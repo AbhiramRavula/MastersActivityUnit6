@@ -234,7 +234,7 @@ namespace Googolplex.Unit6
         {
             if (promptText) promptText.text = "Great job showing kindness to Ravi!";
             if (outcomePanel) outcomePanel.SetActive(true);
-            if (outcomeText) outcomeText.text = "★ Star 2 Earned!";
+            if (outcomeText) outcomeText.text = "Star 2 Earned!";
 
             U6_GameManager_Masters_Activity.Instance.AwardStar();
 

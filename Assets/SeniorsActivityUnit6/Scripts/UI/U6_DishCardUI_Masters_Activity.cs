@@ -31,7 +31,7 @@ namespace Googolplex.Unit6
         {
             currentData = data;
             if (dishNameText != null) dishNameText.text = data.dishName;
-            if (priceText != null) priceText.text = $"₹ {data.price}";
+            if (priceText != null) priceText.text = $"Rs. {data.price}";
             if (dishIcon != null && data.dishSprite != null)
             {
                 dishIcon.sprite = data.dishSprite;

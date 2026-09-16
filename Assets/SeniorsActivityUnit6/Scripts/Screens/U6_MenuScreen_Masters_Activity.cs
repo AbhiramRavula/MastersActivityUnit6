@@ -77,6 +77,7 @@ namespace Googolplex.Unit6
                 foreach (var dish in defaultDishes)
                 {
                     GameObject cardObj = Instantiate(dishCardPrefab, cardsContainer);
+                    cardObj.SetActive(true);
                     U6_DishCardUI_Masters_Activity cardUI = cardObj.GetComponent<U6_DishCardUI_Masters_Activity>();
                     if (cardUI != null)
                     {
@@ -84,6 +85,13 @@ namespace Googolplex.Unit6
                         cardUI.OnCardSelected += HandleDishSelected;
                         spawnedCards.Add(cardUI);
                     }
+                }
+            }
+            else
+            {
+                foreach (var card in spawnedCards)
+                {
+                    if (card != null) card.gameObject.SetActive(true);
                 }
             }
         }

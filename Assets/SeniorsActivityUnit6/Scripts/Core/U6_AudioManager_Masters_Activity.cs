@@ -35,6 +35,11 @@ namespace Googolplex.Unit6
             }
             Instance = this;
 
+            if (bgmSource != null) { bgmSource.playOnAwake = false; bgmSource.loop = true; bgmSource.volume = 0.20f; }
+            if (ambSource != null) { ambSource.playOnAwake = false; ambSource.loop = true; ambSource.volume = 0.15f; }
+            if (sfxSource != null) { sfxSource.playOnAwake = false; sfxSource.loop = false; sfxSource.volume = 0.85f; }
+            if (voSource != null) { voSource.playOnAwake = false; voSource.loop = false; voSource.volume = 1f; }
+
             foreach (var entry in sounds)
             {
                 if (!string.IsNullOrEmpty(entry.id) && !soundDict.ContainsKey(entry.id))
@@ -50,7 +55,7 @@ namespace Googolplex.Unit6
             {
                 if (entry.clip != null && sfxSource != null)
                 {
-                    sfxSource.PlayOneShot(entry.clip, entry.volume > 0 ? entry.volume : 1f);
+                    sfxSource.PlayOneShot(entry.clip, entry.volume > 0 ? entry.volume * 0.85f : 0.85f);
                 }
             }
             else
@@ -68,6 +73,7 @@ namespace Googolplex.Unit6
                     voSource.Stop();
                     voSource.clip = entry.clip;
                     voSource.volume = entry.volume > 0 ? entry.volume : 1f;
+                    voSource.loop = false;
                     voSource.Play();
                 }
             }
@@ -77,15 +83,23 @@ namespace Googolplex.Unit6
             }
         }
 
+        public void StopVO()
+        {
+            if (voSource != null) voSource.Stop();
+        }
+
         public void PlayAmbience(string ambId, bool loop = true)
         {
             if (soundDict.TryGetValue(ambId, out U6_SoundEntry_Masters_Activity entry))
             {
                 if (entry.clip != null && ambSource != null)
                 {
+                    if (ambSource.clip == entry.clip && ambSource.isPlaying) return;
+
+                    ambSource.Stop();
                     ambSource.clip = entry.clip;
                     ambSource.loop = loop;
-                    ambSource.volume = entry.volume > 0 ? entry.volume : 0.5f;
+                    ambSource.volume = entry.volume > 0 ? entry.volume * 0.15f : 0.15f;
                     ambSource.Play();
                 }
             }
@@ -98,6 +112,28 @@ namespace Googolplex.Unit6
         public void StopAmbience()
         {
             if (ambSource != null) ambSource.Stop();
+        }
+
+        public void PlayBGM(string bgmId)
+        {
+            if (soundDict.TryGetValue(bgmId, out U6_SoundEntry_Masters_Activity entry))
+            {
+                if (entry.clip != null && bgmSource != null)
+                {
+                    if (bgmSource.clip == entry.clip && bgmSource.isPlaying) return;
+
+                    bgmSource.Stop();
+                    bgmSource.clip = entry.clip;
+                    bgmSource.loop = true;
+                    bgmSource.volume = entry.volume > 0 ? entry.volume * 0.20f : 0.20f;
+                    bgmSource.Play();
+                }
+            }
+        }
+
+        public void StopBGM()
+        {
+            if (bgmSource != null) bgmSource.Stop();
         }
     }
 }

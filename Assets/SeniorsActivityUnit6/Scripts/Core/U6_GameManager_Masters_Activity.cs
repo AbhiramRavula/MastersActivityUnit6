@@ -39,11 +39,23 @@ namespace Googolplex.Unit6
 
         private void Start()
         {
+            if (U6_AudioManager_Masters_Activity.Instance != null)
+            {
+                U6_AudioManager_Masters_Activity.Instance.PlayBGM("BGM_Main");
+            }
             ChangeState(U6_GamePart.Intro);
         }
 
         public void ChangeState(U6_GamePart nextPart)
         {
+            if (nextPart != U6_GamePart.Intro && nextPart != U6_GamePart.Part1_Waiting)
+            {
+                if (U6_AudioManager_Masters_Activity.Instance != null)
+                {
+                    U6_AudioManager_Masters_Activity.Instance.StopAmbience();
+                }
+            }
+
             currentPart = nextPart;
             UpdateScreenVisibility();
             OnPartChanged?.Invoke(currentPart);

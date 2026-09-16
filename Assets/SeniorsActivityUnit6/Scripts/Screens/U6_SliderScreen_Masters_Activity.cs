@@ -10,8 +10,15 @@ namespace Googolplex.Unit6
         [Header("Phase 1: Volume Slider")]
         [SerializeField] private GameObject volumePhaseContainer;
         [SerializeField] private Slider volumeSlider;
+        [SerializeField] private Image sliderFillImage;
+        [SerializeField] private Image handleKnobImage;
         [SerializeField] private TextMeshProUGUI currentZoneLabel;
         [SerializeField] private Button sayItButton;
+
+        [Header("Zone Card Highlights")]
+        [SerializeField] private GameObject whisperHighlight;
+        [SerializeField] private GameObject justRightHighlight;
+        [SerializeField] private GameObject bigVoiceHighlight;
 
         [Header("Phase 2: Leaving The Restaurant")]
         [SerializeField] private GameObject leavingPhaseContainer;
@@ -65,23 +72,49 @@ namespace Googolplex.Unit6
 
         private void OnSliderMoved(float value)
         {
+            U6_VolumeZone previousZone = currentZone;
+
+            Color zoneColor;
             if (value < 0.33f)
             {
                 currentZone = U6_VolumeZone.Whisper;
-                if (currentZoneLabel) currentZoneLabel.text = "WHISPER";
+                zoneColor = new Color(0.2f, 0.55f, 0.95f);
+                if (currentZoneLabel)
+                {
+                    currentZoneLabel.text = "WHISPER  (Too Soft)";
+                    currentZoneLabel.color = zoneColor;
+                }
             }
             else if (value < 0.67f)
             {
                 currentZone = U6_VolumeZone.JustRight;
-                if (currentZoneLabel) currentZoneLabel.text = "JUST RIGHT ★";
+                zoneColor = new Color(0.15f, 0.72f, 0.32f);
+                if (currentZoneLabel)
+                {
+                    currentZoneLabel.text = "JUST RIGHT  (Polite & Clear)";
+                    currentZoneLabel.color = zoneColor;
+                }
             }
             else
             {
                 currentZone = U6_VolumeZone.BigVoice;
-                if (currentZoneLabel) currentZoneLabel.text = "BIG VOICE";
+                zoneColor = new Color(0.92f, 0.3f, 0.22f);
+                if (currentZoneLabel)
+                {
+                    currentZoneLabel.text = "BIG VOICE  (Too Loud!)";
+                    currentZoneLabel.color = zoneColor;
+                }
             }
 
-            if (U6_AudioManager_Masters_Activity.Instance != null)
+            if (sliderFillImage) sliderFillImage.color = zoneColor;
+            if (handleKnobImage) handleKnobImage.color = zoneColor;
+
+            if (whisperHighlight) whisperHighlight.SetActive(currentZone == U6_VolumeZone.Whisper);
+            if (justRightHighlight) justRightHighlight.SetActive(currentZone == U6_VolumeZone.JustRight);
+            if (bigVoiceHighlight) bigVoiceHighlight.SetActive(currentZone == U6_VolumeZone.BigVoice);
+
+            // Only trigger bubble sound if entering a new zone
+            if (currentZone != previousZone && U6_AudioManager_Masters_Activity.Instance != null)
             {
                 U6_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_SliderZone");
             }
@@ -155,7 +188,7 @@ namespace Googolplex.Unit6
             if (leaveNow)
             {
                 if (feedbackText)
-                    feedbackText.text = "Anu thanks Ravi and leaves. The waiting family gets a table! ★ Star 3 Earned!";
+                    feedbackText.text = "Anu thanks Ravi and leaves. The waiting family gets a table! Star 3 Earned!";
 
                 U6_GameManager_Masters_Activity.Instance.AwardStar();
 

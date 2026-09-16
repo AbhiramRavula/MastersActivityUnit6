@@ -16,6 +16,7 @@ namespace Googolplex.Unit6
         public string failFeedback;
         public string sfxOnFail;
         public string voOnFail;
+        public Sprite fidgetSprite;
     }
 
     public class U6_LiveTableScreen_Masters_Activity : MonoBehaviour
@@ -28,13 +29,17 @@ namespace Googolplex.Unit6
         [SerializeField] private GameObject feedbackPanel;
         [SerializeField] private TextMeshProUGUI feedbackText;
 
+        [Header("Anu Character Visual")]
+        [SerializeField] private Image anuCharacterImage;
+        [SerializeField] private Sprite anuSittingStraightSprite;
+
         [Header("Other Tables Reactions")]
         [SerializeField] private GameObject[] otherTablesNormal;
         [SerializeField] private GameObject[] otherTablesLooking;
 
         [Header("Waiting Events Configuration")]
         [SerializeField] private List<U6_WaitingEventData_Masters_Activity> waitingEvents = new List<U6_WaitingEventData_Masters_Activity>();
-        [SerializeField] private float eventDuration = 5f;
+        [SerializeField] private float eventDuration = 6.5f;
 
         private int currentEventIndex = 0;
         private bool isEventActive = false;
@@ -49,7 +54,12 @@ namespace Googolplex.Unit6
         private void OnEnable()
         {
             InitializeDefaultEvents();
-            StartWaitingSequence();
+            StartCoroutine(InitAndStartSequence());
+        }
+
+        private void OnDisable()
+        {
+            if (activeEventCoroutine != null) StopCoroutine(activeEventCoroutine);
         }
 
         private void InitializeDefaultEvents()
@@ -71,9 +81,9 @@ namespace Googolplex.Unit6
                 {
                     eventName = "Glass Tapping",
                     situationPrompt = "Anu picks up a spoon and starts tapping the glass!",
-                    actionButtonLabel = "PUT IT DOWN",
+                    actionButtonLabel = "PUT SPOON DOWN",
                     successFeedback = "Nice! The table remains quiet and polite.",
-                    failFeedback = "*Ting ting ting!* The other tables turn and stare.",
+                    failFeedback = "Ting ting ting! The other tables turn and stare.",
                     sfxOnFail = "SFX_GlassTing",
                     voOnFail = ""
                 });
@@ -81,7 +91,7 @@ namespace Googolplex.Unit6
                 waitingEvents.Add(new U6_WaitingEventData_Masters_Activity
                 {
                     eventName = "Hungry Shout",
-                    situationPrompt = "Anu is about to shout how hungry she is!",
+                    situationPrompt = "Anu is getting impatient and wants to shout how hungry she is!",
                     actionButtonLabel = "WAIT QUIETLY",
                     successFeedback = "Great patience! Food is being prepared.",
                     failFeedback = "\"I am SO hungry! Where is my food?\" Mother looks embarrassed.",
@@ -92,9 +102,9 @@ namespace Googolplex.Unit6
                 waitingEvents.Add(new U6_WaitingEventData_Masters_Activity
                 {
                     eventName = "Kneeling on Chair",
-                    situationPrompt = "Anu kneels up on the chair with feet underneath!",
+                    situationPrompt = "Anu kneels up on the chair with feet underneath! The chair is wobbling.",
                     actionButtonLabel = "FEET ON FLOOR",
-                    successFeedback = "Both feet on the floor! Sitting straight.",
+                    successFeedback = "Both feet on the floor! Sitting straight and safe.",
                     failFeedback = "The chair wobbled and nearly tipped over!",
                     sfxOnFail = "SFX_ChairWobble",
                     voOnFail = ""
@@ -102,16 +112,35 @@ namespace Googolplex.Unit6
             }
         }
 
-        private void StartWaitingSequence()
+        private IEnumerator InitAndStartSequence()
         {
+            // Wait 1 frame so AudioManager is guaranteed initialized
+            yield return null;
+
             currentEventIndex = 0;
             SetOtherTablesLooking(false);
+            SetAnuSprite(anuSittingStraightSprite);
+
+            if (promptText) promptText.text = "Today Anu's family is eating out at a restaurant...";
+            if (actionButton) actionButton.gameObject.SetActive(false);
+            if (feedbackPanel) feedbackPanel.SetActive(false);
 
             if (U6_AudioManager_Masters_Activity.Instance != null)
             {
+                U6_AudioManager_Masters_Activity.Instance.PlayBGM("BGM_Main");
                 U6_AudioManager_Masters_Activity.Instance.PlayAmbience("AMB_Restaurant");
+                U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_01"); // "Today Anu's family is eating out."
+            }
+
+            yield return new WaitForSeconds(3.0f);
+
+            if (promptText) promptText.text = "The food is not here yet. Watch Anu...";
+            if (U6_AudioManager_Masters_Activity.Instance != null)
+            {
                 U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_02"); // "The food is not here yet. Watch Anu."
             }
+
+            yield return new WaitForSeconds(2.8f);
 
             StartNextEvent();
         }
@@ -130,7 +159,34 @@ namespace Googolplex.Unit6
             if (actionButton) actionButton.gameObject.SetActive(true);
             if (feedbackPanel) feedbackPanel.SetActive(false);
 
+            // Show Anu doing the fidget
+            if (currentEvt.fidgetSprite != null)
+            {
+                SetAnuSprite(currentEvt.fidgetSprite);
+            }
+            else
+            {
+                SetAnuSprite(anuSittingStraightSprite);
+            }
+
             SetOtherTablesLooking(false);
+
+            // Play situation sound cues
+            if (U6_AudioManager_Masters_Activity.Instance != null)
+            {
+                if (currentEventIndex == 0)
+                {
+                    U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_03"); // "Quick! Tap the button!"
+                }
+                else if (currentEvt.eventName.Contains("Glass"))
+                {
+                    U6_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_GlassTing");
+                }
+                else if (currentEvt.eventName.Contains("Kneel"))
+                {
+                    U6_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_ChairWobble");
+                }
+            }
 
             if (activeEventCoroutine != null) StopCoroutine(activeEventCoroutine);
             activeEventCoroutine = StartCoroutine(EventTimerRoutine());
@@ -139,13 +195,14 @@ namespace Googolplex.Unit6
         private IEnumerator EventTimerRoutine()
         {
             isEventActive = true;
+            float duration = 10.0f;
             float elapsed = 0f;
 
-            while (elapsed < eventDuration)
+            while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 if (timeRemainingSlider != null)
-                    timeRemainingSlider.value = 1f - (elapsed / eventDuration);
+                    timeRemainingSlider.value = 1f - (elapsed / duration);
                 yield return null;
             }
 
@@ -177,12 +234,19 @@ namespace Googolplex.Unit6
 
             if (success)
             {
+                // Anu sits straight politely
+                SetAnuSprite(anuSittingStraightSprite);
                 SetOtherTablesLooking(false);
                 if (U6_AudioManager_Masters_Activity.Instance != null)
-                    U6_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_Chirp");
+                    U6_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_Sparkle");
+
+                yield return new WaitForSeconds(2.5f);
+                currentEventIndex++;
+                StartNextEvent();
             }
             else
             {
+                // Failed - other tables look over
                 SetOtherTablesLooking(true);
                 if (U6_AudioManager_Masters_Activity.Instance != null)
                 {
@@ -190,13 +254,27 @@ namespace Googolplex.Unit6
                         U6_AudioManager_Masters_Activity.Instance.PlaySFX(currentEvt.sfxOnFail);
                     if (!string.IsNullOrEmpty(currentEvt.voOnFail))
                         U6_AudioManager_Masters_Activity.Instance.PlayVO(currentEvt.voOnFail);
+                    else
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_MUM_1"); // "Anu, quiet..."
                 }
+
+                // Give student time to see what happened, then retry this event
+                yield return new WaitForSeconds(3.5f);
+                SetOtherTablesLooking(false);
+                SetAnuSprite(anuSittingStraightSprite);
+                if (feedbackPanel) feedbackPanel.SetActive(false);
+                StartNextEvent();
             }
+        }
 
-            yield return new WaitForSeconds(3.5f);
-
-            currentEventIndex++;
-            StartNextEvent();
+        private void SetAnuSprite(Sprite sp)
+        {
+            if (anuCharacterImage != null && sp != null)
+            {
+                anuCharacterImage.sprite = sp;
+                anuCharacterImage.preserveAspect = true;
+                anuCharacterImage.enabled = true;
+            }
         }
 
         private void SetOtherTablesLooking(bool looking)
@@ -215,9 +293,10 @@ namespace Googolplex.Unit6
 
         private IEnumerator CompletePart1Sequence()
         {
+            SetAnuSprite(anuSittingStraightSprite);
             if (promptText) promptText.text = "Well done! The family waited nicely.";
             if (feedbackPanel) feedbackPanel.SetActive(true);
-            if (feedbackText) feedbackText.text = "★ Star 1 Earned!";
+            if (feedbackText) feedbackText.text = "Star 1 Earned!";
 
             U6_GameManager_Masters_Activity.Instance.AwardStar();
 
@@ -226,7 +305,7 @@ namespace Googolplex.Unit6
                 U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_04"); // "Everybody is happy. One star!"
             }
 
-            yield return new WaitForSeconds(3.0f);
+            yield return new WaitForSeconds(3.5f);
 
             U6_GameManager_Masters_Activity.Instance.StartPart2();
         }

@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -9,7 +10,11 @@ namespace Googolplex.Unit6
 {
     public class U6_SceneSetupTool_Masters_Activity : EditorWindow
     {
-        [MenuItem("Unit 6/Generate Complete UI Hierarchy")]
+        private const string SPRITES_PATH = "Assets/SeniorsActivityUnit6/Art/U6_MastersActivitySprites";
+        private const string AUDIOS_PATH = "Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios";
+        private const string SFX_PATH = "Assets/SeniorsActivityUnit6/SFX";
+
+        [MenuItem("Unit 6/Generate and Assign All Assets & Hierarchy")]
         public static void GenerateHierarchy()
         {
             // 1. Ensure EventSystem exists
@@ -34,11 +39,16 @@ namespace Googolplex.Unit6
                 canvasObj = canvas.gameObject;
             }
 
-            CanvasScaler scaler = canvasObj.GetComponent<CanvasScaler>();
-            if (scaler == null) scaler = canvasObj.AddComponent<CanvasScaler>();
+            CanvasScaler scaler = GetOrAddComponent<CanvasScaler>(canvasObj);
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 0.5f;
+
+            // Load Sprite Dictionary
+            Dictionary<string, Sprite> spriteDict = LoadAllSprites();
+
+            // Root Background Image
+            SetupRootBackground(canvasObj.transform, spriteDict);
 
             // 3. Create or find GameManager
             GameObject gmObj = GameObject.Find("[GameManager]");
@@ -52,26 +62,26 @@ namespace Googolplex.Unit6
             AutoWireAudioLibrary(audioMgr, gmObj);
 
             // 4. Create Screens Container Panels under Canvas
-            GameObject liveTablePanel = CreateOrGetPanel(canvasObj.transform, "LiveTableScreen", new Color(0.92f, 0.94f, 0.96f, 1f));
-            GameObject menuPanel = CreateOrGetPanel(canvasObj.transform, "MenuScreen", new Color(0.98f, 0.95f, 0.90f, 1f));
-            GameObject choicePanel = CreateOrGetPanel(canvasObj.transform, "ChoiceScreen", new Color(0.90f, 0.95f, 0.98f, 1f));
-            GameObject sliderPanel = CreateOrGetPanel(canvasObj.transform, "SliderScreen", new Color(0.95f, 0.92f, 0.98f, 1f));
-            GameObject endingPanel = CreateOrGetPanel(canvasObj.transform, "EndingScreen", new Color(0.12f, 0.14f, 0.2f, 1f));
+            GameObject liveTablePanel = CreateOrGetPanel(canvasObj.transform, "LiveTableScreen", new Color(1f, 1f, 1f, 0.05f));
+            GameObject menuPanel = CreateOrGetPanel(canvasObj.transform, "MenuScreen", new Color(0.98f, 0.95f, 0.90f, 0.96f));
+            GameObject choicePanel = CreateOrGetPanel(canvasObj.transform, "ChoiceScreen", new Color(0.90f, 0.95f, 0.98f, 0.96f));
+            GameObject sliderPanel = CreateOrGetPanel(canvasObj.transform, "SliderScreen", new Color(0.95f, 0.92f, 0.98f, 0.96f));
+            GameObject endingPanel = CreateOrGetPanel(canvasObj.transform, "EndingScreen", new Color(0.12f, 0.14f, 0.2f, 0.98f));
 
             // Setup Screen 1: LiveTableScreen (Part 1 - Waiting)
-            SetupLiveTableScreen(liveTablePanel);
+            SetupLiveTableScreen(liveTablePanel, spriteDict);
 
             // Setup Screen 2: MenuScreen (Part 2 - Menu)
-            SetupMenuScreen(menuPanel);
+            SetupMenuScreen(menuPanel, spriteDict);
 
             // Setup Screen 3: ChoiceScreen (Part 3 - Waiter)
-            SetupChoiceScreen(choicePanel);
+            SetupChoiceScreen(choicePanel, spriteDict);
 
             // Setup Screen 4: SliderScreen (Part 4 - Volume & Leaving)
-            SetupSliderScreen(sliderPanel);
+            SetupSliderScreen(sliderPanel, spriteDict);
 
             // Setup Screen 5: EndingScreen
-            SetupEndingScreen(endingPanel);
+            SetupEndingScreen(endingPanel, spriteDict);
 
             // 5. Connect screens to U6_GameManager
             SerializedObject gmSO = new SerializedObject(gameMgr);
@@ -82,10 +92,121 @@ namespace Googolplex.Unit6
             gmSO.FindProperty("endingScreen").objectReferenceValue = endingPanel;
             gmSO.ApplyModifiedProperties();
 
+            // Initial visibility state: Show Part 1, hide others
+            liveTablePanel.SetActive(true);
+            menuPanel.SetActive(false);
+            choicePanel.SetActive(false);
+            sliderPanel.SetActive(false);
+            endingPanel.SetActive(false);
+
             EditorUtility.SetDirty(canvasObj);
             EditorUtility.SetDirty(gmObj);
 
-            Debug.Log("<color=#4CAF50><b>[Unit 6] Complete UI Hierarchy successfully generated & wired!</b></color>");
+            Debug.Log("<color=#4CAF50><b>[Unit 6] Complete UI Hierarchy, Large Mobile Text & Assets updated!</b></color>");
+        }
+
+        private static Dictionary<string, Sprite> LoadAllSprites()
+        {
+            Dictionary<string, Sprite> dict = new Dictionary<string, Sprite>();
+            string[] guids = AssetDatabase.FindAssets("t:Texture2D", new[] { SPRITES_PATH });
+
+            foreach (string guid in guids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                Object[] objects = AssetDatabase.LoadAllAssetsAtPath(path);
+                foreach (Object obj in objects)
+                {
+                    if (obj is Sprite sp)
+                    {
+                        if (!dict.ContainsKey(sp.name))
+                        {
+                            dict.Add(sp.name, sp);
+                        }
+                    }
+                }
+            }
+            return dict;
+        }
+
+        private static Sprite GetOrCreateRoundedBoxSprite()
+        {
+            string dir = "Assets/SeniorsActivityUnit6/Art";
+            if (!System.IO.Directory.Exists(dir))
+            {
+                System.IO.Directory.CreateDirectory(dir);
+            }
+
+            string path = dir + "/UI_RoundedBox_9Slice.png";
+            Sprite existing = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (existing != null) return existing;
+
+            int size = 128;
+            int radius = 32;
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] colors = new Color[size * size];
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    int dx = Mathf.Max(0, Mathf.Max(radius - x, x - (size - 1 - radius)));
+                    int dy = Mathf.Max(0, Mathf.Max(radius - y, y - (size - 1 - radius)));
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    float alpha = Mathf.Clamp01(radius + 0.5f - dist);
+                    colors[y * size + x] = new Color(1f, 1f, 1f, alpha);
+                }
+            }
+
+            tex.SetPixels(colors);
+            tex.Apply();
+            byte[] bytes = tex.EncodeToPNG();
+            System.IO.File.WriteAllBytes(path, bytes);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.spriteBorder = new Vector4(radius, radius, radius, radius);
+                importer.alphaIsTransparency = true;
+                importer.SaveAndReimport();
+            }
+
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
+        private static void SetupRootBackground(Transform parent, Dictionary<string, Sprite> sprites)
+        {
+            Transform existing = parent.Find("RestaurantBackground");
+            GameObject bgObj;
+            if (existing != null)
+            {
+                bgObj = existing.gameObject;
+            }
+            else
+            {
+                bgObj = new GameObject("RestaurantBackground", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                bgObj.transform.SetParent(parent, false);
+                bgObj.transform.SetAsFirstSibling();
+            }
+
+            RectTransform rt = GetOrAddComponent<RectTransform>(bgObj);
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+
+            Image img = GetOrAddComponent<Image>(bgObj);
+            if (sprites.TryGetValue("U6 MA Main Restaurant Interior", out Sprite bgSprite))
+            {
+                img.sprite = bgSprite;
+                img.color = Color.white;
+            }
+            else
+            {
+                img.color = new Color(0.92f, 0.94f, 0.96f, 1f);
+            }
         }
 
         private static GameObject CreateOrGetPanel(Transform parent, string name, Color bgColor)
@@ -116,29 +237,39 @@ namespace Googolplex.Unit6
             return panelObj;
         }
 
-        private static void SetupLiveTableScreen(GameObject screenObj)
+        private static void SetupLiveTableScreen(GameObject screenObj, Dictionary<string, Sprite> sprites)
         {
             var comp = GetOrAddComponent<U6_LiveTableScreen_Masters_Activity>(screenObj);
             ClearChildren(screenObj.transform);
 
-            // Title
-            CreateTMPText(screenObj.transform, "TitleText", "PART 1: WAITING FOR FOOD", 36, new Vector2(0, 420), new Vector2(1200, 80), TextAlignmentOptions.Center, Color.black);
+            // High-Contrast Title Header Card (Large & Bold)
+            CreateUIBox(screenObj.transform, "TitleBanner", "PART 1: WAITING FOR FOOD", 44, new Vector2(0, 440), new Vector2(900, 80), new Color(0.15f, 0.2f, 0.3f, 0.92f), Color.white);
 
-            // Prompt Text
-            var promptText = CreateTMPText(screenObj.transform, "PromptText", "The food is not here yet. Watch Anu.", 30, new Vector2(0, 260), new Vector2(1400, 100), TextAlignmentOptions.Center, new Color(0.2f, 0.2f, 0.2f));
+            // High-Contrast Situation Prompt Card (Large & Bold)
+            GameObject promptBox = CreateUIBox(screenObj.transform, "PromptBox", "The food is not here yet. Watch Anu.", 38, new Vector2(0, 270), new Vector2(1400, 110), new Color(1f, 1f, 1f, 0.95f), new Color(0.1f, 0.1f, 0.1f));
+            var promptText = promptBox.GetComponentInChildren<TextMeshProUGUI>();
 
-            // Other Tables Visual Placeholders (Simulated diners)
-            GameObject normalDiners = CreateUIBox(screenObj.transform, "OtherTables_Normal", "🙂 Other Diners Eating Peacefully", 22, new Vector2(0, 100), new Vector2(1000, 100), new Color(0.8f, 0.9f, 0.8f));
-            GameObject lookingDiners = CreateUIBox(screenObj.transform, "OtherTables_Looking", "👀 OTHER TABLES TURN AND LOOK!", 24, new Vector2(0, 100), new Vector2(1000, 100), new Color(1f, 0.7f, 0.7f));
-            lookingDiners.SetActive(false);
+            // Background Diner Table Rows with rounded borders
+            GameObject normalDiners1 = CreateUISpriteBox(screenObj.transform, "Diners_Normal_1", "Table 1 Normal", new Vector2(-480, 110), new Vector2(440, 240), GetSprite(sprites, "SPR_Diners_EatingNormal 1"));
+            GameObject normalDiners2 = CreateUISpriteBox(screenObj.transform, "Diners_Normal_2", "Table 2 Normal", new Vector2(480, 110), new Vector2(440, 240), GetSprite(sprites, "SPR_Diners_EatingNormal 2"));
 
-            // Action Button
-            GameObject btnObj = CreateUIButton(screenObj.transform, "ActionButton", "STAY SEATED", new Vector2(0, -220), new Vector2(400, 90), new Color(0.2f, 0.65f, 0.35f));
+            GameObject lookDiners1 = CreateUISpriteBox(screenObj.transform, "Diners_Look_1", "Table 1 Looking", new Vector2(-480, 110), new Vector2(440, 240), GetSprite(sprites, "SPR_Diners_HeadsTurned 1"));
+            GameObject lookDiners2 = CreateUISpriteBox(screenObj.transform, "Diners_Look_2", "Table 2 Looking", new Vector2(480, 110), new Vector2(440, 240), GetSprite(sprites, "SPR_Diners_HeadsTurned 2"));
+            lookDiners1.SetActive(false);
+            lookDiners2.SetActive(false);
+
+            // Anu Foreground Character Visual
+            Sprite anuStraight = GetSprite(sprites, "SPR_Anu_SittingStraight");
+            GameObject anuObj = CreateUISpriteBox(screenObj.transform, "AnuCharacterVisual", "", new Vector2(0, 50), new Vector2(260, 360), anuStraight);
+            var anuImg = anuObj.GetComponent<Image>();
+
+            // Action Button (Large & Bold)
+            GameObject btnObj = CreateUIButton(screenObj.transform, "ActionButton", "STAY SEATED", 38, new Vector2(0, -220), new Vector2(480, 100), new Color(0.18f, 0.65f, 0.32f));
             var actionBtn = btnObj.GetComponent<Button>();
             var actionBtnText = btnObj.GetComponentInChildren<TextMeshProUGUI>();
 
-            // Feedback Panel
-            GameObject feedbackPanel = CreateUIBox(screenObj.transform, "FeedbackPanel", "Nice job! Anu stays seated.", 26, new Vector2(0, -360), new Vector2(1200, 80), new Color(1f, 0.95f, 0.7f));
+            // Feedback Panel (Large & Bold)
+            GameObject feedbackPanel = CreateUIBox(screenObj.transform, "FeedbackPanel", "Nice job! Anu stays seated.", 36, new Vector2(0, -370), new Vector2(1300, 100), new Color(1f, 0.95f, 0.7f, 0.96f), new Color(0.2f, 0.15f, 0.05f));
             var feedbackText = feedbackPanel.GetComponentInChildren<TextMeshProUGUI>();
             feedbackPanel.SetActive(false);
 
@@ -149,74 +280,86 @@ namespace Googolplex.Unit6
             so.FindProperty("actionButtonText").objectReferenceValue = actionBtnText;
             so.FindProperty("feedbackPanel").objectReferenceValue = feedbackPanel;
             so.FindProperty("feedbackText").objectReferenceValue = feedbackText;
+            so.FindProperty("anuCharacterImage").objectReferenceValue = anuImg;
+            so.FindProperty("anuSittingStraightSprite").objectReferenceValue = anuStraight;
 
             SerializedProperty normArr = so.FindProperty("otherTablesNormal");
-            normArr.arraySize = 1;
-            normArr.GetArrayElementAtIndex(0).objectReferenceValue = normalDiners;
+            normArr.arraySize = 2;
+            normArr.GetArrayElementAtIndex(0).objectReferenceValue = normalDiners1;
+            normArr.GetArrayElementAtIndex(1).objectReferenceValue = normalDiners2;
 
             SerializedProperty lookArr = so.FindProperty("otherTablesLooking");
-            lookArr.arraySize = 1;
-            lookArr.GetArrayElementAtIndex(0).objectReferenceValue = lookingDiners;
+            lookArr.arraySize = 2;
+            lookArr.GetArrayElementAtIndex(0).objectReferenceValue = lookDiners1;
+            lookArr.GetArrayElementAtIndex(1).objectReferenceValue = lookDiners2;
+
+            // Populate Waiting Events with their specific Sliced Sprites
+            SerializedProperty eventsProp = so.FindProperty("waitingEvents");
+            eventsProp.ClearArray();
+            AddWaitingEvent(eventsProp, "Fish Tank", "Anu spots a fish tank and starts sliding off her chair!", "STAY SEATED", "Good job! Anu stays safely in her seat.", "Anu ran across! The waiter had to swerve around her.", "", "", GetSprite(sprites, "SPR_Anu_SlidingChair"));
+            AddWaitingEvent(eventsProp, "Glass Tapping", "Anu picks up a spoon and starts tapping the glass!", "PUT SPOON DOWN", "Nice! The table remains quiet and polite.", "Ting ting ting! The other tables turn and stare.", "SFX_GlassTing", "", GetSprite(sprites, "SPR_Anu_TappingGlass"));
+            AddWaitingEvent(eventsProp, "Hungry Shout", "Anu is about to shout how hungry she is!", "WAIT QUIETLY", "Great patience! Food is being prepared.", "\"I am SO hungry! Where is my food?\" Mother looks embarrassed.", "", "VO_U6_ANU_7", GetSprite(sprites, "SPR_Anu_ShoutingHungry"));
+            AddWaitingEvent(eventsProp, "Kneeling on Chair", "Anu kneels up on the chair with feet underneath!", "FEET ON FLOOR", "Both feet on the floor! Sitting straight.", "The chair wobbled and nearly tipped over!", "SFX_ChairWobble", "", GetSprite(sprites, "SPR_Anu_KneelingChair"));
 
             so.ApplyModifiedProperties();
         }
 
-        private static void SetupMenuScreen(GameObject screenObj)
+        private static void SetupMenuScreen(GameObject screenObj, Dictionary<string, Sprite> sprites)
         {
             var comp = GetOrAddComponent<U6_MenuScreen_Masters_Activity>(screenObj);
             ClearChildren(screenObj.transform);
 
-            // Header
-            CreateTMPText(screenObj.transform, "HeaderText", "O U R   M E N U", 42, new Vector2(0, 430), new Vector2(800, 80), TextAlignmentOptions.Center, new Color(0.3f, 0.15f, 0.05f));
+            // Header Banner
+            CreateUIBox(screenObj.transform, "MenuHeaderBanner", "O U R   M E N U", 46, new Vector2(0, 440), new Vector2(700, 80), new Color(0.35f, 0.2f, 0.1f, 0.92f), Color.white);
 
             // Grid Container for 6 cards
             GameObject gridObj = new GameObject("CardsContainer", typeof(RectTransform), typeof(GridLayoutGroup));
             gridObj.transform.SetParent(screenObj.transform, false);
             RectTransform gridRT = gridObj.GetComponent<RectTransform>();
-            gridRT.sizeDelta = new Vector2(1100, 520);
+            gridRT.sizeDelta = new Vector2(1150, 520);
             gridRT.anchoredPosition = new Vector2(0, 80);
 
             GridLayoutGroup glg = gridObj.GetComponent<GridLayoutGroup>();
-            glg.cellSize = new Vector2(300, 220);
-            glg.spacing = new Vector2(50, 40);
+            glg.cellSize = new Vector2(320, 230);
+            glg.spacing = new Vector2(60, 40);
             glg.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             glg.constraintCount = 3;
             glg.childAlignment = TextAnchor.MiddleCenter;
 
-            // Generate DishCard UI Prefab / Template
+            // Generate DishCard UI Template (Rounded & Large fonts)
             GameObject cardTemplate = CreateDishCardTemplate(screenObj.transform);
             cardTemplate.SetActive(false);
 
-            // Call Waiter Button
-            GameObject callWaiterBtn = CreateUIButton(screenObj.transform, "CallWaiterButton", "CALL WAITER  🛎️", new Vector2(0, -260), new Vector2(380, 80), new Color(0.9f, 0.45f, 0.2f));
+            // Call Waiter Button (Large & Bold)
+            GameObject callWaiterBtn = CreateUIButton(screenObj.transform, "CallWaiterButton", "CALL WAITER", 36, new Vector2(0, -250), new Vector2(440, 90), new Color(0.9f, 0.45f, 0.2f));
 
             // Read First Prompt Banner
-            GameObject readFirstPrompt = CreateUIBox(screenObj.transform, "ReadFirstPrompt", "📖 READ FIRST", 38, new Vector2(0, -370), new Vector2(600, 90), new Color(1f, 0.35f, 0.35f));
+            GameObject readFirstPrompt = CreateUIBox(screenObj.transform, "ReadFirstPrompt", "READ FIRST", 42, new Vector2(0, -370), new Vector2(650, 90), new Color(0.9f, 0.25f, 0.25f, 0.96f), Color.white);
             var readFirstText = readFirstPrompt.GetComponentInChildren<TextMeshProUGUI>();
             readFirstPrompt.SetActive(false);
 
             // Awkward Waiter Stammer Overlay
-            GameObject awkwardOverlay = CreateUIBox(screenObj.transform, "AwkwardOverlay", "Ravi waits politely...\nAnu: \"Ummm... ummm...\"", 30, new Vector2(0, -370), new Vector2(850, 110), new Color(1f, 0.9f, 0.7f));
+            GameObject awkwardOverlay = CreateUIBox(screenObj.transform, "AwkwardOverlay", "Ravi waits politely...\nAnu: \"Ummm... ummm...\"", 36, new Vector2(0, -370), new Vector2(900, 110), new Color(1f, 0.9f, 0.7f, 0.96f), new Color(0.2f, 0.15f, 0.05f));
             var stammerText = awkwardOverlay.GetComponentInChildren<TextMeshProUGUI>();
             awkwardOverlay.SetActive(false);
 
-            // Order Choice Panel (Polite vs Abrupt)
+            // Order Choice Panel (Rounded large buttons)
             GameObject choicePanel = new GameObject("OrderChoicePanel", typeof(RectTransform));
             choicePanel.transform.SetParent(screenObj.transform, false);
             RectTransform cpRT = choicePanel.GetComponent<RectTransform>();
             cpRT.anchoredPosition = new Vector2(0, -380);
-            cpRT.sizeDelta = new Vector2(1400, 120);
+            cpRT.sizeDelta = new Vector2(1500, 130);
 
-            GameObject btnPolite = CreateUIButton(choicePanel.transform, "PoliteButton", "\"Could I have the dosa, please?\"", new Vector2(-360, 0), new Vector2(640, 80), new Color(0.25f, 0.68f, 0.38f));
-            GameObject btnImpolite = CreateUIButton(choicePanel.transform, "ImpoliteButton", "\"I want dosa.\"", new Vector2(360, 0), new Vector2(640, 80), new Color(0.85f, 0.55f, 0.25f));
+            GameObject btnPolite = CreateUIButton(choicePanel.transform, "PoliteButton", "\"Could I have the dosa, please?\"", 32, new Vector2(-380, 0), new Vector2(700, 95), new Color(0.25f, 0.68f, 0.38f));
+            GameObject btnImpolite = CreateUIButton(choicePanel.transform, "ImpoliteButton", "\"I want dosa.\"", 32, new Vector2(380, 0), new Vector2(700, 95), new Color(0.85f, 0.55f, 0.25f));
             choicePanel.SetActive(false);
 
             // Waiter Feedback
-            GameObject waiterFeedback = CreateUIBox(screenObj.transform, "WaiterFeedback", "Ravi: \"Certainly!\"", 28, new Vector2(0, -450), new Vector2(900, 70), new Color(0.85f, 0.95f, 1f));
+            GameObject waiterFeedback = CreateUIBox(screenObj.transform, "WaiterFeedback", "Ravi: \"Certainly!\"", 34, new Vector2(0, -450), new Vector2(950, 80), new Color(0.85f, 0.95f, 1f, 0.96f), new Color(0.1f, 0.2f, 0.35f));
             var waiterDialogText = waiterFeedback.GetComponentInChildren<TextMeshProUGUI>();
             waiterFeedback.SetActive(false);
 
-            // Wire SerializedObject
+            // Wire SerializedObject with default dishes containing Sprites
             SerializedObject so = new SerializedObject(comp);
             so.FindProperty("cardsContainer").objectReferenceValue = gridObj.transform;
             so.FindProperty("dishCardPrefab").objectReferenceValue = cardTemplate;
@@ -232,42 +375,83 @@ namespace Googolplex.Unit6
             so.FindProperty("impoliteOptionText").objectReferenceValue = btnImpolite.GetComponentInChildren<TextMeshProUGUI>();
             so.FindProperty("waiterFeedbackPopup").objectReferenceValue = waiterFeedback;
             so.FindProperty("waiterDialogText").objectReferenceValue = waiterDialogText;
+
+            SerializedProperty dishesProp = so.FindProperty("defaultDishes");
+            dishesProp.ClearArray();
+            AddDishEntry(dishesProp, "dosa", "Dosa", 60, GetSprite(sprites, "SPR_Dish_Dosa"));
+            AddDishEntry(dishesProp, "idli", "Idli", 40, GetSprite(sprites, "SPR_Dish_Idli"));
+            AddDishEntry(dishesProp, "noodles", "Noodles", 90, GetSprite(sprites, "SPR_Dish_Noodles"));
+            AddDishEntry(dishesProp, "rice", "Rice", 80, GetSprite(sprites, "SPR_Dish_Rice"));
+            AddDishEntry(dishesProp, "roti", "Roti", 30, GetSprite(sprites, "SPR_Dish_Roti"));
+            AddDishEntry(dishesProp, "icecream", "Ice Cream", 50, GetSprite(sprites, "SPR_Dish_IceCream"));
+
             so.ApplyModifiedProperties();
         }
 
-        private static void SetupChoiceScreen(GameObject screenObj)
+        private static void AddDishEntry(SerializedProperty listProp, string id, string name, int price, Sprite sprite)
+        {
+            listProp.InsertArrayElementAtIndex(listProp.arraySize);
+            SerializedProperty elem = listProp.GetArrayElementAtIndex(listProp.arraySize - 1);
+            elem.FindPropertyRelative("dishId").stringValue = id;
+            elem.FindPropertyRelative("dishName").stringValue = name;
+            elem.FindPropertyRelative("price").intValue = price;
+            elem.FindPropertyRelative("dishSprite").objectReferenceValue = sprite;
+        }
+
+        private static void AddWaitingEvent(SerializedProperty listProp, string name, string prompt, string btnLabel, string success, string fail, string sfxFail, string voFail, Sprite fidgetSp)
+        {
+            listProp.InsertArrayElementAtIndex(listProp.arraySize);
+            SerializedProperty elem = listProp.GetArrayElementAtIndex(listProp.arraySize - 1);
+            elem.FindPropertyRelative("eventName").stringValue = name;
+            elem.FindPropertyRelative("situationPrompt").stringValue = prompt;
+            elem.FindPropertyRelative("actionButtonLabel").stringValue = btnLabel;
+            elem.FindPropertyRelative("successFeedback").stringValue = success;
+            elem.FindPropertyRelative("failFeedback").stringValue = fail;
+            elem.FindPropertyRelative("sfxOnFail").stringValue = sfxFail;
+            elem.FindPropertyRelative("voOnFail").stringValue = voFail;
+            elem.FindPropertyRelative("fidgetSprite").objectReferenceValue = fidgetSp;
+        }
+
+        private static void SetupChoiceScreen(GameObject screenObj, Dictionary<string, Sprite> sprites)
         {
             var comp = GetOrAddComponent<U6_WaiterInteractionScreen_Masters_Activity>(screenObj);
             ClearChildren(screenObj.transform);
 
-            CreateTMPText(screenObj.transform, "TitleText", "PART 3: THE WAITER (RAVI)", 36, new Vector2(0, 430), new Vector2(1000, 80), TextAlignmentOptions.Center, Color.black);
+            CreateUIBox(screenObj.transform, "TitleBanner", "PART 3: THE WAITER (RAVI)", 44, new Vector2(0, 440), new Vector2(900, 80), new Color(0.15f, 0.2f, 0.3f, 0.92f), Color.white);
 
-            // Waiter Avatar / Box
-            GameObject waiterBox = CreateUIBox(screenObj.transform, "WaiterAvatarBox", "🧑‍🍳 [ Waiter Ravi ]", 24, new Vector2(0, 220), new Vector2(300, 220), new Color(0.85f, 0.9f, 1f));
+            Sprite warmSmile = GetSprite(sprites, "SPR_Ravi_WarmSmile");
+            Sprite neutralBlank = GetSprite(sprites, "SPR_Ravi_NeutralBlank");
+            Sprite stiffPolite = GetSprite(sprites, "SPR_Ravi_StiffPolite");
+
+            GameObject waiterBox = CreateUISpriteBox(screenObj.transform, "WaiterAvatarBox", "", new Vector2(0, 220), new Vector2(280, 280), neutralBlank);
             var waiterAvatar = waiterBox.GetComponent<Image>();
-            var waiterBadge = CreateTMPText(waiterBox.transform, "Badge", "Ravi", 22, new Vector2(0, -80), new Vector2(160, 40), TextAlignmentOptions.Center, new Color(0.3f, 0.3f, 0.3f));
+            var waiterBadge = CreateTMPText(waiterBox.transform, "Badge", "Ravi", 26, new Vector2(0, -110), new Vector2(180, 45), TextAlignmentOptions.Center, new Color(0.2f, 0.2f, 0.2f));
 
-            // Prompt Text
-            var promptText = CreateTMPText(screenObj.transform, "PromptText", "Ravi brings a fresh jug of water.", 30, new Vector2(0, 40), new Vector2(1400, 100), TextAlignmentOptions.Center, Color.black);
+            // Prompt Text Card
+            GameObject promptBox = CreateUIBox(screenObj.transform, "PromptBox", "Ravi brings a fresh jug of water.", 38, new Vector2(0, 20), new Vector2(1400, 100), new Color(1f, 1f, 1f, 0.95f), new Color(0.1f, 0.1f, 0.1f));
+            var promptText = promptBox.GetComponentInChildren<TextMeshProUGUI>();
 
-            // Choice Container with 2 buttons
+            // Choice Container with 2 large rounded buttons
             GameObject choiceContainer = new GameObject("ChoiceContainer", typeof(RectTransform));
             choiceContainer.transform.SetParent(screenObj.transform, false);
             RectTransform ccRT = choiceContainer.GetComponent<RectTransform>();
             ccRT.anchoredPosition = new Vector2(0, -180);
-            ccRT.sizeDelta = new Vector2(1400, 160);
+            ccRT.sizeDelta = new Vector2(1500, 160);
 
-            GameObject btnA = CreateUIButton(choiceContainer.transform, "OptionA_Button", "\"Thank you!\"", new Vector2(-360, 0), new Vector2(620, 110), new Color(0.25f, 0.68f, 0.38f));
-            GameObject btnB = CreateUIButton(choiceContainer.transform, "OptionB_Button", "(Say nothing)", new Vector2(360, 0), new Vector2(620, 110), new Color(0.85f, 0.55f, 0.25f));
+            GameObject btnA = CreateUIButton(choiceContainer.transform, "OptionA_Button", "\"Thank you!\"", 34, new Vector2(-380, 0), new Vector2(680, 110), new Color(0.25f, 0.68f, 0.38f));
+            GameObject btnB = CreateUIButton(choiceContainer.transform, "OptionB_Button", "(Say nothing)", 34, new Vector2(380, 0), new Vector2(680, 110), new Color(0.85f, 0.55f, 0.25f));
 
             // Outcome Feedback
-            GameObject outcomePanel = CreateUIBox(screenObj.transform, "OutcomePanel", "Ravi smiles warmly and nods.", 28, new Vector2(0, -360), new Vector2(1200, 90), new Color(1f, 0.95f, 0.75f));
+            GameObject outcomePanel = CreateUIBox(screenObj.transform, "OutcomePanel", "Ravi smiles warmly and nods.", 36, new Vector2(0, -360), new Vector2(1300, 100), new Color(1f, 0.95f, 0.75f, 0.96f), new Color(0.2f, 0.15f, 0.05f));
             var outcomeText = outcomePanel.GetComponentInChildren<TextMeshProUGUI>();
             outcomePanel.SetActive(false);
 
             SerializedObject so = new SerializedObject(comp);
             so.FindProperty("promptText").objectReferenceValue = promptText;
             so.FindProperty("waiterAvatar").objectReferenceValue = waiterAvatar;
+            so.FindProperty("waiterSmileSprite").objectReferenceValue = warmSmile;
+            so.FindProperty("waiterNeutralSprite").objectReferenceValue = neutralBlank;
+            so.FindProperty("waiterStiffSprite").objectReferenceValue = stiffPolite;
             so.FindProperty("waiterNameBadge").objectReferenceValue = waiterBadge;
             so.FindProperty("choiceContainer").objectReferenceValue = choiceContainer;
             so.FindProperty("optionA_Button").objectReferenceValue = btnA.GetComponent<Button>();
@@ -279,12 +463,75 @@ namespace Googolplex.Unit6
             so.ApplyModifiedProperties();
         }
 
-        private static void SetupSliderScreen(GameObject screenObj)
+        private static Sprite GetOrCreateCircleSprite()
+        {
+            string dir = "Assets/SeniorsActivityUnit6/Art";
+            if (!System.IO.Directory.Exists(dir))
+            {
+                System.IO.Directory.CreateDirectory(dir);
+            }
+
+            string path = dir + "/UI_Circle_Knob.png";
+            Sprite existing = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (existing != null) return existing;
+
+            int size = 128;
+            float radius = size * 0.5f - 2f;
+            Vector2 center = new Vector2(size * 0.5f, size * 0.5f);
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] colors = new Color[size * size];
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dist = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), center);
+                    float alpha = Mathf.Clamp01(radius + 0.5f - dist);
+                    if (alpha <= 0)
+                    {
+                        colors[y * size + x] = Color.clear;
+                    }
+                    else
+                    {
+                        if (dist > radius - 12f)
+                        {
+                            colors[y * size + x] = new Color(1f, 1f, 1f, alpha);
+                        }
+                        else
+                        {
+                            colors[y * size + x] = new Color(0.96f, 0.96f, 0.98f, alpha);
+                        }
+                    }
+                }
+            }
+
+            tex.SetPixels(colors);
+            tex.Apply();
+            byte[] bytes = tex.EncodeToPNG();
+            System.IO.File.WriteAllBytes(path, bytes);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.alphaIsTransparency = true;
+                importer.SaveAndReimport();
+            }
+
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
+        private static void SetupSliderScreen(GameObject screenObj, Dictionary<string, Sprite> sprites)
         {
             var comp = GetOrAddComponent<U6_SliderScreen_Masters_Activity>(screenObj);
             ClearChildren(screenObj.transform);
 
-            CreateTMPText(screenObj.transform, "TitleText", "PART 4: VOICES & GOODBYES", 36, new Vector2(0, 430), new Vector2(1000, 80), TextAlignmentOptions.Center, Color.black);
+            Sprite roundedSp = GetOrCreateRoundedBoxSprite();
+            Sprite circleKnobSp = GetOrCreateCircleSprite();
+
+            CreateUIBox(screenObj.transform, "TitleBanner", "PART 4: VOICES & GOODBYES", 44, new Vector2(0, 440), new Vector2(900, 80), new Color(0.15f, 0.2f, 0.3f, 0.92f), Color.white);
 
             // Phase 1: Volume Container
             GameObject volPhase = new GameObject("VolumePhaseContainer", typeof(RectTransform));
@@ -295,42 +542,221 @@ namespace Googolplex.Unit6
             vpRT.offsetMin = Vector2.zero;
             vpRT.offsetMax = Vector2.zero;
 
-            CreateTMPText(volPhase.transform, "VolPrompt", "How loud should Anu speak in the restaurant?", 30, new Vector2(0, 260), new Vector2(1200, 80), TextAlignmentOptions.Center, Color.black);
+            CreateUIBox(volPhase.transform, "VolPromptBox", "How loud should Anu speak in the restaurant?", 38, new Vector2(0, 315), new Vector2(1300, 90), new Color(1f, 1f, 1f, 0.95f), new Color(0.1f, 0.1f, 0.1f));
 
-            // UI Slider
+            // Zone Icons & Cards (3 Cards above the slider)
+            Sprite icWhisper = GetSprite(sprites, "SPR_Icon_VolWhisper");
+            Sprite icJustRight = GetSprite(sprites, "SPR_Icon_VolJustRight");
+            Sprite icBigVoice = GetSprite(sprites, "SPR_Icon_VolBigVoice");
+
+            // 1. Whisper Card (-340, 150)
+            GameObject whisperCard = new GameObject("WhisperCard", typeof(RectTransform), typeof(Image));
+            whisperCard.transform.SetParent(volPhase.transform, false);
+            whisperCard.GetComponent<RectTransform>().anchoredPosition = new Vector2(-350, 150);
+            whisperCard.GetComponent<RectTransform>().sizeDelta = new Vector2(310, 150);
+            Image wCardImg = whisperCard.GetComponent<Image>();
+            wCardImg.sprite = roundedSp;
+            wCardImg.type = Image.Type.Sliced;
+            wCardImg.color = new Color(0.92f, 0.96f, 1f, 0.95f);
+
+            CreateUISpriteBox(whisperCard.transform, "Icon", "Whisper", new Vector2(-80, 0), new Vector2(80, 80), icWhisper);
+            CreateTMPText(whisperCard.transform, "Title", "WHISPER", 24, new Vector2(50, 22), new Vector2(180, 35), TextAlignmentOptions.Left, new Color(0.2f, 0.5f, 0.85f));
+            CreateTMPText(whisperCard.transform, "Sub", "Too Soft", 20, new Vector2(50, -18), new Vector2(180, 30), TextAlignmentOptions.Left, new Color(0.4f, 0.5f, 0.6f));
+
+            GameObject whisperHl = new GameObject("Highlight", typeof(RectTransform), typeof(Image));
+            whisperHl.transform.SetParent(whisperCard.transform, false);
+            RectTransform whlRT = whisperHl.GetComponent<RectTransform>();
+            whlRT.anchorMin = Vector2.zero;
+            whlRT.anchorMax = Vector2.one;
+            whlRT.offsetMin = new Vector2(-4, -4);
+            whlRT.offsetMax = new Vector2(4, 4);
+            Image whlImg = whisperHl.GetComponent<Image>();
+            whlImg.sprite = roundedSp;
+            whlImg.type = Image.Type.Sliced;
+            whlImg.color = new Color(0.2f, 0.55f, 0.95f, 0.65f);
+            whisperHl.SetActive(false);
+
+            // 2. Just Right Card (0, 150)
+            GameObject justRightCard = new GameObject("JustRightCard", typeof(RectTransform), typeof(Image));
+            justRightCard.transform.SetParent(volPhase.transform, false);
+            justRightCard.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 150);
+            justRightCard.GetComponent<RectTransform>().sizeDelta = new Vector2(310, 150);
+            Image jrCardImg = justRightCard.GetComponent<Image>();
+            jrCardImg.sprite = roundedSp;
+            jrCardImg.type = Image.Type.Sliced;
+            jrCardImg.color = new Color(0.92f, 0.98f, 0.94f, 0.95f);
+
+            CreateUISpriteBox(justRightCard.transform, "Icon", "Just Right", new Vector2(-80, 0), new Vector2(80, 80), icJustRight);
+            CreateTMPText(justRightCard.transform, "Title", "JUST RIGHT", 24, new Vector2(50, 22), new Vector2(180, 35), TextAlignmentOptions.Left, new Color(0.15f, 0.65f, 0.3f));
+            CreateTMPText(justRightCard.transform, "Sub", "Polite & Clear", 20, new Vector2(50, -18), new Vector2(180, 30), TextAlignmentOptions.Left, new Color(0.3f, 0.55f, 0.35f));
+
+            GameObject justRightHl = new GameObject("Highlight", typeof(RectTransform), typeof(Image));
+            justRightHl.transform.SetParent(justRightCard.transform, false);
+            RectTransform jrhlRT = justRightHl.GetComponent<RectTransform>();
+            jrhlRT.anchorMin = Vector2.zero;
+            jrhlRT.anchorMax = Vector2.one;
+            jrhlRT.offsetMin = new Vector2(-4, -4);
+            jrhlRT.offsetMax = new Vector2(4, 4);
+            Image jrhlImg = justRightHl.GetComponent<Image>();
+            jrhlImg.sprite = roundedSp;
+            jrhlImg.type = Image.Type.Sliced;
+            jrhlImg.color = new Color(0.15f, 0.72f, 0.32f, 0.75f);
+            justRightHl.SetActive(true);
+
+            // 3. Big Voice Card (350, 150)
+            GameObject bigVoiceCard = new GameObject("BigVoiceCard", typeof(RectTransform), typeof(Image));
+            bigVoiceCard.transform.SetParent(volPhase.transform, false);
+            bigVoiceCard.GetComponent<RectTransform>().anchoredPosition = new Vector2(350, 150);
+            bigVoiceCard.GetComponent<RectTransform>().sizeDelta = new Vector2(310, 150);
+            Image bvCardImg = bigVoiceCard.GetComponent<Image>();
+            bvCardImg.sprite = roundedSp;
+            bvCardImg.type = Image.Type.Sliced;
+            bvCardImg.color = new Color(1f, 0.93f, 0.93f, 0.95f);
+
+            CreateUISpriteBox(bigVoiceCard.transform, "Icon", "Big Voice", new Vector2(-80, 0), new Vector2(80, 80), icBigVoice);
+            CreateTMPText(bigVoiceCard.transform, "Title", "BIG VOICE", 24, new Vector2(50, 22), new Vector2(180, 35), TextAlignmentOptions.Left, new Color(0.85f, 0.3f, 0.2f));
+            CreateTMPText(bigVoiceCard.transform, "Sub", "Too Loud!", 20, new Vector2(50, -18), new Vector2(180, 30), TextAlignmentOptions.Left, new Color(0.6f, 0.35f, 0.35f));
+
+            GameObject bigVoiceHl = new GameObject("Highlight", typeof(RectTransform), typeof(Image));
+            bigVoiceHl.transform.SetParent(bigVoiceCard.transform, false);
+            RectTransform bvhlRT = bigVoiceHl.GetComponent<RectTransform>();
+            bvhlRT.anchorMin = Vector2.zero;
+            bvhlRT.anchorMax = Vector2.one;
+            bvhlRT.offsetMin = new Vector2(-4, -4);
+            bvhlRT.offsetMax = new Vector2(4, 4);
+            Image bvhlImg = bigVoiceHl.GetComponent<Image>();
+            bvhlImg.sprite = roundedSp;
+            bvhlImg.type = Image.Type.Sliced;
+            bvhlImg.color = new Color(0.92f, 0.3f, 0.22f, 0.65f);
+            bigVoiceHl.SetActive(false);
+
+            // ============================================
+            // Modern UI Slider Hierarchy
+            // ============================================
             GameObject sliderObj = new GameObject("VolumeSlider", typeof(RectTransform), typeof(Slider));
             sliderObj.transform.SetParent(volPhase.transform, false);
             RectTransform sRT = sliderObj.GetComponent<RectTransform>();
-            sRT.sizeDelta = new Vector2(700, 40);
-            sRT.anchoredPosition = new Vector2(0, 100);
+            sRT.sizeDelta = new Vector2(960, 54);
+            sRT.anchoredPosition = new Vector2(0, -20);
 
             Slider slider = sliderObj.GetComponent<Slider>();
             slider.minValue = 0f;
             slider.maxValue = 1f;
             slider.value = 0.5f;
 
-            // Slider Background & Fill
+            // Background Track Container
             GameObject bg = new GameObject("Background", typeof(RectTransform), typeof(Image));
             bg.transform.SetParent(sliderObj.transform, false);
-            bg.GetComponent<RectTransform>().anchorMin = Vector2.zero;
-            bg.GetComponent<RectTransform>().anchorMax = Vector2.one;
-            bg.GetComponent<Image>().color = new Color(0.8f, 0.8f, 0.8f);
+            RectTransform bgRT = bg.GetComponent<RectTransform>();
+            bgRT.anchorMin = Vector2.zero;
+            bgRT.anchorMax = Vector2.one;
+            bgRT.offsetMin = Vector2.zero;
+            bgRT.offsetMax = Vector2.zero;
+            Image bgImg = bg.GetComponent<Image>();
+            bgImg.sprite = roundedSp;
+            bgImg.type = Image.Type.Sliced;
+            bgImg.color = new Color(0.86f, 0.89f, 0.93f);
 
+            // Colored Zone Strips inside Track Background
+            GameObject zone1Strip = new GameObject("Zone1_WhisperStrip", typeof(RectTransform), typeof(Image));
+            zone1Strip.transform.SetParent(bg.transform, false);
+            RectTransform z1RT = zone1Strip.GetComponent<RectTransform>();
+            z1RT.anchorMin = new Vector2(0f, 0f);
+            z1RT.anchorMax = new Vector2(0.333f, 1f);
+            z1RT.offsetMin = new Vector2(4, 4);
+            z1RT.offsetMax = new Vector2(-2, -4);
+            Image z1Img = zone1Strip.GetComponent<Image>();
+            z1Img.sprite = roundedSp;
+            z1Img.type = Image.Type.Sliced;
+            z1Img.color = new Color(0.3f, 0.6f, 0.95f, 0.3f);
+
+            GameObject zone2Strip = new GameObject("Zone2_JustRightStrip", typeof(RectTransform), typeof(Image));
+            zone2Strip.transform.SetParent(bg.transform, false);
+            RectTransform z2RT = zone2Strip.GetComponent<RectTransform>();
+            z2RT.anchorMin = new Vector2(0.333f, 0f);
+            z2RT.anchorMax = new Vector2(0.666f, 1f);
+            z2RT.offsetMin = new Vector2(2, 4);
+            z2RT.offsetMax = new Vector2(-2, -4);
+            Image z2Img = zone2Strip.GetComponent<Image>();
+            z2Img.sprite = roundedSp;
+            z2Img.type = Image.Type.Sliced;
+            z2Img.color = new Color(0.2f, 0.8f, 0.4f, 0.3f);
+
+            GameObject zone3Strip = new GameObject("Zone3_BigVoiceStrip", typeof(RectTransform), typeof(Image));
+            zone3Strip.transform.SetParent(bg.transform, false);
+            RectTransform z3RT = zone3Strip.GetComponent<RectTransform>();
+            z3RT.anchorMin = new Vector2(0.666f, 0f);
+            z3RT.anchorMax = new Vector2(1f, 1f);
+            z3RT.offsetMin = new Vector2(2, 4);
+            z3RT.offsetMax = new Vector2(-4, -4);
+            Image z3Img = zone3Strip.GetComponent<Image>();
+            z3Img.sprite = roundedSp;
+            z3Img.type = Image.Type.Sliced;
+            z3Img.color = new Color(0.95f, 0.35f, 0.3f, 0.3f);
+
+            // Fill Area
             GameObject fillArea = new GameObject("Fill Area", typeof(RectTransform));
             fillArea.transform.SetParent(sliderObj.transform, false);
-            fillArea.GetComponent<RectTransform>().anchorMin = Vector2.zero;
-            fillArea.GetComponent<RectTransform>().anchorMax = Vector2.one;
+            RectTransform faRT = fillArea.GetComponent<RectTransform>();
+            faRT.anchorMin = Vector2.zero;
+            faRT.anchorMax = Vector2.one;
+            faRT.offsetMin = new Vector2(10, 6);
+            faRT.offsetMax = new Vector2(-10, -6);
 
             GameObject fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
             fill.transform.SetParent(fillArea.transform, false);
-            fill.GetComponent<Image>().color = new Color(0.3f, 0.7f, 0.9f);
+            Image fillImg = fill.GetComponent<Image>();
+            fillImg.sprite = roundedSp;
+            fillImg.type = Image.Type.Sliced;
+            fillImg.color = new Color(0.15f, 0.72f, 0.32f);
             slider.fillRect = fill.GetComponent<RectTransform>();
 
-            // Zone Label
-            var zoneLabel = CreateTMPText(volPhase.transform, "ZoneLabel", "JUST RIGHT ★", 34, new Vector2(0, 0), new Vector2(500, 70), TextAlignmentOptions.Center, new Color(0.2f, 0.6f, 0.3f));
+            // Handle Slide Area & Circular Knob Handle
+            GameObject handleSlideArea = new GameObject("Handle Slide Area", typeof(RectTransform));
+            handleSlideArea.transform.SetParent(sliderObj.transform, false);
+            RectTransform hsaRT = handleSlideArea.GetComponent<RectTransform>();
+            hsaRT.anchorMin = Vector2.zero;
+            hsaRT.anchorMax = Vector2.one;
+            hsaRT.offsetMin = new Vector2(36, 0);
+            hsaRT.offsetMax = new Vector2(-36, 0);
 
-            // Say It Button
-            GameObject sayBtn = CreateUIButton(volPhase.transform, "SayItButton", "SAY IT  🗣️", new Vector2(0, -140), new Vector2(340, 80), new Color(0.25f, 0.65f, 0.35f));
+            GameObject handle = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+            handle.transform.SetParent(handleSlideArea.transform, false);
+            RectTransform hRT = handle.GetComponent<RectTransform>();
+            hRT.sizeDelta = new Vector2(74, 74);
+            Image handleImg = handle.GetComponent<Image>();
+            handleImg.sprite = circleKnobSp;
+            handleImg.color = new Color(0.15f, 0.72f, 0.32f);
+
+            // Inner White Knob Cap
+            GameObject knobCore = new GameObject("KnobCore", typeof(RectTransform), typeof(Image));
+            knobCore.transform.SetParent(handle.transform, false);
+            RectTransform kcRT = knobCore.GetComponent<RectTransform>();
+            kcRT.sizeDelta = new Vector2(56, 56);
+            Image kcImg = knobCore.GetComponent<Image>();
+            kcImg.sprite = circleKnobSp;
+            kcImg.color = Color.white;
+
+            // Inner Grip Dot
+            GameObject knobDot = new GameObject("KnobDot", typeof(RectTransform), typeof(Image));
+            knobDot.transform.SetParent(knobCore.transform, false);
+            RectTransform kdRT = knobDot.GetComponent<RectTransform>();
+            kdRT.sizeDelta = new Vector2(20, 20);
+            Image kdImg = knobDot.GetComponent<Image>();
+            kdImg.sprite = circleKnobSp;
+            kdImg.color = new Color(0.15f, 0.72f, 0.32f);
+
+            slider.handleRect = handle.GetComponent<RectTransform>();
+            slider.targetGraphic = handleImg;
+
+            // Zone Badge Box (Dynamic color feedback)
+            GameObject badgeBox = CreateUIBox(volPhase.transform, "ZoneBadgeBox", "", 34, new Vector2(0, -125), new Vector2(620, 72), new Color(1f, 1f, 1f, 0.95f), Color.white);
+            var zoneLabel = badgeBox.GetComponentInChildren<TextMeshProUGUI>();
+            zoneLabel.text = "JUST RIGHT  (Polite & Clear)";
+            zoneLabel.color = new Color(0.15f, 0.72f, 0.32f);
+
+            // Say It Button (Large Emerald Green)
+            GameObject sayBtn = CreateUIButton(volPhase.transform, "SayItButton", "SAY IT", 38, new Vector2(0, -230), new Vector2(380, 90), new Color(0.2f, 0.72f, 0.35f));
 
             // Phase 2: Leaving Container
             GameObject leavingPhase = new GameObject("LeavingPhaseContainer", typeof(RectTransform));
@@ -341,23 +767,29 @@ namespace Googolplex.Unit6
             lpRT.offsetMin = Vector2.zero;
             lpRT.offsetMax = Vector2.zero;
 
-            CreateTMPText(leavingPhase.transform, "LeavePrompt", "The meal is finished. Another family is waiting by the door.", 30, new Vector2(0, 260), new Vector2(1300, 80), TextAlignmentOptions.Center, Color.black);
+            CreateUIBox(leavingPhase.transform, "LeavePromptBox", "The meal is finished. Another family is waiting by the door.", 38, new Vector2(0, 360), new Vector2(1400, 95), new Color(1f, 1f, 1f, 0.95f), new Color(0.1f, 0.1f, 0.1f));
 
-            GameObject waitFamily = CreateUIBox(leavingPhase.transform, "WaitingFamilyVisual", "👨‍👩‍👧 Family waiting at the door with a tired child", 26, new Vector2(0, 100), new Vector2(900, 100), new Color(1f, 0.9f, 0.8f));
+            Sprite waitingFamilySp = GetSprite(sprites, "Waiting Family");
+            GameObject waitFamily = CreateUISpriteBox(leavingPhase.transform, "WaitingFamilyVisual", "Waiting Family", new Vector2(0, 120), new Vector2(480, 340), waitingFamilySp);
 
-            GameObject btnLeave = CreateUIButton(leavingPhase.transform, "LeavePolitelyButton", "Say thank you and leave  👋", new Vector2(-340, -120), new Vector2(580, 90), new Color(0.25f, 0.68f, 0.38f));
-            GameObject btnStay = CreateUIButton(leavingPhase.transform, "StayAndPlayButton", "Stay & play with spoons", new Vector2(340, -120), new Vector2(580, 90), new Color(0.85f, 0.55f, 0.25f));
+            GameObject btnLeave = CreateUIButton(leavingPhase.transform, "LeavePolitelyButton", "Say thank you and leave", 34, new Vector2(-360, -140), new Vector2(640, 100), new Color(0.25f, 0.68f, 0.38f));
+            GameObject btnStay = CreateUIButton(leavingPhase.transform, "StayAndPlayButton", "Stay & play with spoons", 34, new Vector2(360, -140), new Vector2(640, 100), new Color(0.85f, 0.55f, 0.25f));
             leavingPhase.SetActive(false);
 
             // Feedback
-            GameObject feedback = CreateUIBox(screenObj.transform, "FeedbackPanel", "Feedback text", 26, new Vector2(0, -360), new Vector2(1200, 80), new Color(1f, 0.95f, 0.7f));
+            GameObject feedback = CreateUIBox(screenObj.transform, "FeedbackPanel", "Feedback text", 36, new Vector2(0, -360), new Vector2(1300, 100), new Color(1f, 0.95f, 0.7f, 0.96f), new Color(0.2f, 0.15f, 0.05f));
             var feedbackText = feedback.GetComponentInChildren<TextMeshProUGUI>();
             feedback.SetActive(false);
 
             SerializedObject so = new SerializedObject(comp);
             so.FindProperty("volumePhaseContainer").objectReferenceValue = volPhase;
             so.FindProperty("volumeSlider").objectReferenceValue = slider;
+            so.FindProperty("sliderFillImage").objectReferenceValue = fillImg;
+            so.FindProperty("handleKnobImage").objectReferenceValue = kdImg;
             so.FindProperty("currentZoneLabel").objectReferenceValue = zoneLabel;
+            so.FindProperty("whisperHighlight").objectReferenceValue = whisperHl;
+            so.FindProperty("justRightHighlight").objectReferenceValue = justRightHl;
+            so.FindProperty("bigVoiceHighlight").objectReferenceValue = bigVoiceHl;
             so.FindProperty("sayItButton").objectReferenceValue = sayBtn.GetComponent<Button>();
             so.FindProperty("leavingPhaseContainer").objectReferenceValue = leavingPhase;
             so.FindProperty("waitingFamilyVisual").objectReferenceValue = waitFamily;
@@ -368,7 +800,7 @@ namespace Googolplex.Unit6
             so.ApplyModifiedProperties();
         }
 
-        private static void SetupEndingScreen(GameObject screenObj)
+        private static void SetupEndingScreen(GameObject screenObj, Dictionary<string, Sprite> sprites)
         {
             var comp = GetOrAddComponent<U6_EndingScreen_Masters_Activity>(screenObj);
             ClearChildren(screenObj.transform);
@@ -377,23 +809,30 @@ namespace Googolplex.Unit6
             GameObject starsRow = new GameObject("StarsContainer", typeof(RectTransform));
             starsRow.transform.SetParent(screenObj.transform, false);
             RectTransform srRT = starsRow.GetComponent<RectTransform>();
-            srRT.anchoredPosition = new Vector2(0, 240);
-            srRT.sizeDelta = new Vector2(600, 120);
+            srRT.anchoredPosition = new Vector2(0, 320);
+            srRT.sizeDelta = new Vector2(600, 140);
 
-            GameObject s1 = CreateTMPText(starsRow.transform, "Star1", "⭐", 80, new Vector2(-180, 0), new Vector2(120, 120), TextAlignmentOptions.Center, Color.yellow).gameObject;
-            GameObject s2 = CreateTMPText(starsRow.transform, "Star2", "⭐", 80, new Vector2(0, 0), new Vector2(120, 120), TextAlignmentOptions.Center, Color.yellow).gameObject;
-            GameObject s3 = CreateTMPText(starsRow.transform, "Star3", "⭐", 80, new Vector2(180, 0), new Vector2(120, 120), TextAlignmentOptions.Center, Color.yellow).gameObject;
+            Sprite goldStar = GetSprite(sprites, "SPR_Icon_GoldStar");
+            GameObject s1 = CreateUISpriteBox(starsRow.transform, "Star1", "", new Vector2(-180, 0), new Vector2(130, 130), goldStar);
+            GameObject s2 = CreateUISpriteBox(starsRow.transform, "Star2", "", new Vector2(0, 0), new Vector2(130, 130), goldStar);
+            GameObject s3 = CreateUISpriteBox(starsRow.transform, "Star3", "", new Vector2(180, 0), new Vector2(130, 130), goldStar);
+
+            // Characters Celebrating
+            Sprite anuWave = GetSprite(sprites, "SPR_Anu_GoodbyeWave");
+            Sprite raviSmile = GetSprite(sprites, "SPR_Ravi_WarmSmile");
+            CreateUISpriteBox(screenObj.transform, "AnuWaveCelebration", "", new Vector2(-420, 30), new Vector2(240, 360), anuWave);
+            CreateUISpriteBox(screenObj.transform, "RaviSmileCelebration", "", new Vector2(420, 30), new Vector2(240, 360), raviSmile);
 
             // Banner
-            var bannerText = CreateTMPText(screenObj.transform, "BannerText", "THANK YOU, COME AGAIN!\n🙂 👋", 48, new Vector2(0, 40), new Vector2(1200, 140), TextAlignmentOptions.Center, Color.white);
+            var bannerText = CreateTMPText(screenObj.transform, "BannerText", "THANK YOU, COME AGAIN!", 52, new Vector2(0, 120), new Vector2(1100, 100), TextAlignmentOptions.Center, Color.white);
 
             // Reflection Panel
-            GameObject refPanel = CreateUIBox(screenObj.transform, "ReflectionPanel", "Teacher Reflection:\nWhat will you say to the waiter next time?", 32, new Vector2(0, -180), new Vector2(1200, 120), new Color(0.2f, 0.25f, 0.35f));
+            GameObject refPanel = CreateUIBox(screenObj.transform, "ReflectionPanel", "Teacher Reflection:\nWhat will you say to the waiter next time?", 38, new Vector2(0, -130), new Vector2(1200, 130), new Color(0.2f, 0.25f, 0.35f, 0.96f), Color.white);
             var refText = refPanel.GetComponentInChildren<TextMeshProUGUI>();
             refText.color = Color.white;
 
             // Restart Button
-            GameObject restartBtn = CreateUIButton(screenObj.transform, "RestartButton", "Play Again  🔄", new Vector2(0, -360), new Vector2(300, 70), new Color(0.3f, 0.6f, 0.9f));
+            GameObject restartBtn = CreateUIButton(screenObj.transform, "RestartButton", "Play Again", 36, new Vector2(0, -340), new Vector2(340, 80), new Color(0.3f, 0.6f, 0.9f));
 
             SerializedObject so = new SerializedObject(comp);
             SerializedProperty starsProp = so.FindProperty("starIcons");
@@ -415,32 +854,40 @@ namespace Googolplex.Unit6
             cardObj.transform.SetParent(parent, false);
 
             RectTransform rt = cardObj.GetComponent<RectTransform>();
-            rt.sizeDelta = new Vector2(300, 220);
-            cardObj.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.95f);
+            rt.sizeDelta = new Vector2(320, 230);
+
+            Sprite roundedSp = GetOrCreateRoundedBoxSprite();
+            Image cardImg = cardObj.GetComponent<Image>();
+            cardImg.sprite = roundedSp;
+            cardImg.type = Image.Type.Sliced;
+            cardImg.color = new Color(1f, 1f, 1f, 0.96f);
 
             // Icon Placeholder
             GameObject iconObj = new GameObject("DishIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             iconObj.transform.SetParent(cardObj.transform, false);
             RectTransform iconRT = iconObj.GetComponent<RectTransform>();
-            iconRT.sizeDelta = new Vector2(120, 100);
+            iconRT.sizeDelta = new Vector2(160, 115);
             iconRT.anchoredPosition = new Vector2(0, 35);
-            iconObj.GetComponent<Image>().color = new Color(0.9f, 0.85f, 0.8f);
+            iconObj.GetComponent<Image>().preserveAspect = true;
 
-            // Name
-            var nameText = CreateTMPText(cardObj.transform, "DishName", "Dosa", 24, new Vector2(0, -35), new Vector2(260, 40), TextAlignmentOptions.Center, Color.black);
+            // Name (Large Bold)
+            var nameText = CreateTMPText(cardObj.transform, "DishName", "Dosa", 28, new Vector2(0, -40), new Vector2(280, 45), TextAlignmentOptions.Center, new Color(0.1f, 0.1f, 0.1f));
 
-            // Price
-            var priceText = CreateTMPText(cardObj.transform, "PriceText", "₹ 60", 22, new Vector2(0, -75), new Vector2(260, 35), TextAlignmentOptions.Center, new Color(0.7f, 0.4f, 0.1f));
+            // Price (Large Bold)
+            var priceText = CreateTMPText(cardObj.transform, "PriceText", "Rs. 60", 26, new Vector2(0, -80), new Vector2(280, 40), TextAlignmentOptions.Center, new Color(0.85f, 0.45f, 0.1f));
 
-            // Selection Highlight
+            // Selection Highlight (Rounded)
             GameObject highlight = new GameObject("SelectionHighlight", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             highlight.transform.SetParent(cardObj.transform, false);
             RectTransform hlRT = highlight.GetComponent<RectTransform>();
             hlRT.anchorMin = Vector2.zero;
             hlRT.anchorMax = Vector2.one;
-            hlRT.offsetMin = Vector2.zero;
-            hlRT.offsetMax = Vector2.zero;
-            highlight.GetComponent<Image>().color = new Color(0.2f, 0.8f, 1f, 0.35f);
+            hlRT.offsetMin = new Vector2(-6, -6);
+            hlRT.offsetMax = new Vector2(6, 6);
+            Image hlImg = highlight.GetComponent<Image>();
+            hlImg.sprite = roundedSp;
+            hlImg.type = Image.Type.Sliced;
+            hlImg.color = new Color(0.15f, 0.75f, 1f, 0.45f);
             highlight.SetActive(false);
 
             var cardUI = cardObj.GetComponent<U6_DishCardUI_Masters_Activity>();
@@ -455,6 +902,50 @@ namespace Googolplex.Unit6
             return cardObj;
         }
 
+        private static Sprite GetSprite(Dictionary<string, Sprite> dict, string key)
+        {
+            if (string.IsNullOrEmpty(key)) return null;
+            if (dict.TryGetValue(key, out Sprite sp))
+                return sp;
+
+            string cleanKey = key.Replace(".png", "").Trim().ToLower();
+            foreach (var kvp in dict)
+            {
+                string dictKey = kvp.Key.Replace(".png", "").Trim().ToLower();
+                if (dictKey == cleanKey || dictKey.Contains(cleanKey) || cleanKey.Contains(dictKey))
+                    return kvp.Value;
+            }
+            return null;
+        }
+
+        private static GameObject CreateUISpriteBox(Transform parent, string name, string fallbackText, Vector2 anchoredPos, Vector2 sizeDelta, Sprite sprite)
+        {
+            GameObject box = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            box.transform.SetParent(parent, false);
+
+            RectTransform rt = GetOrAddComponent<RectTransform>(box);
+            rt.anchoredPosition = anchoredPos;
+            rt.sizeDelta = sizeDelta;
+
+            Image img = GetOrAddComponent<Image>(box);
+            if (sprite != null)
+            {
+                img.sprite = sprite;
+                img.color = Color.white;
+                img.preserveAspect = true;
+            }
+            else
+            {
+                img.sprite = GetOrCreateRoundedBoxSprite();
+                img.type = Image.Type.Sliced;
+                img.color = new Color(0.85f, 0.85f, 0.85f, 1f);
+                if (!string.IsNullOrEmpty(fallbackText))
+                    CreateTMPText(box.transform, "Label", fallbackText, 26, Vector2.zero, sizeDelta, TextAlignmentOptions.Center, Color.black);
+            }
+
+            return box;
+        }
+
         private static TextMeshProUGUI CreateTMPText(Transform parent, string name, string content, float fontSize, Vector2 anchoredPos, Vector2 sizeDelta, TextAlignmentOptions alignment, Color color)
         {
             GameObject obj = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
@@ -467,13 +958,14 @@ namespace Googolplex.Unit6
             TextMeshProUGUI tmp = obj.GetComponent<TextMeshProUGUI>();
             tmp.text = content;
             tmp.fontSize = fontSize;
+            tmp.fontStyle = FontStyles.Bold;
             tmp.alignment = alignment;
             tmp.color = color;
 
             return tmp;
         }
 
-        private static GameObject CreateUIBox(Transform parent, string name, string textContent, float fontSize, Vector2 anchoredPos, Vector2 sizeDelta, Color bgColor)
+        private static GameObject CreateUIBox(Transform parent, string name, string textContent, float fontSize, Vector2 anchoredPos, Vector2 sizeDelta, Color bgColor, Color textColor)
         {
             GameObject box = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             box.transform.SetParent(parent, false);
@@ -483,13 +975,15 @@ namespace Googolplex.Unit6
             rt.sizeDelta = sizeDelta;
 
             Image img = GetOrAddComponent<Image>(box);
+            img.sprite = GetOrCreateRoundedBoxSprite();
+            img.type = Image.Type.Sliced;
             img.color = bgColor;
 
-            CreateTMPText(box.transform, "Label", textContent, fontSize, Vector2.zero, sizeDelta, TextAlignmentOptions.Center, Color.black);
+            CreateTMPText(box.transform, "Label", textContent, fontSize, Vector2.zero, sizeDelta, TextAlignmentOptions.Center, textColor);
             return box;
         }
 
-        private static GameObject CreateUIButton(Transform parent, string name, string labelText, Vector2 anchoredPos, Vector2 sizeDelta, Color btnColor)
+        private static GameObject CreateUIButton(Transform parent, string name, string labelText, float fontSize, Vector2 anchoredPos, Vector2 sizeDelta, Color btnColor)
         {
             GameObject btnObj = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
             btnObj.transform.SetParent(parent, false);
@@ -499,9 +993,11 @@ namespace Googolplex.Unit6
             rt.sizeDelta = sizeDelta;
 
             Image img = GetOrAddComponent<Image>(btnObj);
+            img.sprite = GetOrCreateRoundedBoxSprite();
+            img.type = Image.Type.Sliced;
             img.color = btnColor;
 
-            CreateTMPText(btnObj.transform, "Label", labelText, 24, Vector2.zero, sizeDelta, TextAlignmentOptions.Center, Color.white);
+            CreateTMPText(btnObj.transform, "Label", labelText, fontSize, Vector2.zero, sizeDelta, TextAlignmentOptions.Center, Color.white);
             return btnObj;
         }
 
@@ -514,12 +1010,17 @@ namespace Googolplex.Unit6
 
         private static void AutoWireAudioLibrary(U6_AudioManager_Masters_Activity audioMgr, GameObject gmObj)
         {
-            // Ensure 4 AudioSources exist on GameManager
             AudioSource[] sources = gmObj.GetComponents<AudioSource>();
             while (sources.Length < 4)
             {
                 gmObj.AddComponent<AudioSource>();
                 sources = gmObj.GetComponents<AudioSource>();
+            }
+
+            for (int s = 0; s < sources.Length; s++)
+            {
+                sources[s].playOnAwake = false;
+                sources[s].clip = null;
             }
 
             SerializedObject so = new SerializedObject(audioMgr);
@@ -528,24 +1029,55 @@ namespace Googolplex.Unit6
             so.FindProperty("sfxSource").objectReferenceValue = sources[2];
             so.FindProperty("voSource").objectReferenceValue = sources[3];
 
-            // Search for audio clips in Assets/Audio/U6_MastersActivity_audios
-            string[] guids = AssetDatabase.FindAssets("t:AudioClip", new[] { "Assets/Audio/U6_MastersActivity_audios" });
             var soundListProp = so.FindProperty("sounds");
             soundListProp.ClearArray();
+            HashSet<string> registeredIds = new HashSet<string>();
 
-            for (int i = 0; i < guids.Length; i++)
+            // 1. First register all genuine Sound Effects and Ambience from SFX folder
+            if (System.IO.Directory.Exists(SFX_PATH))
             {
-                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
-                AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
-                if (clip == null) continue;
+                string[] sfxGuids = AssetDatabase.FindAssets("t:AudioClip", new[] { SFX_PATH });
+                foreach (string guid in sfxGuids)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                    AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                    if (clip == null) continue;
 
-                string soundId = ResolveSoundId(clip.name);
+                    string soundId = clip.name; // Exact ID e.g. SFX_Chirp, AMB_Restaurant, etc.
+                    if (!registeredIds.Contains(soundId))
+                    {
+                        registeredIds.Add(soundId);
+                        soundListProp.InsertArrayElementAtIndex(soundListProp.arraySize);
+                        SerializedProperty elem = soundListProp.GetArrayElementAtIndex(soundListProp.arraySize - 1);
+                        elem.FindPropertyRelative("id").stringValue = soundId;
+                        elem.FindPropertyRelative("clip").objectReferenceValue = clip;
+                        elem.FindPropertyRelative("volume").floatValue = 1f;
+                    }
+                }
+            }
 
-                soundListProp.InsertArrayElementAtIndex(soundListProp.arraySize);
-                SerializedProperty elem = soundListProp.GetArrayElementAtIndex(soundListProp.arraySize - 1);
-                elem.FindPropertyRelative("id").stringValue = soundId;
-                elem.FindPropertyRelative("clip").objectReferenceValue = clip;
-                elem.FindPropertyRelative("volume").floatValue = 1f;
+            // 2. Then register all Voice-Over character dialogue files from Audio folder
+            if (System.IO.Directory.Exists(AUDIOS_PATH))
+            {
+                string[] voGuids = AssetDatabase.FindAssets("t:AudioClip", new[] { AUDIOS_PATH });
+                foreach (string guid in voGuids)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                    AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                    if (clip == null) continue;
+
+                    string soundId = ResolveSoundId(clip.name);
+                    // Only register if it's a VO or not already registered by genuine SFX
+                    if (!string.IsNullOrEmpty(soundId) && !registeredIds.Contains(soundId))
+                    {
+                        registeredIds.Add(soundId);
+                        soundListProp.InsertArrayElementAtIndex(soundListProp.arraySize);
+                        SerializedProperty elem = soundListProp.GetArrayElementAtIndex(soundListProp.arraySize - 1);
+                        elem.FindPropertyRelative("id").stringValue = soundId;
+                        elem.FindPropertyRelative("clip").objectReferenceValue = clip;
+                        elem.FindPropertyRelative("volume").floatValue = 1f;
+                    }
+                }
             }
 
             so.ApplyModifiedProperties();
@@ -553,7 +1085,13 @@ namespace Googolplex.Unit6
 
         private static string ResolveSoundId(string fileName)
         {
+            if (fileName.StartsWith("SFX_") || fileName.StartsWith("AMB_") || fileName.StartsWith("MUS_") || fileName.StartsWith("VO_"))
+            {
+                return fileName;
+            }
+
             string lower = fileName.ToLower();
+            if (lower.Contains("ukulele") || lower.Contains("marimba") || lower.Contains("gentle cheerful")) return "BGM_Main";
             if (lower.Contains("today anus family")) return "VO_U6_01";
             if (lower.Contains("food is not here yet")) return "VO_U6_02";
             if (lower.Contains("quick tap the button")) return "VO_U6_03";
@@ -587,26 +1125,7 @@ namespace Googolplex.Unit6
             if (lower.Contains("sorry i cannot hear you")) return "VO_U6_DAD_1";
             if (lower.Contains("anu quiet")) return "VO_U6_MUM_1";
 
-            if (lower.Contains("busy but pleasant restaurant")) return "AMB_Restaurant";
-            if (lower.Contains("same restaurant going suddenly quieter")) return "AMB_RestaurantHush";
-            if (lower.Contains("metal spoon tapping")) return "SFX_GlassTing";
-            if (lower.Contains("wooden chair tipping")) return "SFX_ChairWobble";
-            if (lower.Contains("metal fork falling")) return "SFX_ForkDrop";
-            if (lower.Contains("large laminated menu")) return "SFX_MenuOpen";
-            if (lower.Contains("quick pencil scribble")) return "SFX_PadWrite";
-            if (lower.Contains("hot plate being set down")) return "SFX_PlateDown";
-            if (lower.Contains("baby starting to cry")) return "SFX_BabyCry";
-            if (lower.Contains("small shop door chime")) return "SFX_DoorBell";
-            if (lower.Contains("big magical sparkle")) return "SFX_Sparkle";
-            if (lower.Contains("bright star chime")) return "SFX_Star";
-            if (lower.Contains("tiny happy chirp")) return "SFX_Chirp";
-            if (lower.Contains("young children clapping")) return "SFX_Clap";
-            if (lower.Contains("party popper burst")) return "SFX_Confetti";
-            if (lower.Contains("small soft bubble pop")) return "SFX_SliderZone";
-            if (lower.Contains("gentle cheerful ukulele")) return "MUS_Loop";
-            if (lower.Contains("short happy celebration tune")) return "MUS_Win";
-
-            return fileName;
+            return null; // Don't allow old speech prompts to be mapped as SFX
         }
 
         private static void ClearChildren(Transform t)

@@ -52,7 +52,7 @@ namespace Googolplex.Unit6
                 }
             }
 
-            if (bannerText) bannerText.text = "THANK YOU, COME AGAIN!\n🙂 👋";
+            if (bannerText) bannerText.text = "THANK YOU, COME AGAIN!";
 
             if (confettiParticles != null)
                 confettiParticles.Play();
