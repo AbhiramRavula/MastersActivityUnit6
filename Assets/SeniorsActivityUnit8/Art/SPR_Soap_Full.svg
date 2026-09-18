@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 160" width="100" height="160">
+  <!-- Bottle body -->
+  <rect x="20" y="50" width="60" height="100" rx="12" fill="#E0F2FE" stroke="#0284C7" stroke-width="3"/>
+  <!-- Green soap liquid inside -->
+  <rect x="23" y="75" width="54" height="72" rx="8" fill="#34D399" opacity="0.85"/>
+  <!-- Pump top -->
+  <rect x="42" y="30" width="16" height="20" fill="#94A3B8"/>
+  <path d="M 30,30 L 70,30 C 70,20 60,15 50,15 L 30,15 Z" fill="#64748B"/>
+</svg>

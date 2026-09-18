@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="yellowGlow" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#FEF08A"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </radialGradient>
+  </defs>
+  <path d="M 50,90 C 30,40 100,30 130,50 C 170,70 180,120 150,160 C 120,180 60,170 40,130 C 30,110 40,100 50,90 Z" fill="url(#yellowGlow)" stroke="#D97706" stroke-width="4"/>
+  <circle cx="60" cy="115" r="10" fill="#F97316" opacity="0.3"/>
+  <circle cx="130" cy="115" r="10" fill="#F97316" opacity="0.3"/>
+  <circle cx="75" cy="90" r="9" fill="#1F2937"/>
+  <circle cx="77" cy="87" r="3" fill="#FFF"/>
+  <circle cx="115" cy="90" r="9" fill="#1F2937"/>
+  <circle cx="117" cy="87" r="3" fill="#FFF"/>
+  <!-- Surprised cute mouth -->
+  <ellipse cx="95" cy="118" rx="7" ry="10" fill="#1F2937"/>
+</svg>

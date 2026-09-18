@@ -43,7 +43,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -134,7 +134,175 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: back btn UI buttons U6 Seniros acitivity_0
+      rect:
+        serializedVersion: 2
+        x: 54
+        y: 487
+        width: 366
+        height: 367
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9bda3a6c9eae51646a093583005349a8
+      internalID: 2008235506
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: next btn UI buttons U6 Seniros acitivity_1
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 491
+        width: 370
+        height: 373
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e54a7ac7def4ff0449757697e8cc751e
+      internalID: 331890417
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI buttons U6 Seniros acitivity_2
+      rect:
+        serializedVersion: 2
+        x: 855
+        y: 489
+        width: 366
+        height: 366
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 409057a1ae6a9fe40b182571667dd3c5
+      internalID: -537028072
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI buttons U6 Seniros acitivity_3
+      rect:
+        serializedVersion: 2
+        x: 1256
+        y: 489
+        width: 365
+        height: 366
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: db7ef682ab5df4c4e8a943f557622cf4
+      internalID: 971610688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI buttons U6 Seniros acitivity_4
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 95
+        width: 463
+        height: 368
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ba06623a41d74840bf68b5c636391b0
+      internalID: 89384710
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI buttons U6 Seniros acitivity_5
+      rect:
+        serializedVersion: 2
+        x: 1259
+        y: 57
+        width: 377
+        height: 405
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9ffcf4bc1b2d91447b8188bc5449e9f8
+      internalID: -1825840302
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI buttons U6 Seniros acitivity_6
+      rect:
+        serializedVersion: 2
+        x: 500
+        y: 90
+        width: 362
+        height: 383
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a396e2400970ad945ace45179a2fc80b
+      internalID: 1978507770
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UI buttons U6 Seniros acitivity_7
+      rect:
+        serializedVersion: 2
+        x: 869
+        y: 81
+        width: 367
+        height: 383
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c4ee994eeaaef164bb8b7f4915db4908
+      internalID: -1534382740
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -145,7 +313,15 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      UI buttons U6 Seniros acitivity_2: -537028072
+      UI buttons U6 Seniros acitivity_3: 971610688
+      UI buttons U6 Seniros acitivity_4: 89384710
+      UI buttons U6 Seniros acitivity_5: -1825840302
+      UI buttons U6 Seniros acitivity_6: 1978507770
+      UI buttons U6 Seniros acitivity_7: -1534382740
+      back btn UI buttons U6 Seniros acitivity_0: 2008235506
+      next btn UI buttons U6 Seniros acitivity_1: 331890417
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

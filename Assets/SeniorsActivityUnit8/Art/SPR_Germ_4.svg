@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="purpleGlow" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#DDD6FE"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </radialGradient>
+  </defs>
+  <path d="M 70,50 C 110,30 160,60 150,110 C 140,160 80,180 50,140 C 20,100 40,60 70,50 Z" fill="url(#purpleGlow)" stroke="#6D28D9" stroke-width="4"/>
+  <!-- Eyes -->
+  <circle cx="85" cy="95" r="10" fill="#1E1B4B"/>
+  <circle cx="88" cy="92" r="3" fill="#FFF"/>
+  <circle cx="120" cy="95" r="10" fill="#1E1B4B"/>
+  <circle cx="123" cy="92" r="3" fill="#FFF"/>
+  <path d="M 95,115 Q 102,125 110,115" fill="none" stroke="#1E1B4B" stroke-width="3" stroke-linecap="round"/>
+</svg>

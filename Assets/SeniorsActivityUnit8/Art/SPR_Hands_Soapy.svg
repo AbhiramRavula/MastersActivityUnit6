@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="skinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <!-- Left Hand -->
+  <g transform="translate(60, 40) rotate(-15)">
+    <path d="M 60,180 L 60,110 C 60,90 90,90 90,110 L 90,80 C 90,60 115,60 115,80 L 115,70 C 115,50 140,50 140,70 L 140,90 C 140,75 160,75 160,95 L 160,180 Z" fill="url(#skinGrad)" stroke="#B45309" stroke-width="4"/>
+  </g>
+  <!-- Right Hand -->
+  <g transform="translate(190, 40) rotate(15)">
+    <path d="M 60,180 L 60,95 C 60,75 80,75 80,90 L 80,70 C 80,50 105,50 105,70 L 105,80 C 105,60 130,60 130,80 L 130,110 C 130,90 160,90 160,110 L 160,180 Z" fill="url(#skinGrad)" stroke="#B45309" stroke-width="4"/>
+  </g>
+  <!-- Soap Bubbles Overlay -->
+  <circle cx="160" cy="140" r="25" fill="#FFFFFF" opacity="0.85" stroke="#93C5FD" stroke-width="3"/>
+  <circle cx="200" cy="120" r="30" fill="#FFFFFF" opacity="0.9" stroke="#93C5FD" stroke-width="3"/>
+  <circle cx="235" cy="150" r="22" fill="#FFFFFF" opacity="0.8" stroke="#93C5FD" stroke-width="3"/>
+  <circle cx="180" cy="170" r="28" fill="#FFFFFF" opacity="0.9" stroke="#93C5FD" stroke-width="3"/>
+</svg>

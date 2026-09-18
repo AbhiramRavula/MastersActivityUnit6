@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 380" width="240" height="380">
+  <rect x="10" y="10" width="220" height="360" rx="8" fill="#F8FAFC" stroke="#0284C7" stroke-width="6"/>
+  <!-- Door Handle & Bolt Lock -->
+  <rect x="25" y="180" width="35" height="15" rx="3" fill="#64748B" stroke="#334155" stroke-width="2"/>
+  <circle cx="32" cy="187" r="4" fill="#EF4444"/>
+  <!-- SHUT / CLOSED SIGN -->
+  <rect x="55" y="60" width="130" height="50" rx="6" fill="#DC2626" stroke="#FFFFFF" stroke-width="3"/>
+  <text x="120" y="93" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">SHUT</text>
+</svg>

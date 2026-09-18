@@ -14,6 +14,76 @@ namespace Googolplex.Unit6
         private const string AUDIOS_PATH = "Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios";
         private const string SFX_PATH = "Assets/SeniorsActivityUnit6/SFX";
 
+        [MenuItem("Unit 6/Update Only Part 3 (ChoiceScreen & Waiter Panel)")]
+        public static void UpdateOnlyPart3()
+        {
+            Canvas canvas = Object.FindAnyObjectByType<Canvas>();
+            if (canvas == null)
+            {
+                Debug.LogError("[U6_SceneSetupTool] No Canvas found in scene! Please ensure your Canvas is active.");
+                return;
+            }
+
+            Dictionary<string, Sprite> spriteDict = LoadAllSprites();
+            GameObject choicePanel = CreateOrGetPanel(canvas.transform, "ChoiceScreen", new Color(0.06f, 0.09f, 0.14f, 0.45f));
+            SetupChoiceScreen(choicePanel, spriteDict);
+
+            GameObject gmObj = GameObject.Find("[GameManager]");
+            if (gmObj != null)
+            {
+                var gameMgr = gmObj.GetComponent<U6_GameManager_Masters_Activity>();
+                if (gameMgr != null)
+                {
+                    SerializedObject gmSO = new SerializedObject(gameMgr);
+                    var choiceProp = gmSO.FindProperty("choiceScreen");
+                    if (choiceProp != null)
+                    {
+                        choiceProp.objectReferenceValue = choicePanel;
+                        gmSO.ApplyModifiedProperties();
+                    }
+                }
+            }
+
+            Selection.activeGameObject = choicePanel;
+            choicePanel.SetActive(true);
+            Debug.Log("<color=green>[U6_SceneSetupTool] Successfully updated Part 3 (ChoiceScreen & Waiter Panel)! Other panels were NOT touched.</color>");
+        }
+
+        [MenuItem("Unit 6/Update Only EndingScreen (Ending Panel & Stars)")]
+        public static void UpdateOnlyEndingScreen()
+        {
+            Canvas canvas = Object.FindAnyObjectByType<Canvas>();
+            if (canvas == null)
+            {
+                Debug.LogError("[U6_SceneSetupTool] No Canvas found in scene! Please ensure your Canvas is active.");
+                return;
+            }
+
+            Dictionary<string, Sprite> spriteDict = LoadAllSprites();
+            GameObject endingPanel = CreateOrGetPanel(canvas.transform, "EndingScreen", new Color(0.06f, 0.08f, 0.14f, 0.55f));
+            SetupEndingScreen(endingPanel, spriteDict);
+
+            GameObject gmObj = GameObject.Find("[GameManager]");
+            if (gmObj != null)
+            {
+                var gameMgr = gmObj.GetComponent<U6_GameManager_Masters_Activity>();
+                if (gameMgr != null)
+                {
+                    SerializedObject gmSO = new SerializedObject(gameMgr);
+                    var endingProp = gmSO.FindProperty("endingScreen");
+                    if (endingProp != null)
+                    {
+                        endingProp.objectReferenceValue = endingPanel;
+                        gmSO.ApplyModifiedProperties();
+                    }
+                }
+            }
+
+            Selection.activeGameObject = endingPanel;
+            endingPanel.SetActive(true);
+            Debug.Log("<color=green>[U6_SceneSetupTool] Successfully updated EndingScreen! Other panels were NOT touched.</color>");
+        }
+
         [MenuItem("Unit 6/Generate and Assign All Assets & Hierarchy")]
         public static void GenerateHierarchy()
         {
@@ -61,12 +131,12 @@ namespace Googolplex.Unit6
             var audioMgr = GetOrAddComponent<U6_AudioManager_Masters_Activity>(gmObj);
             AutoWireAudioLibrary(audioMgr, gmObj);
 
-            // 4. Create Screens Container Panels under Canvas
-            GameObject liveTablePanel = CreateOrGetPanel(canvasObj.transform, "LiveTableScreen", new Color(1f, 1f, 1f, 0.05f));
-            GameObject menuPanel = CreateOrGetPanel(canvasObj.transform, "MenuScreen", new Color(0.98f, 0.95f, 0.90f, 0.96f));
-            GameObject choicePanel = CreateOrGetPanel(canvasObj.transform, "ChoiceScreen", new Color(0.90f, 0.95f, 0.98f, 0.96f));
-            GameObject sliderPanel = CreateOrGetPanel(canvasObj.transform, "SliderScreen", new Color(0.95f, 0.92f, 0.98f, 0.96f));
-            GameObject endingPanel = CreateOrGetPanel(canvasObj.transform, "EndingScreen", new Color(0.12f, 0.14f, 0.2f, 0.98f));
+            // 4. Create Screens Container Panels under Canvas (Translucent so restaurant background shows)
+            GameObject liveTablePanel = CreateOrGetPanel(canvasObj.transform, "LiveTableScreen", new Color(0f, 0f, 0f, 0f));
+            GameObject menuPanel = CreateOrGetPanel(canvasObj.transform, "MenuScreen", new Color(0.1f, 0.08f, 0.06f, 0.45f));
+            GameObject choicePanel = CreateOrGetPanel(canvasObj.transform, "ChoiceScreen", new Color(0.06f, 0.09f, 0.14f, 0.45f));
+            GameObject sliderPanel = CreateOrGetPanel(canvasObj.transform, "SliderScreen", new Color(0.08f, 0.06f, 0.14f, 0.45f));
+            GameObject endingPanel = CreateOrGetPanel(canvasObj.transform, "EndingScreen", new Color(0.06f, 0.08f, 0.14f, 0.55f));
 
             // Setup Screen 1: LiveTableScreen (Part 1 - Waiting)
             SetupLiveTableScreen(liveTablePanel, spriteDict);
@@ -249,6 +319,13 @@ namespace Googolplex.Unit6
             GameObject promptBox = CreateUIBox(screenObj.transform, "PromptBox", "The food is not here yet. Watch Anu.", 38, new Vector2(0, 270), new Vector2(1400, 110), new Color(1f, 1f, 1f, 0.95f), new Color(0.1f, 0.1f, 0.1f));
             var promptText = promptBox.GetComponentInChildren<TextMeshProUGUI>();
 
+            // Fish Tank Prop in background
+            Sprite fishTankSp = GetSprite(sprites, "SPR_Prop_FishTank");
+            if (fishTankSp != null)
+            {
+                CreateUISpriteBox(screenObj.transform, "FishTankProp", "", new Vector2(490, 270), new Vector2(230, 160), fishTankSp);
+            }
+
             // Background Diner Table Rows with rounded borders
             GameObject normalDiners1 = CreateUISpriteBox(screenObj.transform, "Diners_Normal_1", "Table 1 Normal", new Vector2(-480, 110), new Vector2(440, 240), GetSprite(sprites, "SPR_Diners_EatingNormal 1"));
             GameObject normalDiners2 = CreateUISpriteBox(screenObj.transform, "Diners_Normal_2", "Table 2 Normal", new Vector2(480, 110), new Vector2(440, 240), GetSprite(sprites, "SPR_Diners_EatingNormal 2"));
@@ -359,6 +436,11 @@ namespace Googolplex.Unit6
             var waiterDialogText = waiterFeedback.GetComponentInChildren<TextMeshProUGUI>();
             waiterFeedback.SetActive(false);
 
+            // Full Body Waiter on the right
+            Sprite raviStanding = GetSprite(sprites, "SPR_Ravi_StandingPad");
+            GameObject waiterStandingObj = CreateUISpriteBox(screenObj.transform, "WaiterStandingVisual", "", new Vector2(620, -40), new Vector2(280, 540), raviStanding);
+            waiterStandingObj.SetActive(false);
+
             // Wire SerializedObject with default dishes containing Sprites
             SerializedObject so = new SerializedObject(comp);
             so.FindProperty("cardsContainer").objectReferenceValue = gridObj.transform;
@@ -373,6 +455,7 @@ namespace Googolplex.Unit6
             so.FindProperty("politeOptionText").objectReferenceValue = btnPolite.GetComponentInChildren<TextMeshProUGUI>();
             so.FindProperty("impoliteOptionButton").objectReferenceValue = btnImpolite.GetComponent<Button>();
             so.FindProperty("impoliteOptionText").objectReferenceValue = btnImpolite.GetComponentInChildren<TextMeshProUGUI>();
+            so.FindProperty("waiterStandingVisual").objectReferenceValue = waiterStandingObj.GetComponent<Image>();
             so.FindProperty("waiterFeedbackPopup").objectReferenceValue = waiterFeedback;
             so.FindProperty("waiterDialogText").objectReferenceValue = waiterDialogText;
 
@@ -412,6 +495,39 @@ namespace Googolplex.Unit6
             elem.FindPropertyRelative("fidgetSprite").objectReferenceValue = fidgetSp;
         }
 
+        private static void AddWaiterMoment(
+            SerializedProperty listProp,
+            string title,
+            string prompt,
+            Sprite fullBodyRavi,
+            Sprite prop,
+            Sprite anuSp,
+            string optAText,
+            string optAOutcome,
+            string optAVO,
+            U6_WaiterFaceState optAFace,
+            string optBText,
+            string optBOutcome,
+            string optBVO,
+            U6_WaiterFaceState optBFace)
+        {
+            listProp.InsertArrayElementAtIndex(listProp.arraySize);
+            SerializedProperty elem = listProp.GetArrayElementAtIndex(listProp.arraySize - 1);
+            elem.FindPropertyRelative("situationTitle").stringValue = title;
+            elem.FindPropertyRelative("situationPrompt").stringValue = prompt;
+            elem.FindPropertyRelative("fullBodyPoseSprite").objectReferenceValue = fullBodyRavi;
+            elem.FindPropertyRelative("propSprite").objectReferenceValue = prop;
+            elem.FindPropertyRelative("anuReactionSprite").objectReferenceValue = anuSp;
+            elem.FindPropertyRelative("optionA_Text").stringValue = optAText;
+            elem.FindPropertyRelative("optionA_Outcome").stringValue = optAOutcome;
+            elem.FindPropertyRelative("optionA_VO").stringValue = optAVO;
+            elem.FindPropertyRelative("optionA_Face").enumValueIndex = (int)optAFace;
+            elem.FindPropertyRelative("optionB_Text").stringValue = optBText;
+            elem.FindPropertyRelative("optionB_Outcome").stringValue = optBOutcome;
+            elem.FindPropertyRelative("optionB_VO").stringValue = optBVO;
+            elem.FindPropertyRelative("optionB_Face").enumValueIndex = (int)optBFace;
+        }
+
         private static void SetupChoiceScreen(GameObject screenObj, Dictionary<string, Sprite> sprites)
         {
             var comp = GetOrAddComponent<U6_WaiterInteractionScreen_Masters_Activity>(screenObj);
@@ -422,37 +538,51 @@ namespace Googolplex.Unit6
             Sprite warmSmile = GetSprite(sprites, "SPR_Ravi_WarmSmile");
             Sprite neutralBlank = GetSprite(sprites, "SPR_Ravi_NeutralBlank");
             Sprite stiffPolite = GetSprite(sprites, "SPR_Ravi_StiffPolite");
+            Sprite raviWater = GetSprite(sprites, "SPR_Ravi_WaterJug");
+            Sprite raviPlate = GetSprite(sprites, "SPR_Ravi_ServingPlate");
+            Sprite raviPad = GetSprite(sprites, "SPR_Ravi_StandingPad");
 
-            GameObject waiterBox = CreateUISpriteBox(screenObj.transform, "WaiterAvatarBox", "", new Vector2(0, 220), new Vector2(280, 280), neutralBlank);
-            var waiterAvatar = waiterBox.GetComponent<Image>();
-            var waiterBadge = CreateTMPText(waiterBox.transform, "Badge", "Ravi", 26, new Vector2(0, -110), new Vector2(180, 45), TextAlignmentOptions.Center, new Color(0.2f, 0.2f, 0.2f));
+            Sprite anuStraight = GetSprite(sprites, "SPR_Anu_SittingStraight");
+            Sprite anuHandRaise = GetSprite(sprites, "SPR_Anu_HandRaise");
+            Sprite emptyGlass = GetSprite(sprites, "SPR_EmptyGlass");
+            Sprite spoonFork = GetSprite(sprites, "SPR_Spoon_and_Fork");
+            Sprite dishDosa = GetSprite(sprites, "SPR_Dish_Dosa");
+            Sprite dishNoodles = GetSprite(sprites, "SPR_Dish_Noodles");
+
+            // Character Stage Visuals: Anu (Left), Prop (Center Table), Waiter Ravi (Right)
+            GameObject anuObj = CreateUISpriteBox(screenObj.transform, "AnuAvatar", "", new Vector2(-430, 40), new Vector2(320, 480), anuStraight);
+            GameObject propObj = CreateUISpriteBox(screenObj.transform, "PropItem", "", new Vector2(-30, -30), new Vector2(200, 160), emptyGlass);
+            GameObject waiterFullBodyObj = CreateUISpriteBox(screenObj.transform, "WaiterFullBody", "", new Vector2(380, 70), new Vector2(360, 560), raviWater);
 
             // Prompt Text Card
-            GameObject promptBox = CreateUIBox(screenObj.transform, "PromptBox", "Ravi brings a fresh jug of water.", 38, new Vector2(0, 20), new Vector2(1400, 100), new Color(1f, 1f, 1f, 0.95f), new Color(0.1f, 0.1f, 0.1f));
+            GameObject promptBox = CreateUIBox(screenObj.transform, "PromptBox", "Ravi brings a fresh jug of water.", 38, new Vector2(0, -90), new Vector2(1350, 90), new Color(1f, 1f, 1f, 0.95f), new Color(0.1f, 0.1f, 0.1f));
             var promptText = promptBox.GetComponentInChildren<TextMeshProUGUI>();
 
             // Choice Container with 2 large rounded buttons
             GameObject choiceContainer = new GameObject("ChoiceContainer", typeof(RectTransform));
             choiceContainer.transform.SetParent(screenObj.transform, false);
             RectTransform ccRT = choiceContainer.GetComponent<RectTransform>();
-            ccRT.anchoredPosition = new Vector2(0, -180);
-            ccRT.sizeDelta = new Vector2(1500, 160);
+            ccRT.anchoredPosition = new Vector2(0, -220);
+            ccRT.sizeDelta = new Vector2(1500, 120);
 
-            GameObject btnA = CreateUIButton(choiceContainer.transform, "OptionA_Button", "\"Thank you!\"", 34, new Vector2(-380, 0), new Vector2(680, 110), new Color(0.25f, 0.68f, 0.38f));
-            GameObject btnB = CreateUIButton(choiceContainer.transform, "OptionB_Button", "(Say nothing)", 34, new Vector2(380, 0), new Vector2(680, 110), new Color(0.85f, 0.55f, 0.25f));
+            GameObject btnA = CreateUIButton(choiceContainer.transform, "OptionA_Button", "\"Thank you!\"", 32, new Vector2(-370, 0), new Vector2(680, 95), new Color(0.25f, 0.68f, 0.38f));
+            GameObject btnB = CreateUIButton(choiceContainer.transform, "OptionB_Button", "(Say nothing)", 32, new Vector2(370, 0), new Vector2(680, 95), new Color(0.85f, 0.55f, 0.25f));
 
             // Outcome Feedback
-            GameObject outcomePanel = CreateUIBox(screenObj.transform, "OutcomePanel", "Ravi smiles warmly and nods.", 36, new Vector2(0, -360), new Vector2(1300, 100), new Color(1f, 0.95f, 0.75f, 0.96f), new Color(0.2f, 0.15f, 0.05f));
+            GameObject outcomePanel = CreateUIBox(screenObj.transform, "OutcomePanel", "Ravi smiles warmly and nods.", 36, new Vector2(0, -340), new Vector2(1300, 90), new Color(1f, 0.95f, 0.75f, 0.96f), new Color(0.2f, 0.15f, 0.05f));
             var outcomeText = outcomePanel.GetComponentInChildren<TextMeshProUGUI>();
             outcomePanel.SetActive(false);
 
             SerializedObject so = new SerializedObject(comp);
             so.FindProperty("promptText").objectReferenceValue = promptText;
-            so.FindProperty("waiterAvatar").objectReferenceValue = waiterAvatar;
+            so.FindProperty("waiterFullBodyAvatar").objectReferenceValue = waiterFullBodyObj.GetComponent<Image>();
+            so.FindProperty("anuCharacterAvatar").objectReferenceValue = anuObj.GetComponent<Image>();
+            so.FindProperty("propItemImage").objectReferenceValue = propObj.GetComponent<Image>();
+            so.FindProperty("waiterExpressionBadge").objectReferenceValue = null;
             so.FindProperty("waiterSmileSprite").objectReferenceValue = warmSmile;
             so.FindProperty("waiterNeutralSprite").objectReferenceValue = neutralBlank;
             so.FindProperty("waiterStiffSprite").objectReferenceValue = stiffPolite;
-            so.FindProperty("waiterNameBadge").objectReferenceValue = waiterBadge;
+            so.FindProperty("waiterNameBadge").objectReferenceValue = null;
             so.FindProperty("choiceContainer").objectReferenceValue = choiceContainer;
             so.FindProperty("optionA_Button").objectReferenceValue = btnA.GetComponent<Button>();
             so.FindProperty("optionA_Label").objectReferenceValue = btnA.GetComponentInChildren<TextMeshProUGUI>();
@@ -460,6 +590,31 @@ namespace Googolplex.Unit6
             so.FindProperty("optionB_Label").objectReferenceValue = btnB.GetComponentInChildren<TextMeshProUGUI>();
             so.FindProperty("outcomePanel").objectReferenceValue = outcomePanel;
             so.FindProperty("outcomeText").objectReferenceValue = outcomeText;
+
+            // Populate all 5 Moments with their exact full-body poses and props!
+            SerializedProperty momentsProp = so.FindProperty("moments");
+            momentsProp.ClearArray();
+
+            AddWaiterMoment(momentsProp, "Water Served", "Ravi brings a fresh jug of water to the table.", raviWater, emptyGlass, anuStraight,
+                "\"Thank you!\"", "Ravi smiles warmly and nods.", "VO_U6_ANU_4", U6_WaiterFaceState.WarmSmile,
+                "(Say nothing)", "Ravi is polite, but neutral.", "", U6_WaiterFaceState.BlankNeutral);
+
+            AddWaiterMoment(momentsProp, "Calling Ravi", "Anu needs something and Ravi is across the room.", raviPad, null, anuHandRaise,
+                "Raise a hand gently and make eye contact", "Ravi notices and comes over calmly.", "", U6_WaiterFaceState.WarmSmile,
+                "Wave both arms and shout across the room", "Ravi hurries over while other tables look over.", "", U6_WaiterFaceState.BlankNeutral);
+
+            AddWaiterMoment(momentsProp, "Wrong Dish", "Ravi brings the wrong dish by mistake!", raviPlate, null, anuStraight,
+                "\"Sorry, I think this is the wrong dish.\"", "Ravi apologises warmly: \"I will fix that right away!\"", "VO_U6_WAIT_3", U6_WaiterFaceState.WarmSmile,
+                "\"This is WRONG!\" (loudly)", "Ravi apologises stiffly and fixes it quietly.", "VO_U6_ANU_6", U6_WaiterFaceState.StiffPolite);
+
+            AddWaiterMoment(momentsProp, "Food Served", "Ravi sets the hot dosa down in front of Anu.", raviPlate, dishDosa, anuStraight,
+                "\"Thank you, Ravi!\"", "Ravi nods happily: \"Enjoy your meal!\"", "VO_U6_ANU_4", U6_WaiterFaceState.WarmSmile,
+                "(Grab fork and eat immediately without looking)", "Ravi steps away quietly.", "", U6_WaiterFaceState.BlankNeutral);
+
+            AddWaiterMoment(momentsProp, "Dropped Fork", "Anu accidentally drops her fork on the floor.", raviPad, spoonFork, anuStraight,
+                "\"Excuse me, could I have another fork please?\"", "Ravi brings a clean fork right away with a smile.", "VO_U6_ANU_8", U6_WaiterFaceState.WarmSmile,
+                "\"I dropped my fork!\" (shouted)", "Ravi brings one while the nearby diners look up.", "VO_U6_ANU_9", U6_WaiterFaceState.StiffPolite);
+
             so.ApplyModifiedProperties();
         }
 
@@ -641,8 +796,9 @@ namespace Googolplex.Unit6
 
             Slider slider = sliderObj.GetComponent<Slider>();
             slider.minValue = 0f;
-            slider.maxValue = 1f;
-            slider.value = 0.5f;
+            slider.maxValue = 2f;
+            slider.wholeNumbers = true;
+            slider.value = 1f; // Center: Just Right
 
             // Background Track Container
             GameObject bg = new GameObject("Background", typeof(RectTransform), typeof(Image));
@@ -805,34 +961,41 @@ namespace Googolplex.Unit6
             var comp = GetOrAddComponent<U6_EndingScreen_Masters_Activity>(screenObj);
             ClearChildren(screenObj.transform);
 
-            // Stars Row
+            // Confetti Overlay Banner across top
+            Sprite confettiSp = GetSprite(sprites, "SPR_FX_Confetti");
+            if (confettiSp != null)
+            {
+                CreateUISpriteBox(screenObj.transform, "ConfettiBanner", "", new Vector2(0, 220), new Vector2(1400, 480), confettiSp);
+            }
+
+            // Stars Row (Large Glowing Gold Stars)
             GameObject starsRow = new GameObject("StarsContainer", typeof(RectTransform));
             starsRow.transform.SetParent(screenObj.transform, false);
             RectTransform srRT = starsRow.GetComponent<RectTransform>();
-            srRT.anchoredPosition = new Vector2(0, 320);
-            srRT.sizeDelta = new Vector2(600, 140);
+            srRT.anchoredPosition = new Vector2(0, 310);
+            srRT.sizeDelta = new Vector2(620, 140);
 
             Sprite goldStar = GetSprite(sprites, "SPR_Icon_GoldStar");
-            GameObject s1 = CreateUISpriteBox(starsRow.transform, "Star1", "", new Vector2(-180, 0), new Vector2(130, 130), goldStar);
-            GameObject s2 = CreateUISpriteBox(starsRow.transform, "Star2", "", new Vector2(0, 0), new Vector2(130, 130), goldStar);
-            GameObject s3 = CreateUISpriteBox(starsRow.transform, "Star3", "", new Vector2(180, 0), new Vector2(130, 130), goldStar);
+            GameObject s1 = CreateUISpriteBox(starsRow.transform, "Star1", "", new Vector2(-190, 0), new Vector2(140, 140), goldStar);
+            GameObject s2 = CreateUISpriteBox(starsRow.transform, "Star2", "", new Vector2(0, 0), new Vector2(155, 155), goldStar);
+            GameObject s3 = CreateUISpriteBox(starsRow.transform, "Star3", "", new Vector2(190, 0), new Vector2(140, 140), goldStar);
 
             // Characters Celebrating
             Sprite anuWave = GetSprite(sprites, "SPR_Anu_GoodbyeWave");
             Sprite raviSmile = GetSprite(sprites, "SPR_Ravi_WarmSmile");
-            CreateUISpriteBox(screenObj.transform, "AnuWaveCelebration", "", new Vector2(-420, 30), new Vector2(240, 360), anuWave);
-            CreateUISpriteBox(screenObj.transform, "RaviSmileCelebration", "", new Vector2(420, 30), new Vector2(240, 360), raviSmile);
+            CreateUISpriteBox(screenObj.transform, "AnuWaveCelebration", "", new Vector2(-460, -20), new Vector2(280, 420), anuWave);
+            CreateUISpriteBox(screenObj.transform, "RaviSmileCelebration", "", new Vector2(460, -20), new Vector2(280, 420), raviSmile);
 
-            // Banner
-            var bannerText = CreateTMPText(screenObj.transform, "BannerText", "THANK YOU, COME AGAIN!", 52, new Vector2(0, 120), new Vector2(1100, 100), TextAlignmentOptions.Center, Color.white);
+            // High-Contrast Celebration Card (Deep Navy Card + Gold Text)
+            GameObject bannerBox = CreateUIBox(screenObj.transform, "BannerCard", "THANK YOU, DO COME AGAIN!", 44, new Vector2(0, 120), new Vector2(1050, 85), new Color(0.12f, 0.18f, 0.32f, 0.95f), new Color(1f, 0.88f, 0.3f));
+            var bannerText = bannerBox.GetComponentInChildren<TextMeshProUGUI>();
 
-            // Reflection Panel
-            GameObject refPanel = CreateUIBox(screenObj.transform, "ReflectionPanel", "Teacher Reflection:\nWhat will you say to the waiter next time?", 38, new Vector2(0, -130), new Vector2(1200, 130), new Color(0.2f, 0.25f, 0.35f, 0.96f), Color.white);
+            // Reflection Panel (Clean White Rounded Card + Charcoal Text)
+            GameObject refPanel = CreateUIBox(screenObj.transform, "ReflectionPanel", "Teacher Reflection:\nWhat will you say to the waiter next time?", 36, new Vector2(0, -130), new Vector2(1150, 130), new Color(1f, 1f, 1f, 0.96f), new Color(0.15f, 0.18f, 0.25f));
             var refText = refPanel.GetComponentInChildren<TextMeshProUGUI>();
-            refText.color = Color.white;
 
-            // Restart Button
-            GameObject restartBtn = CreateUIButton(screenObj.transform, "RestartButton", "Play Again", 36, new Vector2(0, -340), new Vector2(340, 80), new Color(0.3f, 0.6f, 0.9f));
+            // Restart Button (Emerald Green Rounded Button)
+            GameObject restartBtn = CreateUIButton(screenObj.transform, "RestartButton", "Play Again", 38, new Vector2(0, -320), new Vector2(360, 85), new Color(0.2f, 0.72f, 0.35f));
 
             SerializedObject so = new SerializedObject(comp);
             SerializedProperty starsProp = so.FindProperty("starIcons");
@@ -1091,7 +1254,6 @@ namespace Googolplex.Unit6
             }
 
             string lower = fileName.ToLower();
-            if (lower.Contains("ukulele") || lower.Contains("marimba") || lower.Contains("gentle cheerful")) return "BGM_Main";
             if (lower.Contains("today anus family")) return "VO_U6_01";
             if (lower.Contains("food is not here yet")) return "VO_U6_02";
             if (lower.Contains("quick tap the button")) return "VO_U6_03";

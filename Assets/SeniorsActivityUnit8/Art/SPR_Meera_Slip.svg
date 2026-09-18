@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 300" width="260" height="300">
+  <defs>
+    <linearGradient id="meeraDress" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+  <!-- Tilted Body / Slip Pose -->
+  <g transform="translate(130,150) rotate(25) translate(-130,-150)">
+    <!-- Head & Hair -->
+    <circle cx="130" cy="70" r="38" fill="#18181B"/>
+    <circle cx="130" cy="75" r="30" fill="#FDE68A"/>
+    <!-- Startled Eyes & Open Mouth -->
+    <circle cx="120" cy="72" r="5" fill="#000"/>
+    <circle cx="140" cy="72" r="5" fill="#000"/>
+    <ellipse cx="130" cy="88" rx="7" ry="9" fill="#991B1B"/>
+    <!-- Dress -->
+    <polygon points="130,115 80,230 180,230" fill="url(#meeraDress)" stroke="#1E3A8A" stroke-width="3"/>
+    <!-- Flailing Arms -->
+    <line x1="100" y1="130" x2="30" y2="80" stroke="#FDE68A" stroke-width="12" stroke-linecap="round"/>
+    <line x1="160" y1="130" x2="230" y2="90" stroke="#FDE68A" stroke-width="12" stroke-linecap="round"/>
+    <!-- Slipping Legs -->
+    <line x1="105" y1="230" x2="60" y2="280" stroke="#FDE68A" stroke-width="12" stroke-linecap="round"/>
+    <line x1="155" y1="230" x2="190" y2="275" stroke="#FDE68A" stroke-width="12" stroke-linecap="round"/>
+  </g>
+</svg>

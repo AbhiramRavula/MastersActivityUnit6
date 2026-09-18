@@ -13,6 +13,17 @@ namespace Googolplex.Unit6
         [Header("Star Tracking (Total: 3 Stars)")]
         [SerializeField] private int starCount = 0;
 
+        [Header("Player Choices")]
+        public string OrderedDishName = "Dosa";
+        public Sprite OrderedDishSprite = null;
+
+        public void SetOrderedDish(string name, Sprite sprite)
+        {
+            OrderedDishName = name;
+            OrderedDishSprite = sprite;
+            Debug.Log($"[U6_GameManager] Player ordered: {name}");
+        }
+
         [Header("Screens")]
         [SerializeField] private GameObject liveTableScreen;
         [SerializeField] private GameObject menuScreen;
@@ -35,14 +46,43 @@ namespace Googolplex.Unit6
                 return;
             }
             Instance = this;
+
+            // Auto-find screen references if left unassigned in manual hierarchy
+            if (liveTableScreen == null)
+            {
+                var s = FindFirstObjectByType<U6_LiveTableScreen_Masters_Activity>(FindObjectsInactive.Include);
+                if (s != null) liveTableScreen = s.gameObject;
+            }
+            if (menuScreen == null)
+            {
+                var s = FindFirstObjectByType<U6_MenuScreen_Masters_Activity>(FindObjectsInactive.Include);
+                if (s != null) menuScreen = s.gameObject;
+            }
+            if (choiceScreen == null)
+            {
+                var s = FindFirstObjectByType<U6_WaiterInteractionScreen_Masters_Activity>(FindObjectsInactive.Include);
+                if (s != null) choiceScreen = s.gameObject;
+            }
+            if (sliderScreen == null)
+            {
+                var s = FindFirstObjectByType<U6_SliderScreen_Masters_Activity>(FindObjectsInactive.Include);
+                if (s != null) sliderScreen = s.gameObject;
+            }
+            if (endingScreen == null)
+            {
+                var s = FindFirstObjectByType<U6_EndingScreen_Masters_Activity>(FindObjectsInactive.Include);
+                if (s != null) endingScreen = s.gameObject;
+            }
+
+            // Ensure AudioManager is present
+            if (GetComponent<U6_AudioManager_Masters_Activity>() == null && FindFirstObjectByType<U6_AudioManager_Masters_Activity>() == null)
+            {
+                gameObject.AddComponent<U6_AudioManager_Masters_Activity>();
+            }
         }
 
         private void Start()
         {
-            if (U6_AudioManager_Masters_Activity.Instance != null)
-            {
-                U6_AudioManager_Masters_Activity.Instance.PlayBGM("BGM_Main");
-            }
             ChangeState(U6_GamePart.Intro);
         }
 

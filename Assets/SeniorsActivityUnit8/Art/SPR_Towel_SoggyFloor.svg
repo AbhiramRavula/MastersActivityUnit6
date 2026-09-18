@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90" width="160" height="90">
+  <!-- Wet crumpled lump -->
+  <path d="M 20,60 C 30,30 60,25 80,40 C 100,20 130,35 140,65 C 130,80 40,85 20,60 Z" fill="#D97706" stroke="#92400E" stroke-width="3"/>
+  <ellipse cx="80" cy="72" rx="70" ry="12" fill="#60A5FA" opacity="0.4"/>
+</svg>
