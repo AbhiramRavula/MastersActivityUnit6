@@ -195,20 +195,33 @@ namespace Googolplex.Unit6
             Debug.Log($"[U6_AudioManager] Scanned project audio: total {sounds.Count} clips loaded.");
         }
 
+        private static string ResolveAlias(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return id;
+            if (string.Equals(id, "MUS_Loop", System.StringComparison.OrdinalIgnoreCase)) return "MUS_Restaurant";
+            if (string.Equals(id, "SFX_DoorBell", System.StringComparison.OrdinalIgnoreCase)) return "SFX_DoorChime";
+            if (string.Equals(id, "SFX_SliderZone", System.StringComparison.OrdinalIgnoreCase)) return "SFX_Bubble";
+            return id;
+        }
+
         private AudioClip LoadClipOnDemand(string soundId)
         {
+            string canonicalId = ResolveAlias(soundId);
             string[] searchFolders = new[] { "Assets/SeniorsActivityUnit6/SFX", "Assets/SeniorsActivityUnit6/Audio" };
             string[] guids = AssetDatabase.FindAssets("t:AudioClip", searchFolders);
             foreach (string guid in guids)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 string fileName = System.IO.Path.GetFileNameWithoutExtension(path);
-                if (string.Equals(fileName, soundId, System.StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(fileName, soundId, System.StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(fileName, canonicalId, System.StringComparison.OrdinalIgnoreCase))
                 {
                     return AssetDatabase.LoadAssetAtPath<AudioClip>(path);
                 }
                 string mappedId = MapFileNameToSoundId(fileName);
-                if (!string.IsNullOrEmpty(mappedId) && string.Equals(mappedId, soundId, System.StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrEmpty(mappedId) &&
+                    (string.Equals(mappedId, soundId, System.StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(mappedId, canonicalId, System.StringComparison.OrdinalIgnoreCase)))
                 {
                     return AssetDatabase.LoadAssetAtPath<AudioClip>(path);
                 }
@@ -218,6 +231,13 @@ namespace Googolplex.Unit6
 
         private static string MapFileNameToSoundId(string fileName)
         {
+            if (string.Equals(fileName, "MUS_Loop", System.StringComparison.OrdinalIgnoreCase)) return "MUS_Restaurant";
+            if (string.Equals(fileName, "MUS_Restaurant", System.StringComparison.OrdinalIgnoreCase)) return "MUS_Restaurant";
+            if (string.Equals(fileName, "SFX_DoorBell", System.StringComparison.OrdinalIgnoreCase)) return "SFX_DoorChime";
+            if (string.Equals(fileName, "SFX_DoorChime", System.StringComparison.OrdinalIgnoreCase)) return "SFX_DoorChime";
+            if (string.Equals(fileName, "SFX_SliderZone", System.StringComparison.OrdinalIgnoreCase)) return "SFX_Bubble";
+            if (string.Equals(fileName, "SFX_Bubble", System.StringComparison.OrdinalIgnoreCase)) return "SFX_Bubble";
+
             if (fileName.StartsWith("SFX_") || fileName.StartsWith("AMB_") || fileName.StartsWith("MUS_") || fileName.StartsWith("VO_") || fileName.StartsWith("BGM_"))
                 return fileName;
 
