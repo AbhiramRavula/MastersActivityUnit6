@@ -39,8 +39,16 @@ namespace Googolplex.Unit8
 
         private void AutoFindUIReferences()
         {
-            if (titleText == null) titleText = transform.Find("TitleText")?.GetComponent<TextMeshProUGUI>();
-            if (discussionQuestionText == null) discussionQuestionText = transform.Find("DiscussionQuestionText")?.GetComponent<TextMeshProUGUI>();
+            if (titleText == null)
+            {
+                Transform t = transform.Find("TitleCard/TitleText") ?? transform.Find("TitleText");
+                if (t != null) titleText = t.GetComponent<TextMeshProUGUI>();
+            }
+            if (discussionQuestionText == null)
+            {
+                Transform t = transform.Find("QuestionCard/DiscussionQuestionText") ?? transform.Find("DiscussionQuestionText");
+                if (t != null) discussionQuestionText = t.GetComponent<TextMeshProUGUI>();
+            }
             if (btnRestartActivity == null)
             {
                 Transform t = transform.Find("Btn_Restart") ?? transform.Find("BottomBar/Btn_Restart");

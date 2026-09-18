@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEditor;
@@ -14,11 +15,15 @@ namespace Googolplex.Unit8
     {
         public const string ScenePath = "Assets/SeniorsActivityUnit8/Scenes/SeniorsActivity_unit8.unity";
         private const string ArtPath = "Assets/SeniorsActivityUnit8/Art";
+        private const string MoreSpritesPath = "Assets/SeniorsActivityUnit8/Art/more sprites";
+
+        private static Dictionary<string, Sprite> spriteCache = new Dictionary<string, Sprite>(System.StringComparer.OrdinalIgnoreCase);
 
         [MenuItem("Googolplex/Unit 8/Setup Complete Unit 8 Scene", false, 10)]
         public static void SetupCompleteUnit8Scene()
         {
-            // Ensure target scene directory exists
+            BuildSpriteCache();
+
             string sceneDir = "Assets/SeniorsActivityUnit8/Scenes";
             if (!Directory.Exists(sceneDir))
             {
@@ -32,6 +37,13 @@ namespace Googolplex.Unit8
             GameObject canvasGo = EnsureCanvas();
             RectTransform canvasRect = canvasGo.GetComponent<RectTransform>();
 
+            // Clean any old loose background on Canvas root
+            Transform looseBg = canvasRect.Find("BG_Image");
+            if (looseBg != null)
+            {
+                Object.DestroyImmediate(looseBg.gameObject);
+            }
+
             // Setup Managers
             GameObject managersGo = GameObject.Find("--- MANAGERS ---");
             if (managersGo == null) managersGo = new GameObject("--- MANAGERS ---");
@@ -41,6 +53,8 @@ namespace Googolplex.Unit8
 
             var am = managersGo.GetComponent<U8_AudioManager_Masters_Activity>();
             if (am == null) am = managersGo.AddComponent<U8_AudioManager_Masters_Activity>();
+            am.EnsureAudioSourcesOnMainCamera();
+            am.AutoPopulateClipsInEditor();
 
             // Setup Screens
             GameObject p1 = CreateOrGetScreen(canvasRect, "U8_Screen_01_Part1Door", typeof(U8_Part1_DoorController_Masters_Activity));
@@ -56,6 +70,8 @@ namespace Googolplex.Unit8
             SetupPart3UI(p3);
             SetupPart4UI(p4);
             SetupEndingUI(end);
+
+            WireControllersSerializedSprites(p1, p2, hw, p3, p4, end);
 
             p1.SetActive(true);
             p2.SetActive(false);
@@ -73,14 +89,284 @@ namespace Googolplex.Unit8
             }
 
             EditorUtility.DisplayDialog("Unit 8 Scene Setup", 
-                $"Unit 8: Washroom Etiquette scene hierarchy created successfully with all GameObjects and UI elements!\n\nTarget scene location:\n{ScenePath}", "OK");
+                $"Unit 8: Washroom Etiquette scene hierarchy created!\nBackground stretched edge-to-edge, header text aligned, and typography scaled for mobile.\n\nTarget scene location:\n{ScenePath}", "OK");
             Debug.Log($"[U8_SceneSetupTool] Completed full Unit 8 scene generation. Target: {ScenePath}");
         }
 
-        private static Sprite LoadSprite(string filename)
+        [MenuItem("Googolplex/Unit 8/Setup Screen 2 Only (Part 2 Inside)", false, 11)]
+        public static void SetupScreen2Only()
         {
-            string path = $"{ArtPath}/{filename}";
+            BuildSpriteCache();
+            GameObject canvasGo = EnsureCanvas();
+            RectTransform canvasRect = canvasGo.GetComponent<RectTransform>();
+
+            GameObject p2 = CreateOrGetScreen(canvasRect, "U8_Screen_02_Part2Inside", typeof(U8_Part2_WashroomInsideController_Masters_Activity));
+            SetupPart2UI(p2);
+
+            var c2 = p2.GetComponent<U8_Part2_WashroomInsideController_Masters_Activity>();
+            if (c2 != null)
+            {
+                var so = new SerializedObject(c2);
+                SetSerializedSprite(so, "cubicleOpenSprite", GetSprite("SPR_Cubicle_Open"));
+                SetSerializedSprite(so, "cubicleClosedSprite", GetSprite("SPR_Cubicle_Closed"));
+                SetSerializedSprite(so, "sinkCleanSprite", GetSprite("SPR_Sink_Clean"));
+                SetSerializedSprite(so, "sinkSplashedSprite", GetSprite("SPR_Sink_Splashed"));
+                SetSerializedSprite(so, "anuNormalSprite", GetSprite("SPR_Anu_Normal"));
+                SetSerializedSprite(so, "anuWashingSprite", GetSprite("SPR_Anu_Washing"));
+                SetSerializedSprite(so, "anuWipingSprite", GetSprite("SPR_Anu_Wiping"));
+                so.ApplyModifiedProperties();
+            }
+
+            Scene currentScene = SceneManager.GetActiveScene();
+            EditorSceneManager.MarkSceneDirty(currentScene);
+
+            EditorUtility.DisplayDialog("Screen 2 Updated", "Screen 2 (Part 2: Inside Washroom) has been updated! Screen 1 and other screens were not modified.", "OK");
+            Debug.Log("[U8_SceneSetupTool] Setup Screen 2 only completed.");
+        }
+
+        [MenuItem("Googolplex/Unit 8/Wire Sprites & Audio Only (Non-Destructive)", false, 12)]
+        public static void WireSpritesAndAudioNonDestructive()
+        {
+            BuildSpriteCache();
+
+            // Setup Managers & Audio without touching hierarchy
+            GameObject managersGo = GameObject.Find("--- MANAGERS ---");
+            if (managersGo != null)
+            {
+                var am = managersGo.GetComponent<U8_AudioManager_Masters_Activity>();
+                if (am != null)
+                {
+                    am.EnsureAudioSourcesOnMainCamera();
+                    am.AutoPopulateClipsInEditor();
+                }
+            }
+
+            Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+            if (canvas != null)
+            {
+                Transform p1 = canvas.transform.Find("U8_Screen_01_Part1Door");
+                Transform p2 = canvas.transform.Find("U8_Screen_02_Part2Inside");
+                Transform hw = canvas.transform.Find("U8_Screen_03_Handwash");
+                Transform p3 = canvas.transform.Find("U8_Screen_04_Part3AfterYou");
+                Transform p4 = canvas.transform.Find("U8_Screen_05_Part4EmptySoap");
+                Transform end = canvas.transform.Find("U8_Screen_06_Ending");
+
+                WireControllersSerializedSprites(
+                    p1 != null ? p1.gameObject : null,
+                    p2 != null ? p2.gameObject : null,
+                    hw != null ? hw.gameObject : null,
+                    p3 != null ? p3.gameObject : null,
+                    p4 != null ? p4.gameObject : null,
+                    end != null ? end.gameObject : null
+                );
+
+                SanitizeAllSceneTexts(canvas.gameObject);
+            }
+
+            Scene currentScene = SceneManager.GetActiveScene();
+            EditorSceneManager.MarkSceneDirty(currentScene);
+
+            EditorUtility.DisplayDialog("Non-Destructive Wire Complete", "All sprites, audio references, and button text glyphs have been sanitized and re-wired! Your GameObjects and positions were kept 100% intact.", "OK");
+            Debug.Log("[U8_SceneSetupTool] Non-destructive sprite and audio wiring completed.");
+        }
+
+        [MenuItem("Googolplex/Unit 8/Sanitize All UI Text Glyphs", false, 13)]
+        public static void SanitizeAllUITextGlyphsMenu()
+        {
+            Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+            if (canvas != null)
+            {
+                int count = SanitizeAllSceneTexts(canvas.gameObject);
+                Scene currentScene = SceneManager.GetActiveScene();
+                EditorSceneManager.MarkSceneDirty(currentScene);
+                EditorUtility.DisplayDialog("Text Sanitization Complete", $"Cleaned {count} TextMeshPro labels in the scene. All unsupported arrow and bullet characters were replaced with standard symbols.", "OK");
+            }
+        }
+
+        private static int SanitizeAllSceneTexts(GameObject root)
+        {
+            if (root == null) return 0;
+            var texts = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+            int modifiedCount = 0;
+            foreach (var t in texts)
+            {
+                if (t == null || string.IsNullOrEmpty(t.text)) continue;
+                string original = t.text;
+                string clean = original
+                    .Replace("\u2794", "")
+                    .Replace("➔", "")
+                    .Replace(">>", "")
+                    .Replace("->", "")
+                    .Replace("\u21BA", "")
+                    .Replace("↺", "")
+                    .Replace("\u2022", "-")
+                    .Replace("•", "-")
+                    .Trim();
+
+                if (clean != original)
+                {
+                    Undo.RecordObject(t, "Sanitize TMP Unicode Glyphs");
+                    t.text = clean;
+                    EditorUtility.SetDirty(t);
+                    modifiedCount++;
+                }
+            }
+            return modifiedCount;
+        }
+
+        public static Sprite GetOrCreateRoundedBoxSprite()
+        {
+            string dir = ArtPath;
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            string path = dir + "/UI_RoundedBox_9Slice.png";
+            Sprite existing = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (existing != null) return existing;
+
+            int size = 128;
+            int radius = 32;
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] colors = new Color[size * size];
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    int dx = Mathf.Max(0, Mathf.Max(radius - x, x - (size - 1 - radius)));
+                    int dy = Mathf.Max(0, Mathf.Max(radius - y, y - (size - 1 - radius)));
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    float alpha = Mathf.Clamp01(radius + 0.5f - dist);
+                    colors[y * size + x] = new Color(1f, 1f, 1f, alpha);
+                }
+            }
+
+            tex.SetPixels(colors);
+            tex.Apply();
+            byte[] bytes = tex.EncodeToPNG();
+            File.WriteAllBytes(path, bytes);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.spriteBorder = new Vector4(radius, radius, radius, radius);
+                importer.alphaIsTransparency = true;
+                importer.SaveAndReimport();
+            }
+
             return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
+        public static Sprite GetOrCreateStarSprite(bool earned)
+        {
+            string dir = ArtPath;
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            string filename = earned ? "SPR_Star_Gold.png" : "SPR_Star_Empty.png";
+            string path = Path.Combine(dir, filename).Replace("\\", "/");
+            Sprite existing = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (existing != null) return existing;
+
+            int size = 128;
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] colors = new Color[size * size];
+            Vector2 center = new Vector2(size / 2f, size / 2f);
+            float outerR = size * 0.44f;
+            float innerR = outerR * 0.42f;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    Vector2 pt = new Vector2(x + 0.5f, y + 0.5f) - center;
+                    float angle = Mathf.Atan2(pt.y, pt.x);
+                    if (angle < 0) angle += Mathf.PI * 2f;
+                    angle = (angle + Mathf.PI / 2f) % (Mathf.PI * 2f);
+
+                    float segment = (Mathf.PI * 2f) / 10f;
+                    int segIndex = Mathf.FloorToInt(angle / segment);
+                    float localAngle = (angle % segment) / segment;
+
+                    float r1 = (segIndex % 2 == 0) ? outerR : innerR;
+                    float r2 = (segIndex % 2 == 0) ? innerR : outerR;
+                    float expectedR = Mathf.Lerp(r1, r2, localAngle);
+
+                    float dist = pt.magnitude;
+                    float delta = expectedR - dist;
+                    float alpha = Mathf.Clamp01(delta + 0.75f);
+
+                    if (earned)
+                    {
+                        Color gold = new Color(1f, 0.85f, 0.15f, 1f);
+                        colors[y * size + x] = new Color(gold.r, gold.g, gold.b, alpha);
+                    }
+                    else
+                    {
+                        Color empty = new Color(0.4f, 0.45f, 0.55f, 0.6f);
+                        colors[y * size + x] = new Color(empty.r, empty.g, empty.b, alpha * empty.a);
+                    }
+                }
+            }
+
+            tex.SetPixels(colors);
+            tex.Apply();
+            File.WriteAllBytes(path, tex.EncodeToPNG());
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.alphaIsTransparency = true;
+                importer.SaveAndReimport();
+            }
+
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
+        private static void BuildSpriteCache()
+        {
+            spriteCache.Clear();
+
+            string[] searchDirs = new[] { MoreSpritesPath, ArtPath };
+            foreach (var dir in searchDirs)
+            {
+                if (!Directory.Exists(dir)) continue;
+
+                string[] guids = AssetDatabase.FindAssets("t:Texture2D", new[] { dir });
+                foreach (var guid in guids)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                    Object[] allAssets = AssetDatabase.LoadAllAssetsAtPath(path);
+                    foreach (var asset in allAssets)
+                    {
+                        if (asset is Sprite s)
+                        {
+                            if (!spriteCache.ContainsKey(s.name))
+                                spriteCache[s.name] = s;
+                        }
+                    }
+                }
+            }
+
+            Debug.Log($"[U8_SceneSetupTool] Sliced Sprite Cache initialized with {spriteCache.Count} sprites.");
+        }
+
+        private static Sprite GetSprite(string name)
+        {
+            if (spriteCache.TryGetValue(name, out Sprite s)) return s;
+
+            // Common aliases
+            if (name == "SPR_Meera_Entering" && spriteCache.TryGetValue("Character \u2014 Meera U8 SA _0", out Sprite s0)) return s0;
+            if (name == "SPR_Washroom_BG" && spriteCache.TryGetValue("SPR_Washroom_BG", out Sprite bg)) return bg;
+
+            return null;
         }
 
         private static void EnsureEventSystem()
@@ -97,13 +383,49 @@ namespace Googolplex.Unit8
             Camera cam = Camera.main;
             if (cam == null)
             {
-                GameObject camGo = new GameObject("Main Camera");
-                cam = camGo.AddComponent<Camera>();
-                cam.tag = "MainCamera";
-                camGo.AddComponent<AudioListener>();
+                cam = Object.FindFirstObjectByType<Camera>();
+                if (cam == null)
+                {
+                    GameObject camGo = new GameObject("Main Camera");
+                    cam = camGo.AddComponent<Camera>();
+                    cam.tag = "MainCamera";
+                }
             }
             cam.orthographic = true;
-            cam.backgroundColor = new Color(0.12f, 0.16f, 0.22f);
+            cam.backgroundColor = new Color(0.10f, 0.14f, 0.20f);
+
+            // Ensure AudioListener on Main Camera
+            AudioListener listener = cam.GetComponent<AudioListener>();
+            if (listener == null) listener = cam.gameObject.AddComponent<AudioListener>();
+            listener.enabled = true;
+
+            // Ensure 4 2D AudioSources on Main Camera (BGM, AMB, SFX, VO)
+            AudioSource[] sources = cam.GetComponents<AudioSource>();
+            while (sources == null || sources.Length < 4)
+            {
+                cam.gameObject.AddComponent<AudioSource>();
+                sources = cam.GetComponents<AudioSource>();
+            }
+
+            sources[0].loop = true;
+            sources[0].playOnAwake = false;
+            sources[0].volume = 0.45f;
+            sources[0].spatialBlend = 0f;
+
+            sources[1].loop = true;
+            sources[1].playOnAwake = false;
+            sources[1].volume = 0.35f;
+            sources[1].spatialBlend = 0f;
+
+            sources[2].loop = false;
+            sources[2].playOnAwake = false;
+            sources[2].volume = 1.0f;
+            sources[2].spatialBlend = 0f;
+
+            sources[3].loop = false;
+            sources[3].playOnAwake = false;
+            sources[3].volume = 1.0f;
+            sources[3].spatialBlend = 0f;
         }
 
         private static GameObject EnsureCanvas()
@@ -153,162 +475,369 @@ namespace Googolplex.Unit8
             return screenGo;
         }
 
+        private static void CleanObsoleteScreenObjects(GameObject screen)
+        {
+            string[] obsolete = { "PromptText", "FeedbackText", "DiscussionQuestionText", "TitleText" };
+            foreach (var name in obsolete)
+            {
+                Transform t = screen.transform.Find(name);
+                if (t != null)
+                {
+                    Object.DestroyImmediate(t.gameObject);
+                }
+            }
+        }
+
         private static void SetupPart1UI(GameObject screen)
         {
+            CleanObsoleteScreenObjects(screen);
+
+            // Fullscreen Stretched Background
+            CreateImage(screen, "Background", Vector2.zero, Vector2.zero, GetSprite("SPR_Washroom_BG"), true);
+
+            // Pinned Top Header Bar
             CreateHeader(screen, "UNIT 8: WASHROOM ETIQUETTE", "Part 1: The Door");
 
-            // Door Image
-            CreateImage(screen, "WashroomDoor", new Vector2(-150, 0), new Vector2(260, 420), LoadSprite("SPR_Cubicle_Closed.svg"));
-            // Anu Avatar
-            CreateImage(screen, "AnuAvatar", new Vector2(200, -50), new Vector2(200, 320), LoadSprite("SPR_Anu_Normal.svg"));
+            // Door Image & Anu Avatar
+            CreateImage(screen, "WashroomDoor", new Vector2(-180, -20), new Vector2(320, 560), GetSprite("SPR_Cubicle_Closed"));
+            CreateImage(screen, "AnuAvatar", new Vector2(240, -60), new Vector2(280, 520), GetSprite("SPR_Anu_Normal"));
 
-            // Prompts
-            CreateText(screen, "PromptText", "The door is closed. What should Anu do?", new Vector2(0, 320), new Vector2(900, 70), 32);
-            CreateText(screen, "FeedbackText", "", new Vector2(0, -320), new Vector2(900, 60), 26, Color.yellow);
+            // Prompt Card
+            CreatePromptCard(screen, "Prompt", "The door is closed. What should Anu do?", new Vector2(0, 380), new Vector2(1300, 90), 38);
 
-            // Choice Buttons
-            GameObject container = CreateContainer(screen, "ChoiceContainer", new Vector2(0, -200), new Vector2(800, 120));
-            CreateButton(container, "Btn_Knock", "Knock and Wait", new Vector2(-260, 0), new Vector2(240, 70), new Color(0.18f, 0.65f, 0.35f));
-            CreateButton(container, "Btn_Bang", "Bang Loudly", new Vector2(0, 0), new Vector2(240, 70), new Color(0.85f, 0.35f, 0.25f));
-            CreateButton(container, "Btn_Push", "Push Open", new Vector2(260, 0), new Vector2(240, 70), new Color(0.75f, 0.55f, 0.2f));
+            // Feedback Card
+            CreateFeedbackCard(screen, "Feedback", "", new Vector2(0, -260), new Vector2(1200, 80), 34, Color.yellow);
+
+            // Choice Buttons (Larger, rounded touch targets with bold text)
+            GameObject container = CreateContainer(screen, "ChoiceContainer", new Vector2(0, -385), new Vector2(1400, 110));
+            CreateButton(container, "Btn_Knock", "Knock and Wait", new Vector2(-430, 0), new Vector2(390, 88), new Color(0.18f, 0.65f, 0.35f), 30);
+            CreateButton(container, "Btn_Bang", "Bang Loudly", new Vector2(0, 0), new Vector2(390, 88), new Color(0.85f, 0.32f, 0.25f), 30);
+            CreateButton(container, "Btn_Push", "Push Open", new Vector2(430, 0), new Vector2(390, 88), new Color(0.80f, 0.55f, 0.20f), 30);
         }
 
         private static void SetupPart2UI(GameObject screen)
         {
+            CleanObsoleteScreenObjects(screen);
+
+            // Fullscreen Stretched Background
+            CreateImage(screen, "Background", Vector2.zero, Vector2.zero, GetSprite("SPR_Washroom_BG"), true);
+
+            // Pinned Top Header Bar
             CreateHeader(screen, "UNIT 8: WASHROOM ETIQUETTE", "Part 2: Inside the Washroom");
 
             // 1. Cubicle Section (Left)
-            GameObject cubicle = CreateContainer(screen, "Cubicle", new Vector2(-550, 0), new Vector2(300, 500));
-            CreateImage(cubicle, "CubicleDoorImage", new Vector2(0, 40), new Vector2(240, 380), LoadSprite("SPR_Cubicle_Open.svg"));
-            CreateButton(cubicle, "Btn_CloseDoor", "1. Close Door", new Vector2(-70, -180), new Vector2(130, 50), new Color(0.2f, 0.6f, 0.9f));
-            CreateButton(cubicle, "Btn_Flush", "2. Flush", new Vector2(70, -180), new Vector2(130, 50), new Color(0.2f, 0.7f, 0.4f));
-            CreateButton(cubicle, "Btn_ComeOut", "3. Step Out", new Vector2(0, -240), new Vector2(200, 45), new Color(0.5f, 0.4f, 0.8f));
+            GameObject cubicle = CreateContainer(screen, "Cubicle", new Vector2(-560, -20), new Vector2(380, 580));
+            CreateImage(cubicle, "CubicleDoorImage", new Vector2(0, 70), new Vector2(300, 480), GetSprite("SPR_Cubicle_Open"));
+            CreateButton(cubicle, "Btn_CloseDoor", "1. Close Door", new Vector2(-85, -200), new Vector2(160, 68), new Color(0.2f, 0.6f, 0.9f), 24);
+            CreateButton(cubicle, "Btn_Flush", "2. Flush", new Vector2(85, -200), new Vector2(160, 68), new Color(0.2f, 0.7f, 0.4f), 24);
+            CreateButton(cubicle, "Btn_ComeOut", "3. Step Out to Sink", new Vector2(0, -270), new Vector2(330, 64), new Color(0.5f, 0.4f, 0.8f), 24);
 
             // 2. Sink Section (Center)
-            GameObject sink = CreateContainer(screen, "Sink", new Vector2(0, 0), new Vector2(360, 500));
-            CreateImage(sink, "SinkImage", new Vector2(0, 0), new Vector2(320, 220), LoadSprite("SPR_Sink_Splashed.svg"));
-            CreateImage(sink, "TapWaterStream", new Vector2(0, -30), new Vector2(50, 100), LoadSprite("SPR_WaterStream.svg"));
-            CreateButton(sink, "Btn_WashHands", "4. Wash Hands", new Vector2(0, -160), new Vector2(200, 50), new Color(0.2f, 0.7f, 0.8f));
-            CreateButton(sink, "Btn_TurnTapOff", "5. Turn Tap Off", new Vector2(0, -220), new Vector2(200, 50), new Color(0.8f, 0.5f, 0.2f));
-            CreateButton(sink, "Btn_WipeSink", "7. Wipe Sink", new Vector2(0, -280), new Vector2(200, 50), new Color(0.2f, 0.8f, 0.4f));
+            GameObject sink = CreateContainer(screen, "Sink", new Vector2(0, -20), new Vector2(440, 580));
+            CreateImage(sink, "SinkImage", new Vector2(0, 70), new Vector2(340, 380), GetSprite("SPR_Sink_Splashed"));
+            CreateImage(sink, "TapWaterStream", new Vector2(10, -5), new Vector2(90, 200), GetSprite("SPR_WaterStream"));
+            CreateButton(sink, "Btn_WashHands", "4. Wash Hands (20s)", new Vector2(0, -150), new Vector2(320, 64), new Color(0.18f, 0.68f, 0.82f), 25);
+            CreateButton(sink, "Btn_TurnTapOff", "5. Turn Tap Off", new Vector2(0, -215), new Vector2(320, 64), new Color(0.85f, 0.52f, 0.20f), 25);
+            CreateButton(sink, "Btn_WipeSink", "7. Wipe Sink Dry", new Vector2(0, -280), new Vector2(320, 64), new Color(0.20f, 0.78f, 0.42f), 25);
 
             // 3. Towel & Bin (Right)
-            GameObject towelHolder = CreateContainer(screen, "TowelHolder", new Vector2(520, 100), new Vector2(200, 250));
-            CreateImage(towelHolder, "TowelHolderImage", Vector2.zero, new Vector2(140, 180), LoadSprite("SPR_Towel_Holder.svg"));
-            CreateButton(towelHolder, "Btn_Towel", "6. Paper Towel", new Vector2(0, -110), new Vector2(160, 45), new Color(0.9f, 0.65f, 0.2f));
+            GameObject towelHolder = CreateContainer(screen, "TowelHolder", new Vector2(560, 90), new Vector2(240, 280));
+            CreateImage(towelHolder, "TowelHolderImage", new Vector2(0, 20), new Vector2(200, 220), GetSprite("SPR_Towel_Holder"));
+            CreateButton(towelHolder, "Btn_Towel", "6. Paper Towel", new Vector2(0, -105), new Vector2(230, 64), new Color(0.92f, 0.65f, 0.20f), 24);
 
-            CreateImage(screen, "TrashBinImage", new Vector2(520, -180), new Vector2(130, 180), LoadSprite("SPR_TrashBin.svg"));
-            CreateImage(screen, "TowelInAir", new Vector2(400, -50), new Vector2(60, 40), null);
-            CreateImage(screen, "SoggyTowelOnFloor", new Vector2(450, -240), new Vector2(120, 70), LoadSprite("SPR_Towel_SoggyFloor.svg"));
+            CreateImage(screen, "TrashBinImage", new Vector2(560, -210), new Vector2(180, 250), GetSprite("SPR_TrashBin"));
+            CreateImage(screen, "TowelInAir", new Vector2(420, -50), new Vector2(90, 70), null);
+            CreateImage(screen, "SoggyTowelOnFloor", new Vector2(440, -280), new Vector2(160, 100), GetSprite("SPR_Towel_SoggyFloor"));
 
             // Anu Avatar
-            CreateImage(screen, "AnuInsideAvatar", new Vector2(-220, -60), new Vector2(180, 280), LoadSprite("SPR_Anu_Normal.svg"));
+            CreateImage(screen, "AnuInsideAvatar", new Vector2(-240, -80), new Vector2(240, 460), GetSprite("SPR_Anu_Normal"));
 
-            // Prompts
-            CreateText(screen, "PromptText", "Step 1: Close the cubicle door first!", new Vector2(0, 320), new Vector2(900, 60), 30);
-            CreateText(screen, "FeedbackText", "", new Vector2(0, -350), new Vector2(900, 50), 24, Color.yellow);
+            // Prompts & Feedback
+            CreatePromptCard(screen, "Prompt", "Step 1: Close the cubicle door first!", new Vector2(0, 380), new Vector2(1350, 90), 36);
+            CreateFeedbackCard(screen, "Feedback", "", new Vector2(0, -355), new Vector2(1200, 75), 32, Color.yellow);
 
-            CreateButton(screen, "Btn_ProceedToPart3", "Next: See What Meera Finds ➔", new Vector2(0, -320), new Vector2(340, 60), new Color(0.18f, 0.65f, 0.35f));
+            CreateButton(screen, "Btn_ProceedToPart3", "Next: See What Meera Finds >>", new Vector2(0, -435), new Vector2(500, 80), new Color(0.18f, 0.65f, 0.35f), 30);
         }
 
         private static void SetupHandwashUI(GameObject screen)
         {
+            CleanObsoleteScreenObjects(screen);
+
+            // Fullscreen Stretched Background
+            CreateImage(screen, "Background", Vector2.zero, Vector2.zero, GetSprite("SPR_Washroom_BG"), true);
+
+            // Pinned Top Header Bar
             CreateHeader(screen, "UNIT 8: HANDWASHING", "20-Second Song & Scrub");
 
             // Hands Image
-            CreateImage(screen, "HandsImage", new Vector2(0, 0), new Vector2(420, 320), LoadSprite("SPR_Hands_Soapy.svg"));
-
-            // Large Touch Scrub Target
-            CreateButton(screen, "ScrubAreaButton", "TAP / RUB TO SCRUB!", new Vector2(0, -220), new Vector2(320, 65), new Color(0.2f, 0.7f, 0.9f));
+            CreateImage(screen, "HandsImage", new Vector2(0, 0), new Vector2(540, 480), GetSprite("SPR_Hands_Soapy"));
 
             // Bubbles Container
-            GameObject bubbles = CreateContainer(screen, "Bubbles", Vector2.zero, new Vector2(400, 300));
-            CreateImage(bubbles, "BubbleCluster", Vector2.zero, new Vector2(220, 220), LoadSprite("SPR_Bubbles.svg"));
+            GameObject bubbles = CreateContainer(screen, "Bubbles", Vector2.zero, new Vector2(500, 400));
+            CreateImage(bubbles, "BubbleCluster", new Vector2(200, -50), new Vector2(300, 280), GetSprite("SPR_Bubbles"));
 
             // 4 Germ Blobs
-            GameObject germs = CreateContainer(screen, "Germs", Vector2.zero, new Vector2(400, 300));
-            CreateImage(germs, "Germ_1", new Vector2(-120, 60), new Vector2(90, 90), LoadSprite("SPR_Germ_1.svg"));
-            CreateImage(germs, "Germ_2", new Vector2(120, 60), new Vector2(90, 90), LoadSprite("SPR_Germ_2.svg"));
-            CreateImage(germs, "Germ_3", new Vector2(-80, -70), new Vector2(90, 90), LoadSprite("SPR_Germ_3.svg"));
-            CreateImage(germs, "Germ_4", new Vector2(80, -70), new Vector2(90, 90), LoadSprite("SPR_Germ_4.svg"));
+            GameObject germs = CreateContainer(screen, "Germs", Vector2.zero, new Vector2(500, 400));
+            CreateImage(germs, "Germ_1", new Vector2(-180, 100), new Vector2(140, 140), GetSprite("SPR_Germ_1"));
+            CreateImage(germs, "Germ_2", new Vector2(180, 100), new Vector2(140, 140), GetSprite("SPR_Germ_2"));
+            CreateImage(germs, "Germ_3", new Vector2(-140, -120), new Vector2(140, 140), GetSprite("SPR_Germ_3"));
+            CreateImage(germs, "Germ_4", new Vector2(140, -120), new Vector2(140, 140), GetSprite("SPR_Germ_4"));
 
-            // Timer & Prompt
-            CreateText(screen, "PromptText", "Keep tapping to scrub hands with soap!", new Vector2(0, 310), new Vector2(900, 60), 30);
-            CreateText(screen, "TimerText", "20s", new Vector2(0, 240), new Vector2(200, 50), 36, Color.cyan);
+            // Large Touch Scrub Target
+            CreateButton(screen, "ScrubAreaButton", "TAP / RUB TO SCRUB!", new Vector2(0, -340), new Vector2(500, 95), new Color(0.15f, 0.65f, 0.85f), 34);
+
+            // Timer Badge Card & Prompt
+            CreatePromptCard(screen, "Prompt", "Keep tapping or rubbing to scrub hands with soap!", new Vector2(0, 380), new Vector2(1300, 90), 36);
+
+            GameObject timerCard = CreateCard(screen, "TimerBadge", new Vector2(0, 275), new Vector2(240, 85), new Color(0.08f, 0.22f, 0.38f, 0.95f));
+            CreateText(timerCard, "TimerText", "20s", Vector2.zero, new Vector2(220, 75), 50, Color.cyan);
         }
 
         private static void SetupPart3UI(GameObject screen)
         {
+            CleanObsoleteScreenObjects(screen);
+
+            // Fullscreen Stretched Background
+            CreateImage(screen, "Background", Vector2.zero, Vector2.zero, GetSprite("SPR_Washroom_BG"), true);
+
+            // Pinned Top Header Bar
             CreateHeader(screen, "UNIT 8: AFTER YOU", "Part 3: What Meera Finds");
 
-            CreateImage(screen, "WetFloorPuddleObject", new Vector2(0, -180), new Vector2(320, 120), LoadSprite("SPR_WetFloorPuddle.svg"));
-            CreateImage(screen, "SplashedSinkOverlay", new Vector2(-200, 20), new Vector2(280, 180), LoadSprite("SPR_Sink_Splashed.svg"));
-            CreateImage(screen, "MeeraAvatar", new Vector2(100, -30), new Vector2(260, 320), LoadSprite("SPR_Meera_Slip.svg"));
+            CreateImage(screen, "WetFloorPuddleObject", new Vector2(0, -220), new Vector2(420, 190), GetSprite("SPR_WetFloorPuddle"));
+            CreateImage(screen, "SoggyTowelFloorObject", new Vector2(480, -240), new Vector2(170, 110), GetSprite("SPR_Towel_SoggyFloor"));
+            CreateImage(screen, "SplashedSinkOverlay", new Vector2(0, 40), new Vector2(340, 390), GetSprite("SPR_Sink_Splashed"));
+            CreateImage(screen, "MeeraAvatar", new Vector2(0, -40), new Vector2(360, 500), GetSprite("SPR_Meera_Slip"));
 
-            CreateText(screen, "PromptText", "Here comes Meera!", new Vector2(0, 310), new Vector2(900, 60), 32);
-            CreateText(screen, "FeedbackText", "", new Vector2(0, -280), new Vector2(900, 50), 24, Color.yellow);
+            CreatePromptCard(screen, "Prompt", "Here comes Meera!", new Vector2(0, 380), new Vector2(1300, 90), 38);
+            CreateFeedbackCard(screen, "Feedback", "", new Vector2(0, -265), new Vector2(1300, 80), 32, Color.yellow);
 
-            CreateButton(screen, "Btn_TryAgain", "↺ TRY AGAIN", new Vector2(-160, -340), new Vector2(240, 65), new Color(0.85f, 0.4f, 0.2f));
-            CreateButton(screen, "Btn_ProceedToPart4", "Next: The Soap! ➔", new Vector2(160, -340), new Vector2(240, 65), new Color(0.18f, 0.65f, 0.35f));
+            GameObject container = CreateContainer(screen, "ChoiceContainer", new Vector2(0, -385), new Vector2(900, 110));
+            CreateButton(container, "Btn_TryAgain", "TRY AGAIN", new Vector2(-240, 0), new Vector2(380, 88), new Color(0.85f, 0.38f, 0.20f), 30);
+            CreateButton(container, "Btn_ProceedToPart4", "Next: The Soap! >>", new Vector2(240, 0), new Vector2(380, 88), new Color(0.18f, 0.65f, 0.35f), 30);
         }
 
         private static void SetupPart4UI(GameObject screen)
         {
+            CleanObsoleteScreenObjects(screen);
+
+            // Fullscreen Stretched Background
+            CreateImage(screen, "Background", Vector2.zero, Vector2.zero, GetSprite("SPR_Washroom_BG"), true);
+
+            // Pinned Top Header Bar
             CreateHeader(screen, "UNIT 8: EMPTY SOAP!", "Part 4: What Should Meera Do?");
 
-            CreateImage(screen, "SoapDispenserImage", new Vector2(-150, 0), new Vector2(160, 240), LoadSprite("SPR_Soap_Empty.svg"));
-            CreateImage(screen, "MeeraAvatar", new Vector2(160, -40), new Vector2(200, 300), LoadSprite("SPR_Meera_Happy.svg"));
+            CreateImage(screen, "SoapDispenserImage", new Vector2(-160, 20), new Vector2(220, 320), GetSprite("SPR_Soap_Empty"));
+            CreateImage(screen, "MeeraAvatar", new Vector2(200, -50), new Vector2(280, 500), GetSprite("SPR_Meera_Happy"));
 
-            CreateText(screen, "PromptText", "The soap is finished. What should Meera do?", new Vector2(0, 310), new Vector2(900, 60), 30);
-            CreateText(screen, "FeedbackText", "", new Vector2(0, -280), new Vector2(900, 50), 24, Color.yellow);
+            CreatePromptCard(screen, "Prompt", "The soap is finished. What should Meera do?", new Vector2(0, 380), new Vector2(1350, 90), 36);
+            CreateFeedbackCard(screen, "Feedback", "", new Vector2(0, -185), new Vector2(1200, 80), 32, Color.yellow);
 
-            GameObject container = CreateContainer(screen, "ChoiceContainer", new Vector2(0, -180), new Vector2(700, 100));
-            CreateButton(container, "Btn_TellTeacher", "Go and Tell a Teacher", new Vector2(-180, 0), new Vector2(280, 65), new Color(0.18f, 0.65f, 0.35f));
-            CreateButton(container, "Btn_JustLeave", "Just Leave", new Vector2(180, 0), new Vector2(280, 65), new Color(0.75f, 0.35f, 0.25f));
+            GameObject container = CreateContainer(screen, "ChoiceContainer", new Vector2(0, -295), new Vector2(1000, 110));
+            CreateButton(container, "Btn_TellTeacher", "Go and Tell a Teacher", new Vector2(-260, 0), new Vector2(440, 88), new Color(0.18f, 0.65f, 0.35f), 28);
+            CreateButton(container, "Btn_JustLeave", "Just Leave", new Vector2(260, 0), new Vector2(400, 88), new Color(0.78f, 0.32f, 0.24f), 28);
 
-            CreateButton(screen, "Btn_Finish", "Finish Unit ➔", new Vector2(0, -340), new Vector2(240, 60), new Color(0.2f, 0.6f, 0.9f));
+            CreateButton(screen, "Btn_Finish", "Finish Unit >>", new Vector2(0, -405), new Vector2(380, 82), new Color(0.20f, 0.60f, 0.90f), 30);
         }
 
         private static void SetupEndingUI(GameObject screen)
         {
+            CleanObsoleteScreenObjects(screen);
+
+            // Fullscreen Stretched Background
+            CreateImage(screen, "Background", Vector2.zero, Vector2.zero, GetSprite("SPR_Washroom_BG"), true);
+
+            // Pinned Top Header Bar
             CreateHeader(screen, "UNIT 8: SUMMARY", "Ready for the Next Person!");
 
-            CreateText(screen, "TitleText", "READY FOR THE NEXT PERSON!", new Vector2(0, 260), new Vector2(900, 70), 40, Color.yellow);
-            CreateText(screen, "DiscussionQuestionText", "Would the next person be happy?", new Vector2(0, 10), new Vector2(1100, 100), 46, new Color(0.4f, 0.9f, 1f));
+            // Title Banner Card
+            GameObject titleCard = CreateCard(screen, "TitleCard", new Vector2(0, 335), new Vector2(1250, 100), new Color(0.10f, 0.22f, 0.38f, 0.95f));
+            CreateText(titleCard, "TitleText", "READY FOR THE NEXT PERSON!", Vector2.zero, new Vector2(1200, 80), 46, Color.yellow);
 
-            // Stars Container
-            GameObject stars = CreateContainer(screen, "StarsContainer", new Vector2(0, 140), new Vector2(500, 120));
-            CreateText(stars, "Star_1", "★", new Vector2(-120, 0), new Vector2(90, 90), 72, Color.yellow);
-            CreateText(stars, "Star_2", "★", new Vector2(0, 0), new Vector2(90, 90), 72, Color.yellow);
-            CreateText(stars, "Star_3", "★", new Vector2(120, 0), new Vector2(90, 90), 72, Color.yellow);
+            // Stars Container (Using Star Sprites)
+            GameObject stars = CreateContainer(screen, "StarsContainer", new Vector2(0, 195), new Vector2(550, 130));
+            Sprite goldStar = GetOrCreateStarSprite(true);
+            CreateImage(stars, "Star_1", new Vector2(-150, 0), new Vector2(110, 110), goldStar);
+            CreateImage(stars, "Star_2", new Vector2(0, 0), new Vector2(110, 110), goldStar);
+            CreateImage(stars, "Star_3", new Vector2(150, 0), new Vector2(110, 110), goldStar);
 
-            CreateButton(screen, "Btn_Restart", "Play Again ↺", new Vector2(0, -280), new Vector2(260, 65), new Color(0.2f, 0.7f, 0.4f));
+            // Meera Character Avatar
+            CreateImage(screen, "MeeraWavingAvatar", new Vector2(360, -90), new Vector2(280, 500), GetSprite("SPR_Meera_Happy"));
+
+            // Discussion Question Card
+            GameObject questionCard = CreateCard(screen, "QuestionCard", new Vector2(-140, -50), new Vector2(960, 180), new Color(0.10f, 0.16f, 0.25f, 0.92f));
+            CreateText(questionCard, "DiscussionQuestionText", "Would the next person be happy entering this washroom?", Vector2.zero, new Vector2(900, 140), 42, new Color(0.40f, 0.90f, 1.0f));
+
+            CreateButton(screen, "Btn_Restart", "Play Again", new Vector2(0, -360), new Vector2(400, 90), new Color(0.18f, 0.68f, 0.38f), 34);
+        }
+
+        private static void WireControllersSerializedSprites(GameObject p1, GameObject p2, GameObject hw, GameObject p3, GameObject p4, GameObject end)
+        {
+            // Part 1 Serialized Fields
+            if (p1 != null)
+            {
+                var c1 = p1.GetComponent<U8_Part1_DoorController_Masters_Activity>();
+                if (c1 != null)
+                {
+                    var so = new SerializedObject(c1);
+                    SetSerializedSprite(so, "doorClosedSprite", GetSprite("SPR_Cubicle_Closed"));
+                    SetSerializedSprite(so, "doorOpenSprite", GetSprite("SPR_Cubicle_Open"));
+                    SetSerializedSprite(so, "anuNormalSprite", GetSprite("SPR_Anu_Normal"));
+                    SetSerializedSprite(so, "anuKnockingSprite", GetSprite("SPR_Anu_Knocking"));
+                    SetSerializedSprite(so, "anuSheepishSprite", GetSprite("SPR_Anu_Sheepish"));
+                    so.ApplyModifiedProperties();
+                }
+            }
+
+            // Part 2 Serialized Fields
+            if (p2 != null)
+            {
+                var c2 = p2.GetComponent<U8_Part2_WashroomInsideController_Masters_Activity>();
+                if (c2 != null)
+                {
+                    var so = new SerializedObject(c2);
+                    SetSerializedSprite(so, "cubicleOpenSprite", GetSprite("SPR_Cubicle_Open"));
+                    SetSerializedSprite(so, "cubicleClosedSprite", GetSprite("SPR_Cubicle_Closed"));
+                    SetSerializedSprite(so, "sinkCleanSprite", GetSprite("SPR_Sink_Clean"));
+                    SetSerializedSprite(so, "sinkSplashedSprite", GetSprite("SPR_Sink_Splashed"));
+                    SetSerializedSprite(so, "anuNormalSprite", GetSprite("SPR_Anu_Normal"));
+                    SetSerializedSprite(so, "anuWashingSprite", GetSprite("SPR_Anu_Washing"));
+                    SetSerializedSprite(so, "anuWipingSprite", GetSprite("SPR_Anu_Wiping"));
+                    so.ApplyModifiedProperties();
+                }
+            }
+
+            // Handwash Screen Serialized Fields
+            if (hw != null)
+            {
+                var chw = hw.GetComponent<U8_HandwashScreenController_Masters_Activity>();
+                if (chw != null)
+                {
+                    var so = new SerializedObject(chw);
+                    SetSerializedSprite(so, "handsSoapySprite", GetSprite("SPR_Hands_Soapy"));
+                    SetSerializedSprite(so, "handsSparklingSprite", GetSprite("SPR_Hands_Sparkling"));
+                    so.ApplyModifiedProperties();
+                }
+            }
+
+            // Part 3 Serialized Fields
+            if (p3 != null)
+            {
+                var c3 = p3.GetComponent<U8_Part3_AfterYouController_Masters_Activity>();
+                if (c3 != null)
+                {
+                    var so = new SerializedObject(c3);
+                    SetSerializedSprite(so, "meeraEnteringSprite", GetSprite("SPR_Meera_Entering"));
+                    SetSerializedSprite(so, "meeraSlippingSprite", GetSprite("SPR_Meera_Slip"));
+                    SetSerializedSprite(so, "meeraUnimpressedSprite", GetSprite("SPR_Meera_Unimpressed"));
+                    SetSerializedSprite(so, "meeraHappySmileSprite", GetSprite("SPR_Meera_Happy"));
+                    so.ApplyModifiedProperties();
+                }
+            }
+
+            // Part 4 Serialized Fields
+            if (p4 != null)
+            {
+                var c4 = p4.GetComponent<U8_Part4_EmptySoapController_Masters_Activity>();
+                if (c4 != null)
+                {
+                    var so = new SerializedObject(c4);
+                    SetSerializedSprite(so, "meeraPumpingSoapSprite", GetSprite("SPR_Meera_PumpSoap"));
+                    SetSerializedSprite(so, "meeraShruggingSprite", GetSprite("SPR_Meera_Unimpressed"));
+                    SetSerializedSprite(so, "meeraHappySprite", GetSprite("SPR_Meera_Happy"));
+                    SetSerializedSprite(so, "soapEmptySprite", GetSprite("SPR_Soap_Empty"));
+                    SetSerializedSprite(so, "soapFullRefilledSprite", GetSprite("SPR_Soap_Full"));
+                    so.ApplyModifiedProperties();
+                }
+            }
+
+            // Ending Screen Serialized Fields
+            if (end != null)
+            {
+                var cend = end.GetComponent<U8_EndingScreen_Masters_Activity>();
+                if (cend != null)
+                {
+                    var so = new SerializedObject(cend);
+                    SetSerializedSprite(so, "starEarnedSprite", GetOrCreateStarSprite(true));
+                    SetSerializedSprite(so, "starEmptySprite", GetOrCreateStarSprite(false));
+                    so.ApplyModifiedProperties();
+                }
+            }
+        }
+
+        private static void SetSerializedSprite(SerializedObject so, string propertyName, Sprite sprite)
+        {
+            if (sprite == null) return;
+            SerializedProperty prop = so.FindProperty(propertyName);
+            if (prop != null)
+            {
+                prop.objectReferenceValue = sprite;
+            }
         }
 
         private static GameObject CreateContainer(GameObject parent, string name, Vector2 pos, Vector2 size)
         {
             Transform existing = parent.transform.Find(name);
-            if (existing != null) return existing.gameObject;
-
-            GameObject go = new GameObject(name, typeof(RectTransform));
+            GameObject go = existing != null ? existing.gameObject : new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent.transform, false);
+
             RectTransform rt = go.GetComponent<RectTransform>();
+            if (rt == null) rt = go.AddComponent<RectTransform>();
             rt.anchoredPosition = pos;
             rt.sizeDelta = size;
             return go;
         }
 
-        private static Image CreateImage(GameObject parent, string name, Vector2 pos, Vector2 size, Sprite sprite)
+        public static GameObject CreateCard(GameObject parent, string name, Vector2 pos, Vector2 size, Color cardColor)
         {
             Transform existing = parent.transform.Find(name);
             GameObject go = existing != null ? existing.gameObject : new GameObject(name, typeof(RectTransform), typeof(Image));
             go.transform.SetParent(parent.transform, false);
 
             RectTransform rt = go.GetComponent<RectTransform>();
+            if (rt == null) rt = go.AddComponent<RectTransform>();
             rt.anchoredPosition = pos;
             rt.sizeDelta = size;
 
             Image img = go.GetComponent<Image>();
+            if (img == null) img = go.AddComponent<Image>();
+            img.sprite = GetOrCreateRoundedBoxSprite();
+            img.type = Image.Type.Sliced;
+            img.color = cardColor;
+            return go;
+        }
+
+        private static Image CreateImage(GameObject parent, string name, Vector2 pos, Vector2 size, Sprite sprite, bool isBackground = false)
+        {
+            Transform existing = parent.transform.Find(name);
+            GameObject go = existing != null ? existing.gameObject : new GameObject(name, typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent.transform, false);
+
+            RectTransform rt = go.GetComponent<RectTransform>();
+            if (rt == null) rt = go.AddComponent<RectTransform>();
+
+            if (isBackground)
+            {
+                go.transform.SetAsFirstSibling();
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+            }
+            else
+            {
+                rt.anchoredPosition = pos;
+                rt.sizeDelta = size;
+            }
+
+            var oldTmp = go.GetComponent<TextMeshProUGUI>();
+            if (oldTmp != null) Object.DestroyImmediate(oldTmp);
+
+            Image img = go.GetComponent<Image>();
+            if (img == null) img = go.AddComponent<Image>();
+            if (isBackground)
+            {
+                img.preserveAspect = false;
+            }
             if (sprite != null)
             {
                 img.sprite = sprite;
@@ -321,38 +850,109 @@ namespace Googolplex.Unit8
             return img;
         }
 
-        private static Button CreateButton(GameObject parent, string name, string label, Vector2 pos, Vector2 size, Color btnColor)
+        private static Button CreateButton(GameObject parent, string name, string label, Vector2 pos, Vector2 size, Color btnColor, float fontSize = 28)
         {
             Transform existing = parent.transform.Find(name);
             GameObject go = existing != null ? existing.gameObject : new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
             go.transform.SetParent(parent.transform, false);
 
             RectTransform rt = go.GetComponent<RectTransform>();
+            if (rt == null) rt = go.AddComponent<RectTransform>();
             rt.anchoredPosition = pos;
             rt.sizeDelta = size;
 
             Image img = go.GetComponent<Image>();
+            if (img == null) img = go.AddComponent<Image>();
+            img.sprite = GetOrCreateRoundedBoxSprite();
+            img.type = Image.Type.Sliced;
             img.color = btnColor;
 
             Button btn = go.GetComponent<Button>();
+            if (btn == null) btn = go.AddComponent<Button>();
+            var colors = btn.colors;
+            colors.highlightedColor = Color.Lerp(btnColor, Color.white, 0.25f);
+            colors.pressedColor = Color.Lerp(btnColor, Color.black, 0.25f);
+            btn.colors = colors;
 
             // Button label
             Transform textTrans = go.transform.Find("Label");
             GameObject textGo = textTrans != null ? textTrans.gameObject : new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
             textGo.transform.SetParent(go.transform, false);
             RectTransform textRt = textGo.GetComponent<RectTransform>();
+            if (textRt == null) textRt = textGo.AddComponent<RectTransform>();
             textRt.anchorMin = Vector2.zero;
             textRt.anchorMax = Vector2.one;
-            textRt.offsetMin = Vector2.zero;
-            textRt.offsetMax = Vector2.zero;
+            textRt.offsetMin = new Vector2(12, 6);
+            textRt.offsetMax = new Vector2(-12, -6);
 
             var tmp = textGo.GetComponent<TextMeshProUGUI>();
+            if (tmp == null) tmp = textGo.AddComponent<TextMeshProUGUI>();
             tmp.text = label;
-            tmp.fontSize = 22;
+            tmp.fontSize = fontSize;
+            tmp.fontStyle = FontStyles.Bold;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.color = Color.white;
+            tmp.enableWordWrapping = true;
 
             return btn;
+        }
+
+        private static GameObject CreatePromptCard(GameObject parent, string name, string content, Vector2 pos, Vector2 size, float fontSize = 38)
+        {
+            string cardName = name.EndsWith("Card") ? name : name + "Card";
+            GameObject card = CreateCard(parent, cardName, pos, size, new Color(0.08f, 0.14f, 0.22f, 0.94f));
+
+            string textName = name.EndsWith("Text") ? name : name + "Text";
+            Transform existingText = card.transform.Find(textName) ?? card.transform.Find("PromptText");
+            
+            GameObject textGo = existingText != null ? existingText.gameObject : new GameObject(textName, typeof(RectTransform), typeof(TextMeshProUGUI));
+            textGo.transform.SetParent(card.transform, false);
+
+            RectTransform textRt = textGo.GetComponent<RectTransform>();
+            if (textRt == null) textRt = textGo.AddComponent<RectTransform>();
+            textRt.anchorMin = Vector2.zero;
+            textRt.anchorMax = Vector2.one;
+            textRt.offsetMin = new Vector2(24, 6);
+            textRt.offsetMax = new Vector2(-24, -6);
+
+            var tmp = textGo.GetComponent<TextMeshProUGUI>();
+            if (tmp == null) tmp = textGo.AddComponent<TextMeshProUGUI>();
+            tmp.text = content;
+            tmp.fontSize = fontSize;
+            tmp.fontStyle = FontStyles.Bold;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.color = Color.white;
+            tmp.enableWordWrapping = true;
+            return card;
+        }
+
+        private static GameObject CreateFeedbackCard(GameObject parent, string name, string content, Vector2 pos, Vector2 size, float fontSize = 34, Color? textColor = null)
+        {
+            string cardName = name.EndsWith("Card") ? name : name + "Card";
+            GameObject card = CreateCard(parent, cardName, pos, size, new Color(0.06f, 0.10f, 0.16f, 0.92f));
+
+            string textName = name.EndsWith("Text") ? name : name + "Text";
+            Transform existingText = card.transform.Find(textName) ?? card.transform.Find("FeedbackText");
+
+            GameObject textGo = existingText != null ? existingText.gameObject : new GameObject(textName, typeof(RectTransform), typeof(TextMeshProUGUI));
+            textGo.transform.SetParent(card.transform, false);
+
+            RectTransform textRt = textGo.GetComponent<RectTransform>();
+            if (textRt == null) textRt = textGo.AddComponent<RectTransform>();
+            textRt.anchorMin = Vector2.zero;
+            textRt.anchorMax = Vector2.one;
+            textRt.offsetMin = new Vector2(20, 6);
+            textRt.offsetMax = new Vector2(-20, -6);
+
+            var tmp = textGo.GetComponent<TextMeshProUGUI>();
+            if (tmp == null) tmp = textGo.AddComponent<TextMeshProUGUI>();
+            tmp.text = content;
+            tmp.fontSize = fontSize;
+            tmp.fontStyle = FontStyles.Bold;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.color = textColor ?? Color.yellow;
+            tmp.enableWordWrapping = true;
+            return card;
         }
 
         private static TextMeshProUGUI CreateText(GameObject parent, string name, string content, Vector2 pos, Vector2 size, float fontSize, Color? color = null)
@@ -362,12 +962,18 @@ namespace Googolplex.Unit8
             go.transform.SetParent(parent.transform, false);
 
             RectTransform rt = go.GetComponent<RectTransform>();
+            if (rt == null) rt = go.AddComponent<RectTransform>();
             rt.anchoredPosition = pos;
             rt.sizeDelta = size;
 
+            var oldImg = go.GetComponent<Image>();
+            if (oldImg != null) Object.DestroyImmediate(oldImg);
+
             var tmp = go.GetComponent<TextMeshProUGUI>();
+            if (tmp == null) tmp = go.AddComponent<TextMeshProUGUI>();
             tmp.text = content;
             tmp.fontSize = fontSize;
+            tmp.fontStyle = FontStyles.Bold;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.color = color ?? Color.white;
             tmp.enableWordWrapping = true;
@@ -376,23 +982,37 @@ namespace Googolplex.Unit8
 
         private static void CreateHeader(GameObject screen, string title, string sub)
         {
-            if (screen.transform.Find("HeaderBar") != null) return;
+            Transform existing = screen.transform.Find("HeaderBar");
+            GameObject headerCard = existing != null ? existing.gameObject : new GameObject("HeaderBar", typeof(RectTransform), typeof(Image));
+            headerCard.transform.SetParent(screen.transform, false);
 
-            GameObject header = new GameObject("HeaderBar", typeof(RectTransform));
-            header.transform.SetParent(screen.transform, false);
-            RectTransform rt = header.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0f, 0.9f);
+            RectTransform rt = headerCard.GetComponent<RectTransform>() ?? headerCard.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0f, 1f);
             rt.anchorMax = new Vector2(1f, 1f);
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.anchoredPosition = new Vector2(0f, -12f);
+            rt.sizeDelta = new Vector2(-40f, 80f);
 
-            GameObject textGo = new GameObject("TitleText", typeof(RectTransform), typeof(TextMeshProUGUI));
-            textGo.transform.SetParent(header.transform, false);
-            var tmp = textGo.GetComponent<TextMeshProUGUI>();
-            tmp.text = $"{title}  •  {sub}";
-            tmp.fontSize = 28;
+            Image img = headerCard.GetComponent<Image>() ?? headerCard.AddComponent<Image>();
+            img.sprite = GetOrCreateRoundedBoxSprite();
+            img.type = Image.Type.Sliced;
+            img.color = new Color(0.06f, 0.10f, 0.16f, 0.94f);
+
+            Transform textTrans = headerCard.transform.Find("TitleText");
+            GameObject textGo = textTrans != null ? textTrans.gameObject : new GameObject("TitleText", typeof(RectTransform), typeof(TextMeshProUGUI));
+            textGo.transform.SetParent(headerCard.transform, false);
+            RectTransform textRt = textGo.GetComponent<RectTransform>() ?? textGo.AddComponent<RectTransform>();
+            textRt.anchorMin = Vector2.zero;
+            textRt.anchorMax = Vector2.one;
+            textRt.offsetMin = new Vector2(24, 0);
+            textRt.offsetMax = new Vector2(-24, 0);
+
+            var tmp = textGo.GetComponent<TextMeshProUGUI>() ?? textGo.AddComponent<TextMeshProUGUI>();
+            tmp.text = $"<color=#FFD700><b>{title}</b></color> - <color=#FFFFFF><b>{sub}</b></color>";
+            tmp.fontSize = 32;
+            tmp.fontStyle = FontStyles.Bold;
             tmp.alignment = TextAlignmentOptions.Center;
-            tmp.color = Color.white;
+            tmp.enableWordWrapping = false;
         }
     }
 }

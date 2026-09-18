@@ -105,13 +105,24 @@ A side-on view of the washroom: Cubicle (Left), Sink/Tap/Soap (Center), Paper To
 
 ```
 Assets/SeniorsActivityUnit8/
+├── Art/
+│   ├── UI_RoundedBox_9Slice.png
+│   └── more sprites/
+│       ├── Character — Anu U8 SA.png (5 poses: Normal, Knocking, Sheepish, Washing, Wiping)
+│       ├── Character — Meera U8 SA .png (5 poses: Entering, Slip, Unimpressed, PumpSoap, Happy)
+│       ├── Friendly Germs & Handwash Close-Up U8 SA.png (4 Germs, Hands Soapy, Hands Sparkling)
+│       ├── Washroom Props & Fixtures U8 SA.png (Doors, Sinks, Tap, Bin, Dispenser)
+│       └── SPR_Washroom_BG.png (Tiled washroom background)
 ├── doc/
-│   ├── Unit_8_Washroom_Etiquette_Class3-4.docx
 │   ├── Unit_8_Specification.md
-│   └── Audio_Manifest_Unit_8.md
+│   ├── Audio_Manifest_Unit_8.md
+│   ├── CONTEXT.md
+│   └── SKILLS.md
 ├── README.md
 ├── Scenes/
 │   └── SeniorsActivity_unit8.unity
+├── SFX/
+│   └── generate_sfx.py (Generates all 24 procedural 16-bit PCM WAV SFX files)
 └── Scripts/
     ├── Core/
     │   ├── U8_GameManager_Masters_Activity.cs
@@ -129,9 +140,16 @@ Assets/SeniorsActivityUnit8/
 
 ---
 
-## 🛠️ How to Setup & Run in Unity
+## 🛠️ Editor Menu Tools & Workflows
 
-1. Open the project in **Unity Editor**.
-2. Go to the top menu bar: **`Googolplex` $\rightarrow$ `Unit 8` $\rightarrow$ `Setup Complete Unit 8 Scene`**.
-3. The tool automatically creates the Canvas, UI elements, character avatars, audio sources, and wires up all component references.
-4. Press **Play** in the Unity Editor to test all 4 parts and the Handwash song loop!
+Under **`Googolplex > Unit 8`** in the Unity menu bar:
+
+1. **`Setup Complete Unit 8 Scene`**:
+   - Generates the complete 6-screen UI hierarchy, mobile-scaled font typography (32-38pt), rounded 9-slice card backgrounds, and wires all serialized sprites & audio listeners.
+2. **`Setup Screen 2 Only (Part 2 Inside)`**:
+   - Rebuilds and updates Screen 2 exclusively, preserving any custom manual changes made to Screen 1 or other screens.
+3. **`Wire Sprites & Audio Only (Non-Destructive)`**:
+   - Non-destructively assigns all serialized sprite references (`SPR_Anu_Knocking`, `SPR_Anu_Wiping`, `SPR_Meera_Slip`, etc.) and sets up the 4 Main Camera 2D `AudioSource` components without moving or destroying ANY scene GameObjects.
+4. **`Sanitize All UI Text Glyphs`**:
+   - Instantly cleans all TextMeshPro labels in the active scene to plain normal text without missing unicode glyph fallbacks.
+

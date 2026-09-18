@@ -16,6 +16,7 @@ namespace Googolplex.Unit8
         [Header("Character Avatars")]
         [SerializeField] private Image anuAvatar;
         [SerializeField] private Sprite anuNormalSprite;
+        [SerializeField] private Sprite anuKnockingSprite;
         [SerializeField] private Sprite anuSheepishSprite;
 
         [Header("UI Prompts & Feedback")]
@@ -49,7 +50,17 @@ namespace Googolplex.Unit8
 
         private void AutoFindUIReferences()
         {
-            if (promptText == null) promptText = GetComponentInChildren<TextMeshProUGUI>(true);
+            if (promptText == null)
+            {
+                Transform t = transform.Find("PromptCard/PromptText") ?? transform.Find("PromptText");
+                if (t != null) promptText = t.GetComponent<TextMeshProUGUI>();
+                else promptText = GetComponentInChildren<TextMeshProUGUI>(true);
+            }
+            if (feedbackText == null)
+            {
+                Transform t = transform.Find("FeedbackCard/FeedbackText") ?? transform.Find("FeedbackText");
+                if (t != null) feedbackText = t.GetComponent<TextMeshProUGUI>();
+            }
 
             if (btnKnockAndWait == null)
             {
@@ -109,6 +120,7 @@ namespace Googolplex.Unit8
             isProcessingChoice = true;
             SetButtonsInteractable(false);
 
+            if (anuAvatar != null && anuKnockingSprite != null) anuAvatar.sprite = anuKnockingSprite;
             if (feedbackText != null) feedbackText.text = "Knock, knock! Anu waits patiently...";
             if (U8_AudioManager_Masters_Activity.Instance != null)
             {
@@ -119,6 +131,7 @@ namespace Googolplex.Unit8
             yield return new WaitForSeconds(1.8f);
 
             // Door opens
+            if (anuAvatar != null && anuNormalSprite != null) anuAvatar.sprite = anuNormalSprite;
             if (doorImage != null && doorOpenSprite != null) doorImage.sprite = doorOpenSprite;
             if (shutSignObject != null) shutSignObject.SetActive(false);
             if (feedbackText != null) feedbackText.text = "The other student comes out. Anu goes in!";

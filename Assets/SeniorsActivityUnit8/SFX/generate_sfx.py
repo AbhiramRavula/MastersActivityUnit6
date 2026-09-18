@@ -141,7 +141,6 @@ def main():
     # 11. AMB_Washroom (Gentle tiled room tone with echo drip)
     def amb_washroom_func(t, dur):
         room_tone = (random.random() * 2.0 - 1.0) * 0.05
-        # Soft drip at 1.5s
         drip_t = t % 2.0
         drip = math.exp(-40 * drip_t) * math.sin(2 * math.pi * 1400 * drip_t) * 0.2 if drip_t < 0.15 else 0
         return room_tone + drip
@@ -156,6 +155,56 @@ def main():
         bass = math.sin(2 * math.pi * (freq * 0.5) * t) * 0.2
         return lead + bass
     create_wav("MUS_HandwashSong.wav", 20.0, song_func, volume=0.45)
+
+    # 13. SFX_Star (Bright chiming glockenspiel sparkle)
+    def star_func(t, dur):
+        decay1 = math.exp(-6 * t)
+        decay2 = math.exp(-8 * max(0, t - 0.08)) if t >= 0.08 else 0
+        decay3 = math.exp(-10 * max(0, t - 0.16)) if t >= 0.16 else 0
+        s1 = math.sin(2 * math.pi * 1318.5 * t) * decay1  # E6
+        s2 = math.sin(2 * math.pi * 1567.9 * t) * decay2  # G6
+        s3 = math.sin(2 * math.pi * 2093.0 * t) * decay3  # C7
+        return (s1 + s2 + s3) * 0.4
+    create_wav("SFX_Star.wav", 1.2, star_func, volume=0.7)
+
+    # 14. SFX_Clap (Applause / clapping bursts)
+    def clap_func(t, dur):
+        env = math.exp(-12 * (t % 0.12))
+        noise = (random.random() * 2.0 - 1.0) * 0.6
+        return env * noise
+    create_wav("SFX_Clap.wav", 1.5, clap_func, volume=0.6)
+
+    # 15. SFX_Confetti (Party popper pop and sparkle)
+    def confetti_func(t, dur):
+        pop = math.exp(-35 * t) * math.sin(2 * math.pi * 220 * t)
+        sparkle = math.exp(-4 * t) * (random.random() * 2.0 - 1.0) * 0.3
+        return pop + sparkle
+    create_wav("SFX_Confetti.wav", 0.8, confetti_func, volume=0.7)
+
+    # 16. SFX_Sparkle (High frequency magical chime)
+    def sparkle_func(t, dur):
+        decay = math.exp(-5 * t)
+        freq = 2400 + 800 * math.sin(t * 30)
+        return decay * math.sin(2 * math.pi * freq * t) * 0.35
+    create_wav("SFX_Sparkle.wav", 0.9, sparkle_func, volume=0.6)
+
+    # 17. MUS_Win (4s celebratory fanfare victory tune)
+    def win_func(t, dur):
+        melody_notes = [523.25, 659.25, 783.99, 1046.50]  # C5, E5, G5, C6
+        idx = min(len(melody_notes) - 1, int(t * 2))
+        freq = melody_notes[idx]
+        env = math.exp(-2.5 * (t % 0.5)) if t < 2.0 else math.exp(-1.2 * (t - 2.0))
+        lead = math.sin(2 * math.pi * freq * t) * env
+        bass = math.sin(2 * math.pi * (freq * 0.5) * t) * 0.3
+        return (lead + bass) * 0.45
+    create_wav("MUS_Win.wav", 4.0, win_func, volume=0.6)
+
+    # 18. SFX_MeeraGasp (Meera startle gasp)
+    def mee_gasp_func(t, dur):
+        env = math.sin(math.pi * (t / dur))
+        gasp = math.sin(2 * math.pi * (450 + 200 * t) * t) * 0.4 + ((random.random() * 2.0 - 1.0) * 0.2)
+        return env * gasp
+    create_wav("VO_U8_MEE_2.wav", 0.4, mee_gasp_func, volume=0.6)
 
     print("All Unit 8 SFX WAV files generated successfully!")
 

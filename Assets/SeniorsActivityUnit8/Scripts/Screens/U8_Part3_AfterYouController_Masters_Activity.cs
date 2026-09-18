@@ -44,7 +44,18 @@ namespace Googolplex.Unit8
 
         private void AutoFindUIReferences()
         {
-            if (promptText == null) promptText = GetComponentInChildren<TextMeshProUGUI>(true);
+            if (promptText == null)
+            {
+                Transform t = transform.Find("PromptCard/PromptText") ?? transform.Find("PromptText");
+                if (t != null) promptText = t.GetComponent<TextMeshProUGUI>();
+                else promptText = GetComponentInChildren<TextMeshProUGUI>(true);
+            }
+            if (feedbackText == null)
+            {
+                Transform t = transform.Find("FeedbackCard/FeedbackText") ?? transform.Find("FeedbackText");
+                if (t != null) feedbackText = t.GetComponent<TextMeshProUGUI>();
+            }
+
             if (btnTryAgain == null)
             {
                 Transform t = transform.Find("Btn_TryAgain") ?? transform.Find("BottomBar/Btn_TryAgain");

@@ -19,7 +19,7 @@ namespace Googolplex.Unit8
     {
         public static U8_AudioManager_Masters_Activity Instance { get; private set; }
 
-        [Header("Audio Sources")]
+        [Header("Audio Sources (Hosted on Main Camera)")]
         [SerializeField] private AudioSource bgmSource;
         [SerializeField] private AudioSource ambSource;
         [SerializeField] private AudioSource sfxSource;
@@ -42,18 +42,17 @@ namespace Googolplex.Unit8
             AudioListener.volume = 1.0f;
             AudioListener.pause = false;
 
-            EnsureAudioSources();
-            EnsureAudioListener();
+            EnsureAudioSourcesOnMainCamera();
 
 #if UNITY_EDITOR
             AutoPopulateClipsInEditor();
 #endif
 
             BuildSoundDictionary();
-            Debug.Log($"[U8_AudioManager] Initialized successfully with {soundDict.Count} registered audio entries.");
+            Debug.Log($"[U8_AudioManager] Initialized successfully with {soundDict.Count} registered audio entries. Audio Sources hosted on Main Camera.");
         }
 
-        private GameObject GetAudioHostGameObject()
+        public GameObject GetMainCameraHost()
         {
             if (Camera.main != null) return Camera.main.gameObject;
             Camera anyCam = FindFirstObjectByType<Camera>();
@@ -62,23 +61,52 @@ namespace Googolplex.Unit8
             return gameObject;
         }
 
-        private void EnsureAudioSources()
+        public void EnsureAudioSourcesOnMainCamera()
         {
-            GameObject host = GetAudioHostGameObject();
-            if (!host.activeSelf) host.SetActive(true);
+            GameObject camHost = GetMainCameraHost();
+            if (!camHost.activeSelf) camHost.SetActive(true);
 
-            bgmSource = ValidateOrAttachSource(bgmSource, host, 0.40f, true);
-            ambSource = ValidateOrAttachSource(ambSource, host, 0.30f, true);
-            sfxSource = ValidateOrAttachSource(sfxSource, host, 1.0f, false);
-            voSource = ValidateOrAttachSource(voSource, host, 1.0f, false);
+            // Ensure AudioListener
+            AudioListener listener = camHost.GetComponent<AudioListener>();
+            if (listener == null) listener = camHost.AddComponent<AudioListener>();
+            listener.enabled = true;
+
+            // Clean up any extra listeners in scene
+            AudioListener[] listeners = FindObjectsByType<AudioListener>(FindObjectsSortMode.None);
+            foreach (var l in listeners)
+            {
+                if (l != listener) l.enabled = false;
+            }
+
+            bgmSource = ValidateOrAttachSource(bgmSource, camHost, "BGM_Source", 0.45f, true);
+            ambSource = ValidateOrAttachSource(ambSource, camHost, "AMB_Source", 0.35f, true);
+            sfxSource = ValidateOrAttachSource(sfxSource, camHost, "SFX_Source", 1.0f, false);
+            voSource = ValidateOrAttachSource(voSource, camHost, "VO_Source", 1.0f, false);
         }
 
-        private AudioSource ValidateOrAttachSource(AudioSource source, GameObject host, float defaultVol, bool loop)
+        private AudioSource ValidateOrAttachSource(AudioSource source, GameObject host, string sourceTag, float defaultVol, bool loop)
         {
-            if (source == null || !source.gameObject.activeInHierarchy)
+            if (source == null || source.gameObject != host)
             {
-                GameObject target = host != null ? host : GetAudioHostGameObject();
-                source = target.AddComponent<AudioSource>();
+                // Find existing source with tag or on host
+                AudioSource[] sources = host.GetComponents<AudioSource>();
+                if (sources != null && sources.Length > 0)
+                {
+                    // Match by loop setting or tag if possible
+                    foreach (var s in sources)
+                    {
+                        if (s.loop == loop && (source == null || s != bgmSource && s != ambSource && s != sfxSource && s != voSource))
+                        {
+                            source = s;
+                            break;
+                        }
+                    }
+                }
+
+                if (source == null)
+                {
+                    source = host.AddComponent<AudioSource>();
+                }
             }
 
             source.enabled = true;
@@ -86,32 +114,11 @@ namespace Googolplex.Unit8
             source.loop = loop;
             source.volume = defaultVol;
             source.mute = false;
-            source.spatialBlend = 0f;
+            source.spatialBlend = 0f; // 2D Full stereo everywhere
             return source;
         }
 
-        private void EnsureAudioListener()
-        {
-            GameObject host = GetAudioHostGameObject();
-            AudioListener listener = host.GetComponent<AudioListener>();
-            if (listener == null)
-            {
-                listener = FindFirstObjectByType<AudioListener>();
-                if (listener == null) listener = FindObjectOfType<AudioListener>();
-            }
-
-            if (listener == null)
-            {
-                listener = host.AddComponent<AudioListener>();
-            }
-
-            if (listener != null)
-            {
-                listener.enabled = true;
-            }
-        }
-
-        private void BuildSoundDictionary()
+        public void BuildSoundDictionary()
         {
             soundDict.Clear();
             if (sounds != null)
@@ -131,7 +138,7 @@ namespace Googolplex.Unit8
         }
 
 #if UNITY_EDITOR
-        private void AutoPopulateClipsInEditor()
+        public void AutoPopulateClipsInEditor()
         {
             if (sounds == null) sounds = new List<U8_SoundEntry_Masters_Activity>();
             HashSet<string> registered = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
@@ -142,7 +149,13 @@ namespace Googolplex.Unit8
                     registered.Add(s.id);
             }
 
-            string[] searchFolders = new[] { "Assets/SeniorsActivityUnit8/SFX", "Assets/SeniorsActivityUnit8/Audio", "Assets/SeniorsActivityUnit6/SFX" };
+            string[] searchFolders = new[] { 
+                "Assets/SeniorsActivityUnit8/SFX", 
+                "Assets/SeniorsActivityUnit8/Audio/U8_MastersActivity_audios",
+                "Assets/SeniorsActivityUnit8/Audio", 
+                "Assets/SeniorsActivityUnit6/SFX" 
+            };
+
             foreach (string folder in searchFolders)
             {
                 if (!System.IO.Directory.Exists(folder)) continue;
@@ -170,13 +183,19 @@ namespace Googolplex.Unit8
                 }
             }
 
-            Debug.Log($"[U8_AudioManager] Scanned project audio: total {sounds.Count} clips loaded.");
+            BuildSoundDictionary();
+            Debug.Log($"[U8_AudioManager] Auto-populated audio clips: total {sounds.Count} clips loaded.");
         }
 
         private AudioClip LoadClipOnDemand(string soundId)
         {
             List<string> validFolders = new List<string>();
-            string[] searchFolders = new[] { "Assets/SeniorsActivityUnit8/SFX", "Assets/SeniorsActivityUnit8/Audio", "Assets/SeniorsActivityUnit6/SFX" };
+            string[] searchFolders = new[] { 
+                "Assets/SeniorsActivityUnit8/SFX", 
+                "Assets/SeniorsActivityUnit8/Audio/U8_MastersActivity_audios",
+                "Assets/SeniorsActivityUnit8/Audio", 
+                "Assets/SeniorsActivityUnit6/SFX" 
+            };
             foreach (var f in searchFolders)
             {
                 if (System.IO.Directory.Exists(f)) validFolders.Add(f);
@@ -202,29 +221,29 @@ namespace Googolplex.Unit8
             return null;
         }
 
-        private static string MapFileNameToSoundId(string fileName)
+        public static string MapFileNameToSoundId(string fileName)
         {
             if (fileName.StartsWith("SFX_") || fileName.StartsWith("AMB_") || fileName.StartsWith("MUS_") || fileName.StartsWith("VO_"))
                 return fileName;
 
-            string lower = fileName.ToLower();
+            string lower = fileName.ToLower().Trim();
 
             // Teacher / Narrator VO
             if (lower.Contains("anu needs the washroom")) return "VO_U8_01";
-            if (lower.Contains("the door is closed what should")) return "VO_U8_02";
+            if (lower.Contains("the door is closed what should") || lower.Contains("door is closed")) return "VO_U8_02";
             if (lower.Contains("knock and wait")) return "VO_U8_03";
             if (lower.Contains("now what next")) return "VO_U8_04";
-            if (lower.Contains("do not forget to flush")) return "VO_U8_05";
-            if (lower.Contains("now wash your hands keep")) return "VO_U8_06";
+            if (lower.Contains("do not forget to flush") || lower.Contains("forget to flush")) return "VO_U8_05";
+            if (lower.Contains("now wash your hands") || lower.Contains("keep tapping")) return "VO_U8_06";
             if (lower.Contains("keep going")) return "VO_U8_07";
-            if (lower.Contains("all clean one star")) return "VO_U8_08";
+            if (lower.Contains("all clean one star") || lower.Contains("all clean")) return "VO_U8_08";
             if (lower.Contains("turn the tap off")) return "VO_U8_09";
             if (lower.Contains("towel in the bin")) return "VO_U8_10";
             if (lower.Contains("wipe the sink")) return "VO_U8_11";
             if (lower.Contains("here comes meera")) return "VO_U8_12";
-            if (lower.Contains("oh dear shall we try again")) return "VO_U8_13";
-            if (lower.Contains("the soap is finished what should")) return "VO_U8_14";
-            if (lower.Contains("three stars ready for the next")) return "VO_U8_15";
+            if (lower.Contains("shall we try again") || lower.Contains("oh dear")) return "VO_U8_13";
+            if (lower.Contains("the soap is finished what should") || lower.Contains("soap is finished what")) return "VO_U8_14";
+            if (lower.Contains("three stars ready for the next") || lower.Contains("ready for the next person")) return "VO_U8_15";
             if (lower.Contains("would the next person be happy")) return "VO_U8_16";
 
             // Character Voices
@@ -269,7 +288,7 @@ namespace Googolplex.Unit8
         {
             if (string.IsNullOrEmpty(soundId)) return;
 
-            sfxSource = ValidateOrAttachSource(sfxSource, GetAudioHostGameObject(), 1.0f, false);
+            EnsureAudioSourcesOnMainCamera();
 
             if (!soundDict.TryGetValue(soundId, out U8_SoundEntry_Masters_Activity entry))
             {
@@ -287,7 +306,7 @@ namespace Googolplex.Unit8
             {
                 float vol = entry.volume > 0 ? entry.volume : 1.0f;
                 sfxSource.PlayOneShot(entry.clip, vol);
-                Debug.Log($"[U8_AudioManager] >>> PLAYING SFX: {soundId} (Clip: '{entry.clip.name}') <<<");
+                Debug.Log($"[U8_AudioManager] >>> PLAYING SFX on Main Camera: '{soundId}' (Clip: '{entry.clip.name}') <<<");
             }
             else
             {
@@ -299,7 +318,7 @@ namespace Googolplex.Unit8
         {
             if (string.IsNullOrEmpty(voId)) return;
 
-            voSource = ValidateOrAttachSource(voSource, GetAudioHostGameObject(), 1.0f, false);
+            EnsureAudioSourcesOnMainCamera();
 
             if (!soundDict.TryGetValue(voId, out U8_SoundEntry_Masters_Activity entry))
             {
@@ -320,7 +339,7 @@ namespace Googolplex.Unit8
                 voSource.volume = entry.volume > 0 ? entry.volume : 1f;
                 voSource.loop = false;
                 voSource.Play();
-                Debug.Log($"[U8_AudioManager] >>> PLAYING VO: {voId} (Clip: '{entry.clip.name}') <<<");
+                Debug.Log($"[U8_AudioManager] >>> PLAYING VO on Main Camera: '{voId}' (Clip: '{entry.clip.name}') <<<");
             }
             else
             {
@@ -337,7 +356,7 @@ namespace Googolplex.Unit8
         {
             if (string.IsNullOrEmpty(bgmId)) return;
 
-            bgmSource = ValidateOrAttachSource(bgmSource, GetAudioHostGameObject(), 0.40f, loop);
+            EnsureAudioSourcesOnMainCamera();
 
             if (!soundDict.TryGetValue(bgmId, out U8_SoundEntry_Masters_Activity entry))
             {
@@ -345,7 +364,7 @@ namespace Googolplex.Unit8
                 AudioClip onDemand = LoadClipOnDemand(bgmId);
                 if (onDemand != null)
                 {
-                    entry = new U8_SoundEntry_Masters_Activity { id = bgmId, clip = onDemand, volume = 0.4f };
+                    entry = new U8_SoundEntry_Masters_Activity { id = bgmId, clip = onDemand, volume = 0.45f };
                     soundDict[bgmId] = entry;
                 }
 #endif
@@ -358,9 +377,9 @@ namespace Googolplex.Unit8
                 bgmSource.Stop();
                 bgmSource.clip = entry.clip;
                 bgmSource.loop = loop;
-                bgmSource.volume = entry.volume > 0 ? entry.volume : 0.4f;
+                bgmSource.volume = entry.volume > 0 ? entry.volume : 0.45f;
                 bgmSource.Play();
-                Debug.Log($"[U8_AudioManager] >>> PLAYING BGM: {bgmId} (Clip: '{entry.clip.name}') <<<");
+                Debug.Log($"[U8_AudioManager] >>> PLAYING BGM on Main Camera: '{bgmId}' (Clip: '{entry.clip.name}') <<<");
             }
         }
 
@@ -373,7 +392,7 @@ namespace Googolplex.Unit8
         {
             if (string.IsNullOrEmpty(ambId)) return;
 
-            ambSource = ValidateOrAttachSource(ambSource, GetAudioHostGameObject(), 0.30f, loop);
+            EnsureAudioSourcesOnMainCamera();
 
             if (!soundDict.TryGetValue(ambId, out U8_SoundEntry_Masters_Activity entry))
             {
@@ -381,7 +400,7 @@ namespace Googolplex.Unit8
                 AudioClip onDemand = LoadClipOnDemand(ambId);
                 if (onDemand != null)
                 {
-                    entry = new U8_SoundEntry_Masters_Activity { id = ambId, clip = onDemand, volume = 0.3f };
+                    entry = new U8_SoundEntry_Masters_Activity { id = ambId, clip = onDemand, volume = 0.35f };
                     soundDict[ambId] = entry;
                 }
 #endif
@@ -394,9 +413,9 @@ namespace Googolplex.Unit8
                 ambSource.Stop();
                 ambSource.clip = entry.clip;
                 ambSource.loop = loop;
-                ambSource.volume = entry.volume > 0 ? entry.volume : 0.3f;
+                ambSource.volume = entry.volume > 0 ? entry.volume : 0.35f;
                 ambSource.Play();
-                Debug.Log($"[U8_AudioManager] >>> PLAYING AMBIENCE: {ambId} (Clip: '{entry.clip.name}') <<<");
+                Debug.Log($"[U8_AudioManager] >>> PLAYING AMBIENCE on Main Camera: '{ambId}' (Clip: '{entry.clip.name}') <<<");
             }
         }
 
