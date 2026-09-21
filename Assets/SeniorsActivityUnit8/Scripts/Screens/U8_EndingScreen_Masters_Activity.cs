@@ -67,19 +67,53 @@ namespace Googolplex.Unit8
                     }
                 }
             }
+
+            if (meeraWavingAvatar == null)
+            {
+                Transform t = transform.Find("MeeraWavingAvatar") ?? transform.Find("MeeraAvatar") ?? transform.Find("Meera_Image");
+                if (t != null) meeraWavingAvatar = t.GetComponent<Image>();
+            }
+            if (meeraWavingAvatar != null)
+            {
+                meeraWavingAvatar.preserveAspect = true;
+                meeraWavingAvatar.SetNativeSize();
+            }
+
+            if (starEarnedSprite == null || starEmptySprite == null)
+            {
+                Sprite[] allSprites = Resources.FindObjectsOfTypeAll<Sprite>();
+                foreach (var s in allSprites)
+                {
+                    if (starEarnedSprite == null && s != null && s.name == "SPR_Icon_GoldStar")
+                        starEarnedSprite = s;
+                    if (starEmptySprite == null && s != null && s.name == "SPR_Icon_StarOutline")
+                        starEmptySprite = s;
+                }
+            }
         }
 
         private IEnumerator PlayEndingSequence()
         {
+            if (meeraWavingAvatar != null)
+            {
+                meeraWavingAvatar.preserveAspect = true;
+                meeraWavingAvatar.SetNativeSize();
+            }
+
             if (titleText != null) titleText.text = "READY FOR THE NEXT PERSON!";
             if (subtitleText != null) subtitleText.text = "Washroom Etiquette Complete!";
             if (discussionQuestionText != null) discussionQuestionText.text = "";
 
-            // Reset stars to empty initially
+            // Reset stars to empty outlines initially
             foreach (var star in starImages)
             {
-                if (star != null && starEmptySprite != null) star.sprite = starEmptySprite;
-                if (star != null) star.transform.localScale = Vector3.zero;
+                if (star != null)
+                {
+                    star.preserveAspect = true;
+                    if (starEmptySprite != null) star.sprite = starEmptySprite;
+                    star.transform.localScale = Vector3.one;
+                    star.color = Color.white;
+                }
             }
 
             if (confettiEffectObject != null) confettiEffectObject.SetActive(true);
@@ -98,7 +132,7 @@ namespace Googolplex.Unit8
                 ? U8_GameManager_Masters_Activity.Instance.StarCount 
                 : 3;
 
-            // Reveal stars one by one with pop
+            // Reveal stars one by one with pop animation into gold stars
             for (int i = 0; i < totalEarned && i < starImages.Count; i++)
             {
                 if (starImages[i] != null)
@@ -109,10 +143,11 @@ namespace Googolplex.Unit8
                         U8_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_Star");
                     }
 
-                    // Pop animation
-                    for (float t = 0; t < 1f; t += Time.deltaTime * 5f)
+                    // Punch / Pop animation from 1.0 -> 1.35 -> 1.0
+                    for (float t = 0; t < 1f; t += Time.deltaTime * 6f)
                     {
-                        starImages[i].transform.localScale = Vector3.one * Mathf.Lerp(0f, 1.2f, t);
+                        float s = Mathf.Sin(t * Mathf.PI) * 0.35f + 1f;
+                        starImages[i].transform.localScale = Vector3.one * s;
                         yield return null;
                     }
                     starImages[i].transform.localScale = Vector3.one;

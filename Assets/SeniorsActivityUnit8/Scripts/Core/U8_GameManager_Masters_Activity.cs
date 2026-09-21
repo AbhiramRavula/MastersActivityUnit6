@@ -58,6 +58,7 @@ namespace Googolplex.Unit8
 
         private void Start()
         {
+            ResetUnitState();
             ShowPart(U8_GamePart.Part1_Door);
             if (U8_AudioManager_Masters_Activity.Instance != null)
             {

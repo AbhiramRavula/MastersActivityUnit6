@@ -34,29 +34,32 @@
 - **Choice 3: Push it open** (Incorrect) $\rightarrow$ Plays `SFX_BoltRattle`, door is bolted, shows patience is needed.
 
 ### Part 2 — Inside the Washroom (6 Minutes, 1 Star)
-- Side-on 2D washroom view (Cubicle $\rightarrow$ Sink & Tap & Soap $\rightarrow$ Towels & Bin).
+- Side-on 2D washroom view (Cubicle $\rightarrow$ Sink & Tap & Soap $\rightarrow$ Towels & Bin) with dedicated step button card.
 - Sequence of 7 actions:
   1. **Lock Cubicle Door:** `SFX_BoltClick` (Mandatory before proceeding).
   2. **Flush Toilet:** `SFX_Flush` (Skipping causes unflushed toilet in Part 3).
   3. **Step Out of Cubicle:** Door swings open, Anu walks to sink.
   4. **Wash Hands:** Triggers **Handwash Screen** (20-second scrub, bubbles, germs slide off). Awards Star 1.
   5. **Turn Tap Off:** `SFX_TapOff` (Skipping leaves tap running in Part 3).
-  6. **Throw Towel in Bin:** `SFX_TowelPull` $\rightarrow$ `SFX_BinDrop` (Skipping drops soggy towel on floor).
+  6. **Throw Towel in Bin:** `SFX_TowelPull` $\rightarrow$ `SFX_BinDrop` (Skipping drops soggy towel on floor). Parabolic toss trajectory.
   7. **Wipe Sink:** `SFX_Wipe` (Skipping leaves splashed wet sink and floor puddle).
+- **Intuitive Step Navigation:** Active button pops with gentle pulse animation (`alpha = 1.0`), while inactive and completed steps are non-interactable without dimming.
 
 ### Dedicated Handwash Screen
-- Close-up of 2 hands under water stream.
-- 20-second timer matching `MUS_HandwashSong`.
-- Tapping/swiping rubs hands, builds bubbles, and releases 4 cute germ blobs with playful squeaks (`SFX_GermOff`).
-- If tapping stops before 20s, shows `"Keep going!"` with `VO_U8_07`.
-- Finishes with sparkle bloom (`SFX_Sparkle`), awards Star 1.
+- Close-up of 2 hands under water stream with soap and bubbles.
+- 20-second timer matching full duration of `MUS_HandwashSong`.
+- **8 Friendly Germ Blobs:** Placed across real handwashing zones (fingertips, palms, thumbs, between fingers, wrists).
+- Tapping/swiping rubs hands, builds bubbles, and wiggles active germs.
+- Germs clear gradually and evenly across the 20 seconds (~1 germ every 2.5s).
+- If tapping stops before 20s, shows `"Keep going! Scrub the germs away!"` with `VO_U8_07`.
+- Finishes with sparkle bloom (`SFX_Sparkle`), awards Star 1, and returns automatically to Part 2.
 
 ### Part 3 — After You (3 Minutes, 1 Star)
 - Anu walks out $\rightarrow$ 3-second pause $\rightarrow$ Meera walks in.
 - **If all steps passed:** Meera enters dry, clean room, uses sink with a smile, leaves happy. Star 2 awarded.
 - **If steps skipped:**
   - Wet floor: Shoe hits puddle, slides, flails arms, catches herself on sink (`SFX_Slip`, `VO_U8_MEE_2`).
-  - Splashed sink: Wipes sink with unimpressed expression.
+  - Splashed sink: Wipes sink with unimpressed expression; splashed overlay persists.
   - Running tap: Turns off forgotten running tap.
   - Soggy towel: Visible on floor next to bin.
   - Unflushed toilet: Opens cubicle, stops, closes door with a sigh.
@@ -64,10 +67,10 @@
 
 ### Part 4 — Empty Soap! (1 Minute, 1 Star)
 - Meera pumps soap dispenser $\rightarrow$ `SFX_SoapPump` $\rightarrow$ nothing comes out $\rightarrow$ `SFX_SoapEmpty`.
-- **Choice 1: Go and tell a teacher** (Correct) $\rightarrow$ Informs teacher (`VO_U8_MEE_1`), dispenser refilled, sparkles (`SFX_Sparkle`), two other students use it. Awards Star 3.
+- **Choice 1: Go and tell a teacher** (Correct) $\rightarrow$ Informs teacher (`VO_U8_MEE_1`), dispenser visibly refills (`SPR_Soap_Full`), sparkles (`SFX_Sparkle`), two other students use it. Awards Star 3.
 - **Choice 2: Just leave** (Lesson outcome) $\rightarrow$ Shrugs and leaves. 3 students enter, try in frustration, and leave empty-handed.
 
 ### Ending Celebration & Discussion (1 Minute)
-- 3 Gold Stars reveal (`SFX_Star`), Confetti (`SFX_Confetti`), Win music (`MUS_Win`).
+- 3 Gold Stars reveal from sprite sheet (`SPR_Icon_GoldStar`, `SFX_Star`), Confetti (`SFX_Confetti`), Win music (`MUS_Win`).
 - **Core Reflection Question:**
   > **"Would the next person be happy?"**

@@ -15,7 +15,9 @@ namespace Googolplex.Unit8
         [SerializeField] private Button btnScrubArea;
 
         [Header("Hands & Soap Visuals")]
-        [SerializeField] private Image handsImage;
+        [SerializeField] private RawImage handsVideoImage;
+        [SerializeField] private U8_VideoPlayerUI_Masters_Activity videoPlayerUI;
+        [SerializeField] private Image handsFallbackImage;
         [SerializeField] private Sprite handsNormalSprite;
         [SerializeField] private Sprite handsSoapySprite;
         [SerializeField] private Sprite handsSparklingSprite;
@@ -54,6 +56,7 @@ namespace Googolplex.Unit8
         private void OnDisable()
         {
             if (handwashCoroutine != null) StopCoroutine(handwashCoroutine);
+            if (videoPlayerUI != null) videoPlayerUI.Pause();
             if (U8_AudioManager_Masters_Activity.Instance != null)
             {
                 U8_AudioManager_Masters_Activity.Instance.StopBGM();
@@ -76,13 +79,24 @@ namespace Googolplex.Unit8
 
             if (btnScrubArea == null)
             {
-                Transform t = transform.Find("ScrubAreaButton") ?? transform.Find("HandsImage") ?? transform.Find("Btn_Scrub");
+                Transform t = transform.Find("ScrubAreaButton") ?? transform.Find("HandsImage/HandsVideo") ?? transform.Find("HandsVideo") ?? transform.Find("HandsImage") ?? transform.Find("Btn_Scrub");
                 if (t != null) btnScrubArea = t.GetComponent<Button>();
             }
-            if (handsImage == null)
+            if (handsFallbackImage == null)
             {
-                Transform t = transform.Find("HandsImage") ?? transform.Find("Hands");
-                if (t != null) handsImage = t.GetComponent<Image>();
+                Transform t = transform.Find("HandsImage") ?? transform.Find("HandsFallback");
+                if (t != null) handsFallbackImage = t.GetComponent<Image>();
+                if (handsFallbackImage == null) handsFallbackImage = GetComponentInChildren<Image>(true);
+            }
+            if (handsVideoImage == null)
+            {
+                Transform t = transform.Find("HandsImage/HandsVideo") ?? transform.Find("HandsVideo");
+                if (t != null) handsVideoImage = t.GetComponent<RawImage>();
+                if (handsVideoImage == null) handsVideoImage = GetComponentInChildren<RawImage>(true);
+            }
+            if (videoPlayerUI == null)
+            {
+                videoPlayerUI = GetComponentInChildren<U8_VideoPlayerUI_Masters_Activity>(true);
             }
             if (bubbleContainer == null)
             {
@@ -92,13 +106,26 @@ namespace Googolplex.Unit8
             if (germBlobs == null || germBlobs.Count == 0)
             {
                 germBlobs = new List<Image>();
-                for (int i = 1; i <= 4; i++)
+                Transform germsParent = transform.Find("Germs");
+                if (germsParent != null)
                 {
-                    Transform t = transform.Find($"Germ_{i}") ?? transform.Find($"Germs/Germ_{i}");
-                    if (t != null)
+                    foreach (Transform child in germsParent)
                     {
-                        Image g = t.GetComponent<Image>();
+                        var g = child.GetComponent<Image>();
                         if (g != null) germBlobs.Add(g);
+                    }
+                }
+
+                if (germBlobs.Count == 0)
+                {
+                    for (int i = 1; i <= 12; i++)
+                    {
+                        Transform t = transform.Find($"Germ_{i}") ?? transform.Find($"Germs/Germ_{i}");
+                        if (t != null)
+                        {
+                            Image g = t.GetComponent<Image>();
+                            if (g != null && !germBlobs.Contains(g)) germBlobs.Add(g);
+                        }
                     }
                 }
             }
@@ -112,10 +139,30 @@ namespace Googolplex.Unit8
             germsCleared = 0;
             timeSinceLastScrub = 0f;
 
-            if (handsImage != null && handsSoapySprite != null) handsImage.sprite = handsSoapySprite;
-            if (bubbleContainer != null) bubbleContainer.SetActive(true);
+            // Reset Hands Image & enable video child
+            if (handsFallbackImage != null && handsSoapySprite != null)
+            {
+                handsFallbackImage.sprite = handsSoapySprite;
+                handsFallbackImage.gameObject.SetActive(true);
+            }
 
-            // Reset all 4 friendly germ blobs
+            if (handsVideoImage != null)
+            {
+                handsVideoImage.gameObject.SetActive(true);
+            }
+
+            if (videoPlayerUI != null)
+            {
+                videoPlayerUI.gameObject.SetActive(true);
+                videoPlayerUI.Play();
+            }
+
+            if (bubbleContainer != null)
+            {
+                bubbleContainer.SetActive(true);
+            }
+
+            // Reset all friendly germ blobs
             foreach (var blob in germBlobs)
             {
                 if (blob != null)
@@ -125,7 +172,7 @@ namespace Googolplex.Unit8
                 }
             }
 
-            if (promptText != null) promptText.text = "Keep tapping to scrub hands with soap!";
+            if (promptText != null) promptText.text = $"Tap or rub to scrub away all {germBlobs.Count} germs!";
             if (timerSlider != null)
             {
                 timerSlider.maxValue = songDurationSeconds;
@@ -155,6 +202,9 @@ namespace Googolplex.Unit8
                 if (scrubCount % 2 == 0) U8_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_Bubble");
             }
 
+            // Animate germ wiggle on tap
+            WiggleActiveGerms();
+
             // Animate bubble growth
             if (bubbleSprites != null)
             {
@@ -162,13 +212,19 @@ namespace Googolplex.Unit8
                 {
                     if (bubble != null)
                     {
-                        bubble.transform.localScale = Vector3.one * Mathf.Clamp(0.5f + (scrubCount * 0.05f), 0.5f, 1.3f);
+                        bubble.transform.localScale = Vector3.one * Mathf.Clamp(0.5f + (scrubCount * 0.04f), 0.5f, 1.4f);
                     }
                 }
             }
 
-            // Check if a germ blob slides off
-            int targetGermsToClear = Mathf.Clamp(scrubCount / scrubsPerGerm, 0, germBlobs.Count);
+            // Paced Germ Clearance across the 20-second duration:
+            // Ensures germs clear gradually as student taps, lasting through the full song
+            float timeElapsed = songDurationSeconds - currentTimer;
+            float secondsPerGerm = (germBlobs.Count > 0) ? (songDurationSeconds / germBlobs.Count) : 2.5f;
+            int maxPacedGerms = Mathf.Clamp(Mathf.FloorToInt(timeElapsed / secondsPerGerm) + 1, 1, germBlobs.Count);
+            int tapPacedGerms = Mathf.Clamp(scrubCount / Mathf.Max(1, scrubsPerGerm), 0, germBlobs.Count);
+
+            int targetGermsToClear = Mathf.Min(maxPacedGerms, tapPacedGerms);
             if (targetGermsToClear > germsCleared)
             {
                 int indexToClear = germsCleared;
@@ -177,7 +233,34 @@ namespace Googolplex.Unit8
                 {
                     StartCoroutine(SlideOffGermRoutine(germBlobs[indexToClear]));
                 }
+
+                if (promptText != null)
+                {
+                    promptText.text = $"Great scrubbing! {germsCleared}/{germBlobs.Count} germs washed away!";
+                }
             }
+        }
+
+        private void WiggleActiveGerms()
+        {
+            for (int i = germsCleared; i < germBlobs.Count; i++)
+            {
+                if (germBlobs[i] != null && germBlobs[i].gameObject.activeSelf)
+                {
+                    StartCoroutine(QuickWiggleRoutine(germBlobs[i].transform));
+                }
+            }
+        }
+
+        private IEnumerator QuickWiggleRoutine(Transform t)
+        {
+            if (t == null) yield break;
+            Vector3 origScale = Vector3.one;
+            t.localScale = new Vector3(1.12f, 0.88f, 1f);
+            yield return new WaitForSeconds(0.06f);
+            if (t != null) t.localScale = new Vector3(0.92f, 1.08f, 1f);
+            yield return new WaitForSeconds(0.06f);
+            if (t != null) t.localScale = origScale;
         }
 
         private IEnumerator SlideOffGermRoutine(Image germImage)
@@ -188,7 +271,7 @@ namespace Googolplex.Unit8
             }
 
             Vector3 startPos = germImage.transform.localPosition;
-            for (float t = 0; t < 1f; t += Time.deltaTime * 3f)
+            for (float t = 0; t < 1f; t += Time.deltaTime * 3.5f)
             {
                 germImage.transform.localPosition = startPos + new Vector3(t * 60f, -t * 80f, 0);
                 germImage.transform.localScale = Vector3.one * (1f - t);
@@ -211,7 +294,7 @@ namespace Googolplex.Unit8
                 // Encouragement if student pauses tapping
                 if (timeSinceLastScrub > 3.0f && isHandwashingActive)
                 {
-                    if (promptText != null) promptText.text = "Keep going!";
+                    if (promptText != null) promptText.text = "Keep going! Scrub the germs away!";
                     if (U8_AudioManager_Masters_Activity.Instance != null)
                     {
                         U8_AudioManager_Masters_Activity.Instance.PlayVO("VO_U8_07"); // "Keep going!"
@@ -229,13 +312,37 @@ namespace Googolplex.Unit8
         {
             isHandwashingActive = false;
 
-            // Clear remaining germs
+            // 1. Immediately disable child video GameObject
+            if (videoPlayerUI != null)
+            {
+                videoPlayerUI.Stop();
+                videoPlayerUI.gameObject.SetActive(false);
+            }
+            if (handsVideoImage != null)
+            {
+                handsVideoImage.gameObject.SetActive(false);
+            }
+
+            // 2. Hide all remaining germs and bubble clutter
             foreach (var blob in germBlobs)
             {
                 if (blob != null) blob.gameObject.SetActive(false);
             }
+            if (bubbleContainer != null)
+            {
+                bubbleContainer.SetActive(false);
+            }
 
-            if (handsImage != null && handsSparklingSprite != null) handsImage.sprite = handsSparklingSprite;
+            // 3. Reveal clean sparkling hands on parent HandsImage
+            if (handsFallbackImage != null)
+            {
+                if (handsSparklingSprite != null)
+                {
+                    handsFallbackImage.sprite = handsSparklingSprite;
+                }
+                handsFallbackImage.gameObject.SetActive(true);
+            }
+
             if (promptText != null) promptText.text = "All clean! Star 1 Earned!";
 
             if (U8_AudioManager_Masters_Activity.Instance != null)

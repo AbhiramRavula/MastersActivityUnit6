@@ -115,6 +115,13 @@ namespace Googolplex.Unit8
                 SetSerializedSprite(so, "anuWashingSprite", GetSprite("SPR_Anu_Washing"));
                 SetSerializedSprite(so, "anuWipingSprite", GetSprite("SPR_Anu_Wiping"));
                 so.ApplyModifiedProperties();
+
+                Transform anuT = p2.transform.Find("AnuInsideAvatar") ?? p2.transform.Find("AnuAvatar");
+                if (anuT != null)
+                {
+                    var img = anuT.GetComponent<Image>();
+                    if (img != null) { img.preserveAspect = true; img.SetNativeSize(); }
+                }
             }
 
             Scene currentScene = SceneManager.GetActiveScene();
@@ -124,7 +131,234 @@ namespace Googolplex.Unit8
             Debug.Log("[U8_SceneSetupTool] Setup Screen 2 only completed.");
         }
 
-        [MenuItem("Googolplex/Unit 8/Wire Sprites & Audio Only (Non-Destructive)", false, 12)]
+        [MenuItem("Googolplex/Unit 8/Setup Screen 3 Only (Handwash Video & Song)", false, 12)]
+        public static void SetupScreen3Only()
+        {
+            BuildSpriteCache();
+            GameObject canvasGo = EnsureCanvas();
+            RectTransform canvasRect = canvasGo.GetComponent<RectTransform>();
+
+            GameObject hw = CreateOrGetScreen(canvasRect, "U8_Screen_03_Handwash", typeof(U8_HandwashScreenController_Masters_Activity));
+            SetupHandwashUI(hw);
+
+            var chw = hw.GetComponent<U8_HandwashScreenController_Masters_Activity>();
+            if (chw != null)
+            {
+                var so = new SerializedObject(chw);
+                SetSerializedSprite(so, "handsSoapySprite", GetSprite("SPR_Hands_Soapy"));
+                SetSerializedSprite(so, "handsSparklingSprite", GetSprite("SPR_Hands_Sparkling"));
+                so.ApplyModifiedProperties();
+            }
+
+            Scene currentScene = SceneManager.GetActiveScene();
+            EditorSceneManager.MarkSceneDirty(currentScene);
+
+            EditorUtility.DisplayDialog("Screen 3 Updated", "Screen 3 (Handwashing Video & 20s Song) has been updated and Video Player is wired!", "OK");
+            Debug.Log("[U8_SceneSetupTool] Setup Screen 3 only completed.");
+        }
+
+        [MenuItem("Googolplex/Unit 8/Setup Screen 4 Only (Part 3 After You)", false, 13)]
+        public static void SetupScreen4Only()
+        {
+            BuildSpriteCache();
+            GameObject canvasGo = EnsureCanvas();
+            RectTransform canvasRect = canvasGo.GetComponent<RectTransform>();
+
+            GameObject p3 = CreateOrGetScreen(canvasRect, "U8_Screen_04_Part3AfterYou", typeof(U8_Part3_AfterYouController_Masters_Activity));
+            SetupPart3UI(p3);
+
+            var c3 = p3.GetComponent<U8_Part3_AfterYouController_Masters_Activity>();
+            if (c3 != null)
+            {
+                var so = new SerializedObject(c3);
+                SetSerializedSprite(so, "meeraEnteringSprite", GetSprite("SPR_Meera_Entering"));
+                SetSerializedSprite(so, "meeraSlippingSprite", GetSprite("SPR_Meera_Slip"));
+                SetSerializedSprite(so, "meeraUnimpressedSprite", GetSprite("SPR_Meera_Unimpressed"));
+                SetSerializedSprite(so, "meeraHappySmileSprite", GetSprite("SPR_Meera_Happy"));
+                SetSerializedSprite(so, "sinkCleanSprite", GetSprite("SPR_Sink_Clean"));
+                SetSerializedSprite(so, "sinkSplashedSprite", GetSprite("SPR_Sink_Splashed"));
+
+                SetSerializedGameObject(so, "wetFloorPuddleObject", p3.transform.Find("WetFloorPuddleObject")?.gameObject);
+                SetSerializedGameObject(so, "soggyTowelFloorObject", p3.transform.Find("SoggyTowelFloorObject")?.gameObject);
+                SetSerializedGameObject(so, "runningWaterStreamObject", p3.transform.Find("RunningWaterStreamObject")?.gameObject);
+                SetSerializedGameObject(so, "splashedSinkOverlay", p3.transform.Find("SplashedSinkOverlay")?.gameObject ?? p3.transform.Find("SinkSplashed")?.gameObject);
+
+                Transform sinkT = p3.transform.Find("SinkImage") ?? p3.transform.Find("Sink/SinkImage") ?? p3.transform.Find("Sink");
+                if (sinkT != null)
+                {
+                    var sinkProp = so.FindProperty("sinkImage");
+                    if (sinkProp != null) sinkProp.objectReferenceValue = sinkT.GetComponent<Image>();
+                }
+
+                Transform avatarT = p3.transform.Find("MeeraAvatar") ?? p3.transform.Find("Meera_Image");
+                if (avatarT != null)
+                {
+                    var avatarProp = so.FindProperty("meeraAvatar");
+                    var img = avatarT.GetComponent<Image>();
+                    if (avatarProp != null) avatarProp.objectReferenceValue = img;
+                    if (img != null) { img.preserveAspect = true; img.SetNativeSize(); }
+                }
+
+                so.ApplyModifiedProperties();
+            }
+
+            Scene currentScene = SceneManager.GetActiveScene();
+            EditorSceneManager.MarkSceneDirty(currentScene);
+
+            EditorUtility.DisplayDialog("Screen 4 Updated", "Screen 4 (Part 3: AFTER YOU) has been updated with full puddle, sink, tap, and Meera character staging!", "OK");
+            Debug.Log("[U8_SceneSetupTool] Setup Screen 4 only completed.");
+        }
+
+        [MenuItem("Googolplex/Unit 8/Setup Screen 5 Only (Part 4 Empty Soap)", false, 14)]
+        public static void SetupScreen5Only()
+        {
+            BuildSpriteCache();
+            GameObject canvasGo = EnsureCanvas();
+            RectTransform canvasRect = canvasGo.GetComponent<RectTransform>();
+
+            GameObject p4 = CreateOrGetScreen(canvasRect, "U8_Screen_05_Part4EmptySoap", typeof(U8_Part4_EmptySoapController_Masters_Activity));
+            SetupPart4UI(p4);
+
+            var c4 = p4.GetComponent<U8_Part4_EmptySoapController_Masters_Activity>();
+            if (c4 != null)
+            {
+                var so = new SerializedObject(c4);
+                SetSerializedSprite(so, "meeraPumpingSoapSprite", GetSprite("SPR_Meera_PumpSoap"));
+                SetSerializedSprite(so, "meeraShruggingSprite", GetSprite("SPR_Meera_Unimpressed"));
+                SetSerializedSprite(so, "meeraHappySprite", GetSprite("SPR_Meera_Happy"));
+                SetSerializedSprite(so, "soapEmptySprite", GetSprite("SPR_Soap_Empty"));
+                SetSerializedSprite(so, "soapFullRefilledSprite", GetSprite("SPR_Soap_Full"));
+
+                Transform soapT = p4.transform.Find("SoapDispenserImage") ?? p4.transform.Find("SoapDispenser");
+                if (soapT != null)
+                {
+                    var soapProp = so.FindProperty("soapDispenserImage");
+                    if (soapProp != null) soapProp.objectReferenceValue = soapT.GetComponent<Image>();
+                }
+
+                Transform avatarT = p4.transform.Find("MeeraAvatar") ?? p4.transform.Find("Meera_Image");
+                if (avatarT != null)
+                {
+                    var avatarProp = so.FindProperty("meeraAvatar");
+                    var img = avatarT.GetComponent<Image>();
+                    if (avatarProp != null) avatarProp.objectReferenceValue = img;
+                    if (img != null) { img.preserveAspect = true; img.SetNativeSize(); }
+                }
+
+                so.ApplyModifiedProperties();
+            }
+
+            Scene currentScene = SceneManager.GetActiveScene();
+            EditorSceneManager.MarkSceneDirty(currentScene);
+
+            EditorUtility.DisplayDialog("Screen 5 Updated", "Screen 5 (Part 4: EMPTY SOAP) has been updated with Sink, Soap Dispenser, and Meera!", "OK");
+            Debug.Log("[U8_SceneSetupTool] Setup Screen 5 only completed.");
+        }
+
+        [MenuItem("Googolplex/Unit 8/Setup Screen 6 Only (Ending & Stars)", false, 15)]
+        public static void SetupScreen6Only()
+        {
+            BuildSpriteCache();
+            GameObject canvasGo = EnsureCanvas();
+            RectTransform canvasRect = canvasGo.GetComponent<RectTransform>();
+
+            GameObject end = CreateOrGetScreen(canvasRect, "U8_Screen_06_Ending", typeof(U8_EndingScreen_Masters_Activity));
+            SetupEndingUI(end);
+
+            var cend = end.GetComponent<U8_EndingScreen_Masters_Activity>();
+            if (cend != null)
+            {
+                var so = new SerializedObject(cend);
+                SetSerializedSprite(so, "starEarnedSprite", GetOrCreateStarSprite(true));
+                SetSerializedSprite(so, "starEmptySprite", GetOrCreateStarSprite(false));
+
+                Transform starsCont = end.transform.Find("StarsContainer") ?? end.transform;
+                SerializedProperty starImagesProp = so.FindProperty("starImages");
+                if (starImagesProp != null)
+                {
+                    starImagesProp.ClearArray();
+                    for (int i = 1; i <= 3; i++)
+                    {
+                        Transform starT = starsCont.Find($"Star_{i}") ?? end.transform.Find($"Star_{i}");
+                        if (starT != null)
+                        {
+                            Image img = starT.GetComponent<Image>();
+                            if (img != null)
+                            {
+                                starImagesProp.InsertArrayElementAtIndex(starImagesProp.arraySize);
+                                starImagesProp.GetArrayElementAtIndex(starImagesProp.arraySize - 1).objectReferenceValue = img;
+                                img.sprite = GetOrCreateStarSprite(false);
+                                img.color = Color.white;
+                                img.preserveAspect = true;
+                            }
+                        }
+                    }
+                }
+
+                Transform avatarT = end.transform.Find("MeeraWavingAvatar") ?? end.transform.Find("MeeraAvatar");
+                if (avatarT != null)
+                {
+                    var avatarProp = so.FindProperty("meeraWavingAvatar");
+                    var img = avatarT.GetComponent<Image>();
+                    if (avatarProp != null) avatarProp.objectReferenceValue = img;
+                    if (img != null) { img.preserveAspect = true; img.SetNativeSize(); }
+                }
+
+                Transform btnRestartT = end.transform.Find("Btn_Restart") ?? end.transform.Find("BottomBar/Btn_Restart");
+                if (btnRestartT != null)
+                {
+                    var btnProp = so.FindProperty("btnRestartActivity");
+                    if (btnProp != null) btnProp.objectReferenceValue = btnRestartT.GetComponent<Button>();
+                }
+
+                so.ApplyModifiedProperties();
+            }
+
+            Scene currentScene = SceneManager.GetActiveScene();
+            EditorSceneManager.MarkSceneDirty(currentScene);
+
+            EditorUtility.DisplayDialog("Screen 6 Updated", "Screen 6 (Ending & Stars) has been updated with SPR_Icon_GoldStar and SPR_Icon_StarOutline from U6 MA Props Sprite Sheet!", "OK");
+            Debug.Log("[U8_SceneSetupTool] Setup Screen 6 only completed.");
+        }
+
+        [MenuItem("Googolplex/Unit 8/Clean Duplicate UI Buttons", false, 15)]
+        public static void CleanDuplicateUIButtons()
+        {
+            Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+            if (canvas == null) return;
+
+            int cleanedCount = 0;
+            string[] screens = { "U8_Screen_01_Part1Door", "U8_Screen_02_Part2Inside", "U8_Screen_03_Handwash", "U8_Screen_04_Part3AfterYou", "U8_Screen_05_Part4EmptySoap", "U8_Screen_06_Ending" };
+            string[] looseBtnNames = { "Btn_TryAgain", "Btn_ProceedToPart4", "Btn_Finish", "Btn_Knock", "Btn_Bang", "Btn_Push", "Btn_TellTeacher", "Btn_JustLeave" };
+
+            foreach (string screenName in screens)
+            {
+                Transform screenT = canvas.transform.Find(screenName);
+                if (screenT == null) continue;
+
+                Transform choiceContainer = screenT.Find("ChoiceContainer");
+                if (choiceContainer != null)
+                {
+                    foreach (string btnName in looseBtnNames)
+                    {
+                        Transform looseBtn = screenT.Find(btnName);
+                        if (looseBtn != null)
+                        {
+                            Object.DestroyImmediate(looseBtn.gameObject);
+                            cleanedCount++;
+                        }
+                    }
+                }
+            }
+
+            Scene currentScene = SceneManager.GetActiveScene();
+            EditorSceneManager.MarkSceneDirty(currentScene);
+
+            EditorUtility.DisplayDialog("Cleaned Duplicate Buttons", $"Removed {cleanedCount} duplicate loose buttons from scene hierarchy!", "OK");
+            Debug.Log($"[U8_SceneSetupTool] Removed {cleanedCount} duplicate loose buttons.");
+        }
+
+        [MenuItem("Googolplex/Unit 8/Wire Sprites & Audio Only (Non-Destructive)", false, 15)]
         public static void WireSpritesAndAudioNonDestructive()
         {
             BuildSpriteCache();
@@ -264,6 +498,17 @@ namespace Googolplex.Unit8
 
         public static Sprite GetOrCreateStarSprite(bool earned)
         {
+            if (earned)
+            {
+                Sprite s = GetSprite("SPR_Icon_GoldStar");
+                if (s != null) return s;
+            }
+            else
+            {
+                Sprite s = GetSprite("SPR_Icon_StarOutline");
+                if (s != null) return s;
+            }
+
             string dir = ArtPath;
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
@@ -477,7 +722,7 @@ namespace Googolplex.Unit8
 
         private static void CleanObsoleteScreenObjects(GameObject screen)
         {
-            string[] obsolete = { "PromptText", "FeedbackText", "DiscussionQuestionText", "TitleText" };
+            string[] obsolete = { "PromptText", "FeedbackText", "DiscussionQuestionText", "TitleText", "Btn_TryAgain", "Btn_ProceedToPart4", "Btn_Finish", "Btn_Knock", "Btn_Bang", "Btn_Push", "Btn_TellTeacher", "Btn_JustLeave" };
             foreach (var name in obsolete)
             {
                 Transform t = screen.transform.Find(name);
@@ -500,7 +745,8 @@ namespace Googolplex.Unit8
 
             // Door Image & Anu Avatar
             CreateImage(screen, "WashroomDoor", new Vector2(-180, -20), new Vector2(320, 560), GetSprite("SPR_Cubicle_Closed"));
-            CreateImage(screen, "AnuAvatar", new Vector2(240, -60), new Vector2(280, 520), GetSprite("SPR_Anu_Normal"));
+            var anuImg1 = CreateImage(screen, "AnuAvatar", new Vector2(240, -60), new Vector2(250, 650), GetSprite("SPR_Anu_Normal"));
+            if (anuImg1 != null) { anuImg1.preserveAspect = true; anuImg1.SetNativeSize(); }
 
             // Prompt Card
             CreatePromptCard(screen, "Prompt", "The door is closed. What should Anu do?", new Vector2(0, 380), new Vector2(1300, 90), 38);
@@ -550,13 +796,14 @@ namespace Googolplex.Unit8
             CreateImage(screen, "SoggyTowelOnFloor", new Vector2(440, -280), new Vector2(160, 100), GetSprite("SPR_Towel_SoggyFloor"));
 
             // Anu Avatar
-            CreateImage(screen, "AnuInsideAvatar", new Vector2(-240, -80), new Vector2(240, 460), GetSprite("SPR_Anu_Normal"));
+            var anuInsideImg = CreateImage(screen, "AnuInsideAvatar", new Vector2(-240, -80), new Vector2(250, 650), GetSprite("SPR_Anu_Normal"));
+            if (anuInsideImg != null) { anuInsideImg.preserveAspect = true; anuInsideImg.SetNativeSize(); }
 
             // Prompts & Feedback
             CreatePromptCard(screen, "Prompt", "Step 1: Close the cubicle door first!", new Vector2(0, 380), new Vector2(1350, 90), 36);
             CreateFeedbackCard(screen, "Feedback", "", new Vector2(0, -355), new Vector2(1200, 75), 32, Color.yellow);
 
-            CreateButton(screen, "Btn_ProceedToPart3", "Next: See What Meera Finds >>", new Vector2(0, -435), new Vector2(500, 80), new Color(0.18f, 0.65f, 0.35f), 30);
+            CreateButton(screen, "Btn_ProceedToPart3", "See What Meera Finds", new Vector2(0, -435), new Vector2(500, 80), new Color(0.18f, 0.65f, 0.35f), 30);
         }
 
         private static void SetupHandwashUI(GameObject screen)
@@ -569,19 +816,26 @@ namespace Googolplex.Unit8
             // Pinned Top Header Bar
             CreateHeader(screen, "UNIT 8: HANDWASHING", "20-Second Song & Scrub");
 
-            // Hands Image
-            CreateImage(screen, "HandsImage", new Vector2(0, 0), new Vector2(540, 480), GetSprite("SPR_Hands_Soapy"));
+            // Hands Video with U8_VideoPlayerUI
+            RawImage handsVideo = CreateRawImage(screen, "HandsVideo", new Vector2(0, 0), new Vector2(580, 480));
+            var videoPlayer = handsVideo.GetComponent<U8_VideoPlayerUI_Masters_Activity>();
+            if (videoPlayer == null) videoPlayer = handsVideo.gameObject.AddComponent<U8_VideoPlayerUI_Masters_Activity>();
+            videoPlayer.SetupPlayer();
 
             // Bubbles Container
             GameObject bubbles = CreateContainer(screen, "Bubbles", Vector2.zero, new Vector2(500, 400));
             CreateImage(bubbles, "BubbleCluster", new Vector2(200, -50), new Vector2(300, 280), GetSprite("SPR_Bubbles"));
 
-            // 4 Germ Blobs
-            GameObject germs = CreateContainer(screen, "Germs", Vector2.zero, new Vector2(500, 400));
-            CreateImage(germs, "Germ_1", new Vector2(-180, 100), new Vector2(140, 140), GetSprite("SPR_Germ_1"));
-            CreateImage(germs, "Germ_2", new Vector2(180, 100), new Vector2(140, 140), GetSprite("SPR_Germ_2"));
-            CreateImage(germs, "Germ_3", new Vector2(-140, -120), new Vector2(140, 140), GetSprite("SPR_Germ_3"));
-            CreateImage(germs, "Germ_4", new Vector2(140, -120), new Vector2(140, 140), GetSprite("SPR_Germ_4"));
+            // 8 Friendly Germ Blobs across handwashing zones
+            GameObject germs = CreateContainer(screen, "Germs", Vector2.zero, new Vector2(600, 480));
+            CreateImage(germs, "Germ_1", new Vector2(-170, 130), new Vector2(120, 120), GetSprite("SPR_Germ_1"));  // Left Fingers
+            CreateImage(germs, "Germ_2", new Vector2(170, 130), new Vector2(120, 120), GetSprite("SPR_Germ_2"));   // Right Fingers
+            CreateImage(germs, "Germ_3", new Vector2(-130, 20), new Vector2(125, 125), GetSprite("SPR_Germ_3"));   // Left Palm
+            CreateImage(germs, "Germ_4", new Vector2(130, 20), new Vector2(125, 125), GetSprite("SPR_Germ_4"));    // Right Palm
+            CreateImage(germs, "Germ_5", new Vector2(-230, -50), new Vector2(110, 110), GetSprite("SPR_Germ_4"));  // Left Thumb
+            CreateImage(germs, "Germ_6", new Vector2(230, -50), new Vector2(110, 110), GetSprite("SPR_Germ_1"));   // Right Thumb
+            CreateImage(germs, "Germ_7", new Vector2(0, 100), new Vector2(115, 115), GetSprite("SPR_Germ_2"));     // Between Fingers
+            CreateImage(germs, "Germ_8", new Vector2(0, -135), new Vector2(120, 120), GetSprite("SPR_Germ_3"));    // Wrist Center
 
             // Large Touch Scrub Target
             CreateButton(screen, "ScrubAreaButton", "TAP / RUB TO SCRUB!", new Vector2(0, -340), new Vector2(500, 95), new Color(0.15f, 0.65f, 0.85f), 34);
@@ -603,17 +857,19 @@ namespace Googolplex.Unit8
             // Pinned Top Header Bar
             CreateHeader(screen, "UNIT 8: AFTER YOU", "Part 3: What Meera Finds");
 
-            CreateImage(screen, "WetFloorPuddleObject", new Vector2(0, -220), new Vector2(420, 190), GetSprite("SPR_WetFloorPuddle"));
-            CreateImage(screen, "SoggyTowelFloorObject", new Vector2(480, -240), new Vector2(170, 110), GetSprite("SPR_Towel_SoggyFloor"));
-            CreateImage(screen, "SplashedSinkOverlay", new Vector2(0, 40), new Vector2(340, 390), GetSprite("SPR_Sink_Splashed"));
-            CreateImage(screen, "MeeraAvatar", new Vector2(0, -40), new Vector2(360, 500), GetSprite("SPR_Meera_Slip"));
+            CreateImage(screen, "SinkImage", new Vector2(0, -20), new Vector2(340, 380), GetSprite("SPR_Sink_Splashed"));
+            CreateImage(screen, "WetFloorPuddleObject", new Vector2(-220, -250), new Vector2(460, 200), GetSprite("SPR_WetFloorPuddle"));
+            CreateImage(screen, "SoggyTowelFloorObject", new Vector2(500, -250), new Vector2(170, 110), GetSprite("SPR_Towel_SoggyFloor"));
+            CreateImage(screen, "RunningWaterStreamObject", new Vector2(10, -5), new Vector2(90, 200), GetSprite("SPR_WaterStream"));
+            var meeraPart3Img = CreateImage(screen, "MeeraAvatar", new Vector2(-520, -50), new Vector2(231, 656), GetSprite("SPR_Meera_Entering"));
+            if (meeraPart3Img != null) { meeraPart3Img.preserveAspect = true; meeraPart3Img.SetNativeSize(); }
 
-            CreatePromptCard(screen, "Prompt", "Here comes Meera!", new Vector2(0, 380), new Vector2(1300, 90), 38);
+            CreatePromptCard(screen, "Prompt", "Anu has left the washroom...", new Vector2(0, 380), new Vector2(1300, 90), 38);
             CreateFeedbackCard(screen, "Feedback", "", new Vector2(0, -265), new Vector2(1300, 80), 32, Color.yellow);
 
             GameObject container = CreateContainer(screen, "ChoiceContainer", new Vector2(0, -385), new Vector2(900, 110));
             CreateButton(container, "Btn_TryAgain", "TRY AGAIN", new Vector2(-240, 0), new Vector2(380, 88), new Color(0.85f, 0.38f, 0.20f), 30);
-            CreateButton(container, "Btn_ProceedToPart4", "Next: The Soap! >>", new Vector2(240, 0), new Vector2(380, 88), new Color(0.18f, 0.65f, 0.35f), 30);
+            CreateButton(container, "Btn_ProceedToPart4", "Next: The Soap!", new Vector2(240, 0), new Vector2(380, 88), new Color(0.18f, 0.65f, 0.35f), 30);
         }
 
         private static void SetupPart4UI(GameObject screen)
@@ -626,8 +882,10 @@ namespace Googolplex.Unit8
             // Pinned Top Header Bar
             CreateHeader(screen, "UNIT 8: EMPTY SOAP!", "Part 4: What Should Meera Do?");
 
-            CreateImage(screen, "SoapDispenserImage", new Vector2(-160, 20), new Vector2(220, 320), GetSprite("SPR_Soap_Empty"));
-            CreateImage(screen, "MeeraAvatar", new Vector2(200, -50), new Vector2(280, 500), GetSprite("SPR_Meera_Happy"));
+            CreateImage(screen, "SinkImage", new Vector2(0, -20), new Vector2(340, 380), GetSprite("SPR_Sink_Clean"));
+            CreateImage(screen, "SoapDispenserImage", new Vector2(-160, 40), new Vector2(220, 320), GetSprite("SPR_Soap_Empty"));
+            var meeraPart4Img = CreateImage(screen, "MeeraAvatar", new Vector2(160, -50), new Vector2(249, 656), GetSprite("SPR_Meera_PumpSoap"));
+            if (meeraPart4Img != null) { meeraPart4Img.preserveAspect = true; meeraPart4Img.SetNativeSize(); }
 
             CreatePromptCard(screen, "Prompt", "The soap is finished. What should Meera do?", new Vector2(0, 380), new Vector2(1350, 90), 36);
             CreateFeedbackCard(screen, "Feedback", "", new Vector2(0, -185), new Vector2(1200, 80), 32, Color.yellow);
@@ -636,7 +894,7 @@ namespace Googolplex.Unit8
             CreateButton(container, "Btn_TellTeacher", "Go and Tell a Teacher", new Vector2(-260, 0), new Vector2(440, 88), new Color(0.18f, 0.65f, 0.35f), 28);
             CreateButton(container, "Btn_JustLeave", "Just Leave", new Vector2(260, 0), new Vector2(400, 88), new Color(0.78f, 0.32f, 0.24f), 28);
 
-            CreateButton(screen, "Btn_Finish", "Finish Unit >>", new Vector2(0, -405), new Vector2(380, 82), new Color(0.20f, 0.60f, 0.90f), 30);
+            CreateButton(screen, "Btn_Finish", "Finish Unit", new Vector2(0, -405), new Vector2(380, 82), new Color(0.20f, 0.60f, 0.90f), 30);
         }
 
         private static void SetupEndingUI(GameObject screen)
@@ -655,13 +913,14 @@ namespace Googolplex.Unit8
 
             // Stars Container (Using Star Sprites)
             GameObject stars = CreateContainer(screen, "StarsContainer", new Vector2(0, 195), new Vector2(550, 130));
-            Sprite goldStar = GetOrCreateStarSprite(true);
-            CreateImage(stars, "Star_1", new Vector2(-150, 0), new Vector2(110, 110), goldStar);
-            CreateImage(stars, "Star_2", new Vector2(0, 0), new Vector2(110, 110), goldStar);
-            CreateImage(stars, "Star_3", new Vector2(150, 0), new Vector2(110, 110), goldStar);
+            Sprite emptyStar = GetOrCreateStarSprite(false);
+            CreateImage(stars, "Star_1", new Vector2(-150, 0), new Vector2(120, 120), emptyStar);
+            CreateImage(stars, "Star_2", new Vector2(0, 0), new Vector2(120, 120), emptyStar);
+            CreateImage(stars, "Star_3", new Vector2(150, 0), new Vector2(120, 120), emptyStar);
 
             // Meera Character Avatar
-            CreateImage(screen, "MeeraWavingAvatar", new Vector2(360, -90), new Vector2(280, 500), GetSprite("SPR_Meera_Happy"));
+            var meeraEndImg = CreateImage(screen, "MeeraWavingAvatar", new Vector2(360, -90), new Vector2(250, 650), GetSprite("SPR_Meera_Happy"));
+            if (meeraEndImg != null) { meeraEndImg.preserveAspect = true; meeraEndImg.SetNativeSize(); }
 
             // Discussion Question Card
             GameObject questionCard = CreateCard(screen, "QuestionCard", new Vector2(-140, -50), new Vector2(960, 180), new Color(0.10f, 0.16f, 0.25f, 0.92f));
@@ -685,6 +944,13 @@ namespace Googolplex.Unit8
                     SetSerializedSprite(so, "anuKnockingSprite", GetSprite("SPR_Anu_Knocking"));
                     SetSerializedSprite(so, "anuSheepishSprite", GetSprite("SPR_Anu_Sheepish"));
                     so.ApplyModifiedProperties();
+
+                    Transform anuT = p1.transform.Find("AnuAvatar") ?? p1.transform.Find("Anu_Image");
+                    if (anuT != null)
+                    {
+                        var img = anuT.GetComponent<Image>();
+                        if (img != null) { img.preserveAspect = true; img.SetNativeSize(); }
+                    }
                 }
             }
 
@@ -703,6 +969,13 @@ namespace Googolplex.Unit8
                     SetSerializedSprite(so, "anuWashingSprite", GetSprite("SPR_Anu_Washing"));
                     SetSerializedSprite(so, "anuWipingSprite", GetSprite("SPR_Anu_Wiping"));
                     so.ApplyModifiedProperties();
+
+                    Transform anuT = p2.transform.Find("AnuInsideAvatar") ?? p2.transform.Find("AnuAvatar");
+                    if (anuT != null)
+                    {
+                        var img = anuT.GetComponent<Image>();
+                        if (img != null) { img.preserveAspect = true; img.SetNativeSize(); }
+                    }
                 }
             }
 
@@ -730,6 +1003,30 @@ namespace Googolplex.Unit8
                     SetSerializedSprite(so, "meeraSlippingSprite", GetSprite("SPR_Meera_Slip"));
                     SetSerializedSprite(so, "meeraUnimpressedSprite", GetSprite("SPR_Meera_Unimpressed"));
                     SetSerializedSprite(so, "meeraHappySmileSprite", GetSprite("SPR_Meera_Happy"));
+                    SetSerializedSprite(so, "sinkCleanSprite", GetSprite("SPR_Sink_Clean"));
+                    SetSerializedSprite(so, "sinkSplashedSprite", GetSprite("SPR_Sink_Splashed"));
+
+                    SetSerializedGameObject(so, "wetFloorPuddleObject", p3.transform.Find("WetFloorPuddleObject")?.gameObject);
+                    SetSerializedGameObject(so, "soggyTowelFloorObject", p3.transform.Find("SoggyTowelFloorObject")?.gameObject);
+                    SetSerializedGameObject(so, "runningWaterStreamObject", p3.transform.Find("RunningWaterStreamObject")?.gameObject);
+                    SetSerializedGameObject(so, "splashedSinkOverlay", p3.transform.Find("SplashedSinkOverlay")?.gameObject ?? p3.transform.Find("SinkSplashed")?.gameObject);
+                    
+                    Transform sinkT = p3.transform.Find("SinkImage") ?? p3.transform.Find("Sink/SinkImage") ?? p3.transform.Find("Sink");
+                    if (sinkT != null)
+                    {
+                        var sinkProp = so.FindProperty("sinkImage");
+                        if (sinkProp != null) sinkProp.objectReferenceValue = sinkT.GetComponent<Image>();
+                    }
+
+                    Transform avatarT = p3.transform.Find("MeeraAvatar") ?? p3.transform.Find("Meera_Image");
+                    if (avatarT != null)
+                    {
+                        var avatarProp = so.FindProperty("meeraAvatar");
+                        var img = avatarT.GetComponent<Image>();
+                        if (avatarProp != null) avatarProp.objectReferenceValue = img;
+                        if (img != null) { img.preserveAspect = true; img.SetNativeSize(); }
+                    }
+
                     so.ApplyModifiedProperties();
                 }
             }
@@ -746,6 +1043,23 @@ namespace Googolplex.Unit8
                     SetSerializedSprite(so, "meeraHappySprite", GetSprite("SPR_Meera_Happy"));
                     SetSerializedSprite(so, "soapEmptySprite", GetSprite("SPR_Soap_Empty"));
                     SetSerializedSprite(so, "soapFullRefilledSprite", GetSprite("SPR_Soap_Full"));
+
+                    Transform soapT = p4.transform.Find("SoapDispenserImage") ?? p4.transform.Find("SoapDispenser");
+                    if (soapT != null)
+                    {
+                        var soapProp = so.FindProperty("soapDispenserImage");
+                        if (soapProp != null) soapProp.objectReferenceValue = soapT.GetComponent<Image>();
+                    }
+
+                    Transform avatarT = p4.transform.Find("MeeraAvatar") ?? p4.transform.Find("Meera_Image");
+                    if (avatarT != null)
+                    {
+                        var avatarProp = so.FindProperty("meeraAvatar");
+                        var img = avatarT.GetComponent<Image>();
+                        if (avatarProp != null) avatarProp.objectReferenceValue = img;
+                        if (img != null) { img.preserveAspect = true; img.SetNativeSize(); }
+                    }
+
                     so.ApplyModifiedProperties();
                 }
             }
@@ -759,6 +1073,46 @@ namespace Googolplex.Unit8
                     var so = new SerializedObject(cend);
                     SetSerializedSprite(so, "starEarnedSprite", GetOrCreateStarSprite(true));
                     SetSerializedSprite(so, "starEmptySprite", GetOrCreateStarSprite(false));
+
+                    Transform starsCont = end.transform.Find("StarsContainer") ?? end.transform;
+                    SerializedProperty starImagesProp = so.FindProperty("starImages");
+                    if (starImagesProp != null)
+                    {
+                        starImagesProp.ClearArray();
+                        for (int i = 1; i <= 3; i++)
+                        {
+                            Transform starT = starsCont.Find($"Star_{i}") ?? end.transform.Find($"Star_{i}");
+                            if (starT != null)
+                            {
+                                Image img = starT.GetComponent<Image>();
+                                if (img != null)
+                                {
+                                    starImagesProp.InsertArrayElementAtIndex(starImagesProp.arraySize);
+                                    starImagesProp.GetArrayElementAtIndex(starImagesProp.arraySize - 1).objectReferenceValue = img;
+                                    img.sprite = GetOrCreateStarSprite(false);
+                                    img.color = Color.white;
+                                    img.preserveAspect = true;
+                                }
+                            }
+                        }
+                    }
+
+                    Transform avatarT = end.transform.Find("MeeraWavingAvatar") ?? end.transform.Find("MeeraAvatar");
+                    if (avatarT != null)
+                    {
+                        var avatarProp = so.FindProperty("meeraWavingAvatar");
+                        var img = avatarT.GetComponent<Image>();
+                        if (avatarProp != null) avatarProp.objectReferenceValue = img;
+                        if (img != null) { img.preserveAspect = true; img.SetNativeSize(); }
+                    }
+
+                    Transform btnRestartT = end.transform.Find("Btn_Restart") ?? end.transform.Find("BottomBar/Btn_Restart");
+                    if (btnRestartT != null)
+                    {
+                        var btnProp = so.FindProperty("btnRestartActivity");
+                        if (btnProp != null) btnProp.objectReferenceValue = btnRestartT.GetComponent<Button>();
+                    }
+
                     so.ApplyModifiedProperties();
                 }
             }
@@ -771,6 +1125,16 @@ namespace Googolplex.Unit8
             if (prop != null)
             {
                 prop.objectReferenceValue = sprite;
+            }
+        }
+
+        private static void SetSerializedGameObject(SerializedObject so, string propertyName, GameObject go)
+        {
+            if (go == null) return;
+            SerializedProperty prop = so.FindProperty(propertyName);
+            if (prop != null)
+            {
+                prop.objectReferenceValue = go;
             }
         }
 
@@ -848,6 +1212,23 @@ namespace Googolplex.Unit8
                 img.color = new Color(1f, 1f, 1f, 0.2f);
             }
             return img;
+        }
+
+        private static RawImage CreateRawImage(GameObject parent, string name, Vector2 pos, Vector2 size)
+        {
+            Transform existing = parent.transform.Find(name);
+            GameObject go = existing != null ? existing.gameObject : new GameObject(name, typeof(RectTransform), typeof(RawImage));
+            go.transform.SetParent(parent.transform, false);
+
+            RectTransform rt = go.GetComponent<RectTransform>();
+            if (rt == null) rt = go.AddComponent<RectTransform>();
+            rt.anchoredPosition = pos;
+            rt.sizeDelta = size;
+
+            RawImage rawImg = go.GetComponent<RawImage>();
+            if (rawImg == null) rawImg = go.AddComponent<RawImage>();
+            rawImg.color = Color.white;
+            return rawImg;
         }
 
         private static Button CreateButton(GameObject parent, string name, string label, Vector2 pos, Vector2 size, Color btnColor, float fontSize = 28)

@@ -42,9 +42,16 @@ namespace Googolplex.Unit8
         private void OnEnable()
         {
             ResetScreen();
+            StartCoroutine(PlayScreen1OpeningVO());
+        }
+
+        private IEnumerator PlayScreen1OpeningVO()
+        {
             if (U8_AudioManager_Masters_Activity.Instance != null)
             {
                 U8_AudioManager_Masters_Activity.Instance.PlayVO("VO_U8_01"); // "Anu needs the washroom."
+                yield return new WaitForSeconds(1.8f);
+                U8_AudioManager_Masters_Activity.Instance.PlayVO("VO_U8_02"); // "The door is closed. What should Anu do?"
             }
         }
 
@@ -87,6 +94,12 @@ namespace Googolplex.Unit8
                 Transform t = transform.Find("AnuAvatar") ?? transform.Find("Anu_Image");
                 if (t != null) anuAvatar = t.GetComponent<Image>();
             }
+            if (anuAvatar != null)
+            {
+                anuAvatar.preserveAspect = true;
+                if (anuNormalSprite != null && anuAvatar.sprite == null) anuAvatar.sprite = anuNormalSprite;
+                anuAvatar.SetNativeSize();
+            }
         }
 
         public void ResetScreen()
@@ -94,7 +107,12 @@ namespace Googolplex.Unit8
             isProcessingChoice = false;
             if (doorImage != null && doorClosedSprite != null) doorImage.sprite = doorClosedSprite;
             if (shutSignObject != null) shutSignObject.SetActive(true);
-            if (anuAvatar != null && anuNormalSprite != null) anuAvatar.sprite = anuNormalSprite;
+            if (anuAvatar != null)
+            {
+                anuAvatar.preserveAspect = true;
+                if (anuNormalSprite != null) anuAvatar.sprite = anuNormalSprite;
+                anuAvatar.SetNativeSize();
+            }
 
             if (promptText != null) promptText.text = "The door is closed. What should Anu do?";
             if (feedbackText != null) feedbackText.text = "";
@@ -120,7 +138,12 @@ namespace Googolplex.Unit8
             isProcessingChoice = true;
             SetButtonsInteractable(false);
 
-            if (anuAvatar != null && anuKnockingSprite != null) anuAvatar.sprite = anuKnockingSprite;
+            if (anuAvatar != null && anuKnockingSprite != null)
+            {
+                anuAvatar.sprite = anuKnockingSprite;
+                anuAvatar.preserveAspect = true;
+                anuAvatar.SetNativeSize();
+            }
             if (feedbackText != null) feedbackText.text = "Knock, knock! Anu waits patiently...";
             if (U8_AudioManager_Masters_Activity.Instance != null)
             {
@@ -131,7 +154,12 @@ namespace Googolplex.Unit8
             yield return new WaitForSeconds(1.8f);
 
             // Door opens
-            if (anuAvatar != null && anuNormalSprite != null) anuAvatar.sprite = anuNormalSprite;
+            if (anuAvatar != null && anuNormalSprite != null)
+            {
+                anuAvatar.sprite = anuNormalSprite;
+                anuAvatar.preserveAspect = true;
+                anuAvatar.SetNativeSize();
+            }
             if (doorImage != null && doorOpenSprite != null) doorImage.sprite = doorOpenSprite;
             if (shutSignObject != null) shutSignObject.SetActive(false);
             if (feedbackText != null) feedbackText.text = "The other student comes out. Anu goes in!";
@@ -169,7 +197,12 @@ namespace Googolplex.Unit8
                 U8_AudioManager_Masters_Activity.Instance.PlayVO("VO_U8_VOICE_1"); // "Just a minute!" (muffled)
             }
 
-            if (anuAvatar != null && anuSheepishSprite != null) anuAvatar.sprite = anuSheepishSprite;
+            if (anuAvatar != null && anuSheepishSprite != null)
+            {
+                anuAvatar.sprite = anuSheepishSprite;
+                anuAvatar.preserveAspect = true;
+                anuAvatar.SetNativeSize();
+            }
             if (feedbackText != null) feedbackText.text = "Someone is inside: 'Just a minute!' Anu feels sheepish.";
 
             yield return new WaitForSeconds(2.0f);
@@ -182,7 +215,12 @@ namespace Googolplex.Unit8
             yield return new WaitForSeconds(1.5f);
 
             // Reset for retry
-            if (anuAvatar != null && anuNormalSprite != null) anuAvatar.sprite = anuNormalSprite;
+            if (anuAvatar != null && anuNormalSprite != null)
+            {
+                anuAvatar.sprite = anuNormalSprite;
+                anuAvatar.preserveAspect = true;
+                anuAvatar.SetNativeSize();
+            }
             if (feedbackText != null) feedbackText.text = "Let's try again with polite manners!";
             isProcessingChoice = false;
             SetButtonsInteractable(true);

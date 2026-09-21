@@ -160,7 +160,11 @@ Both units feature top-level Unity Editor menu automation under **`Googolplex`**
 #### Unit 8 Editor Tools (`Googolplex > Unit 8`)
 - **`Setup Complete Unit 8 Scene`**: Rebuilds the entire 6-screen UI hierarchy, card layouts, mobile typography (32–38pt), and wire bindings.
 - **`Setup Screen 2 Only (Part 2 Inside)`**: Rebuilds Screen 2 without touching other screens.
+- **`Setup Screen 3 Only (Handwash Video & Song)`**: Rebuilds Screen 3 with the 8-germ layout and video player setup.
+- **`Setup Screen 4 Only (Part 3 After You)`**: Updates Screen 4 with consequence visuals and Meera slip handling.
+- **`Setup Screen 6 Only (Ending & Stars)`**: Updates Screen 6 with star sprites from sprite sheet.
 - **`Wire Sprites & Audio Only (Non-Destructive)`**: Automatically links serialized sprite and audio references without moving or altering scene objects.
+- **`Clean Duplicate UI Buttons`**: Cleans up any loose duplicate choice buttons in the hierarchy.
 - **`Sanitize All UI Text Glyphs`**: Cleans all TextMeshPro labels in the scene, replacing unsupported unicode characters with clean ASCII/standard characters.
 
 ---

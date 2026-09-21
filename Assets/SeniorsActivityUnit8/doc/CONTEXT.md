@@ -64,6 +64,11 @@ All 10 character poses are sliced from `Assets/SeniorsActivityUnit8/Art/more spr
 - **`SPR_Meera_PumpSoap`**: Pressing soap dispenser pump in Part 4 intro.
 - **`SPR_Meera_Happy`**: Cheerful smile and thumbs-up in clean outcome, refilled soap, and celebration.
 
+### Stars & Sprite Sheet
+- Sourced from `Assets/SeniorsActivityUnit8/Art/more sprites/U6 MA Props, Icons & Stars Sprite Sheet.png`:
+  - **`SPR_Icon_GoldStar`**: Victory gold star.
+  - **`SPR_Icon_StarOutline`**: Empty unearned star slot.
+
 ---
 
 ## 4. UI Guidelines & Component Standards
@@ -76,4 +81,8 @@ All 10 character poses are sliced from `Assets/SeniorsActivityUnit8/Art/more spr
   - Prompts: 36–38pt Bold.
   - Feedback: 32–34pt Bold.
   - Buttons: 28–34pt Bold.
-- **Label Formatting:** Plain normal English words only without special unicode arrow symbols to guarantee 100% font compatibility with default TMP assets.
+- **3-State Step Button Architecture:**
+  - Active step button pops dynamically (1.14x scale) + gentle sine pulse at 100% opacity.
+  - Inactive and completed steps remain visible at full opacity with raycasts disabled.
+  - `FindStepButton(1..7)` matches by numerical text prefix (`1.`, `2.`, etc.) dynamically on `OnEnable()`.
+- **Label Formatting:** Plain normal English words only without special unicode arrow symbols (`👉`, `✓`, `>>`) to guarantee 100% font compatibility with default TMP assets.

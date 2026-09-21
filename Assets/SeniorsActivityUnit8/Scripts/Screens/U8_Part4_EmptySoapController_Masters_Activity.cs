@@ -39,6 +39,7 @@ namespace Googolplex.Unit8
 
         private void OnEnable()
         {
+            AutoFindUIReferences();
             StartCoroutine(InitSoapEmptyRoutine());
         }
 
@@ -58,23 +59,44 @@ namespace Googolplex.Unit8
 
             if (btnTellTeacher == null)
             {
-                Transform t = transform.Find("Btn_TellTeacher") ?? transform.Find("ChoiceContainer/Btn_TellTeacher");
+                Transform t = transform.Find("ChoiceContainer/Btn_TellTeacher") ?? transform.Find("Btn_TellTeacher");
                 if (t != null) btnTellTeacher = t.GetComponent<Button>();
             }
             if (btnJustLeave == null)
             {
-                Transform t = transform.Find("Btn_JustLeave") ?? transform.Find("ChoiceContainer/Btn_JustLeave");
+                Transform t = transform.Find("ChoiceContainer/Btn_JustLeave") ?? transform.Find("Btn_JustLeave");
                 if (t != null) btnJustLeave = t.GetComponent<Button>();
             }
             if (btnFinishUnit == null)
             {
-                Transform t = transform.Find("Btn_Finish") ?? transform.Find("BottomBar/Btn_Finish");
-                if (t != null) btnFinishUnit = t.GetComponent<Button>();
+                var allButtons = GetComponentsInChildren<Button>(true);
+                foreach (var b in allButtons)
+                {
+                    if (b != null && (b.name.IndexOf("Finish", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                      b.name.IndexOf("Proceed", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                      b.name.IndexOf("Next", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                      b.name.IndexOf("Done", System.StringComparison.OrdinalIgnoreCase) >= 0))
+                    {
+                        btnFinishUnit = b;
+                        break;
+                    }
+                }
             }
             if (meeraAvatar == null)
             {
                 Transform t = transform.Find("MeeraAvatar") ?? transform.Find("Meera_Image");
                 if (t != null) meeraAvatar = t.GetComponent<Image>();
+            }
+            if (meeraAvatar != null)
+            {
+                meeraAvatar.preserveAspect = true;
+                if (meeraPumpingSoapSprite != null && meeraAvatar.sprite == null) meeraAvatar.sprite = meeraPumpingSoapSprite;
+                meeraAvatar.SetNativeSize();
+            }
+            if (soapDispenserImage == null)
+            {
+                Transform t = transform.Find("SoapDispenserImage") ?? transform.Find("SoapDispenser") ?? transform.Find("Soap");
+                if (t != null) soapDispenserImage = t.GetComponent<Image>();
             }
         }
 
@@ -83,9 +105,18 @@ namespace Googolplex.Unit8
             isProcessingChoice = false;
             if (btnFinishUnit != null) btnFinishUnit.gameObject.SetActive(false);
             if (otherChildrenUsingSoapOverlay != null) otherChildrenUsingSoapOverlay.SetActive(false);
-            if (soapDispenserImage != null && soapEmptySprite != null) soapDispenserImage.sprite = soapEmptySprite;
+            if (soapDispenserImage != null && soapEmptySprite != null)
+            {
+                soapDispenserImage.sprite = soapEmptySprite;
+                soapDispenserImage.gameObject.SetActive(true);
+            }
 
-            if (meeraAvatar != null && meeraPumpingSoapSprite != null) meeraAvatar.sprite = meeraPumpingSoapSprite;
+            if (meeraAvatar != null && meeraPumpingSoapSprite != null)
+            {
+                meeraAvatar.sprite = meeraPumpingSoapSprite;
+                meeraAvatar.preserveAspect = true;
+                meeraAvatar.SetNativeSize();
+            }
             if (promptText != null) promptText.text = "Meera presses the soap dispenser...";
 
             yield return new WaitForSeconds(0.6f);
@@ -135,24 +166,55 @@ namespace Googolplex.Unit8
 
             yield return new WaitForSeconds(2.0f);
 
-            // Refill dispenser with sparkle
-            if (soapDispenserImage != null && soapFullRefilledSprite != null) soapDispenserImage.sprite = soapFullRefilledSprite;
+            // 1. Refill dispenser with SPR_Soap_Full and punchy scale pop
+            if (soapDispenserImage != null)
+            {
+                if (soapFullRefilledSprite != null) soapDispenserImage.sprite = soapFullRefilledSprite;
+                soapDispenserImage.gameObject.SetActive(true);
+
+                // Pop scale animation
+                Vector3 origScale = soapDispenserImage.transform.localScale;
+                for (float t = 0; t < 1f; t += Time.deltaTime * 5f)
+                {
+                    soapDispenserImage.transform.localScale = origScale * Mathf.Lerp(1.3f, 1.0f, t);
+                    yield return null;
+                }
+                soapDispenserImage.transform.localScale = origScale;
+            }
+
             if (otherChildrenUsingSoapOverlay != null) otherChildrenUsingSoapOverlay.SetActive(true);
-            if (meeraAvatar != null && meeraHappySprite != null) meeraAvatar.sprite = meeraHappySprite;
+            if (meeraAvatar != null && meeraHappySprite != null)
+            {
+                meeraAvatar.sprite = meeraHappySprite;
+                meeraAvatar.preserveAspect = true;
+                meeraAvatar.SetNativeSize();
+            }
 
             if (U8_AudioManager_Masters_Activity.Instance != null)
             {
                 U8_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_Sparkle");
             }
 
-            if (feedbackText != null) feedbackText.text = "The soap is refilled! Other children can wash their hands cleanly. Star 3 Earned!";
+            if (feedbackText != null) feedbackText.text = "The soap is refilled full! Other children can wash their hands cleanly. Star 3 Earned!";
             if (U8_GameManager_Masters_Activity.Instance != null)
             {
                 U8_GameManager_Masters_Activity.Instance.AwardStar();
             }
 
-            yield return new WaitForSeconds(2.0f);
-            if (btnFinishUnit != null) btnFinishUnit.gameObject.SetActive(true);
+            yield return new WaitForSeconds(1.5f);
+            if (btnFinishUnit != null)
+            {
+                btnFinishUnit.gameObject.SetActive(true);
+                btnFinishUnit.transform.SetAsLastSibling();
+                btnFinishUnit.onClick.RemoveListener(OnFinishUnitClicked);
+                btnFinishUnit.onClick.AddListener(OnFinishUnitClicked);
+            }
+            else
+            {
+                // Fallback auto-proceed if no button exists
+                yield return new WaitForSeconds(2.0f);
+                OnFinishUnitClicked();
+            }
         }
 
         private void OnJustLeaveClicked()
@@ -166,7 +228,12 @@ namespace Googolplex.Unit8
             isProcessingChoice = true;
             SetButtonsInteractable(false);
 
-            if (meeraAvatar != null && meeraShruggingSprite != null) meeraAvatar.sprite = meeraShruggingSprite;
+            if (meeraAvatar != null && meeraShruggingSprite != null)
+            {
+                meeraAvatar.sprite = meeraShruggingSprite;
+                meeraAvatar.preserveAspect = true;
+                meeraAvatar.SetNativeSize();
+            }
             if (feedbackText != null) feedbackText.text = "Meera shrugs and walks away...";
 
             yield return new WaitForSeconds(1.5f);

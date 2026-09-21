@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: f45d0b28b806429418eb9d7f56222b96
+guid: eaad9a1ecf207e74db377d1b7e528aa9
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -136,106 +136,190 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "Character \u2014 Meera U8 SA _0"
+      name: SPR_Icon_GoldStar
       rect:
         serializedVersion: 2
-        x: 45
-        y: 148
-        width: 231
-        height: 656
+        x: 12
+        y: 500
+        width: 408
+        height: 434
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7a432aa0cf5e4bc4bbe54ce7a74aa22b
-      internalID: 880759706
+      spriteID: d5e8bd7afc6b7674fb2d1050ee26a17d
+      internalID: -775619421
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SPR_Meera_Unimpressed
+      name: SPR_Icon_StarOutline
       rect:
         serializedVersion: 2
-        x: 688
-        y: 145
-        width: 239
-        height: 613
+        x: 420
+        y: 557
+        width: 329
+        height: 325
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 51807c76c1da658429a5044261c7a707
-      internalID: 270251113
+      spriteID: 16a4111798218264e9808ce9ff112ed2
+      internalID: 1574219645
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SPR_Meera_Slip
+      name: SPR_FX_Confetti
       rect:
         serializedVersion: 2
-        x: 307
-        y: 144
-        width: 380
-        height: 577
+        x: 770
+        y: 533
+        width: 343
+        height: 395
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9c1bd64439a07da4c8b8611f1504b0b5
-      internalID: -844708181
+      spriteID: b917e872f7799bf4295f3f4e5c21584a
+      internalID: 1803598159
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SPR_Meera_Happy
+      name: SPR_Prop_FishTank
       rect:
         serializedVersion: 2
-        x: 1389
-        y: 146
-        width: 281
-        height: 611
+        x: 1126
+        y: 504
+        width: 388
+        height: 399
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 94d6534a25a9b2e45af032e0082d7c1a
-      internalID: -130774010
+      spriteID: 14ae35c4e6c73594e9160b07469bdc8f
+      internalID: -1483410335
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SPR_Meera_PumpSoap
+      name: SPR_Spoon_and_Fork
       rect:
         serializedVersion: 2
-        x: 1089
-        y: 142
-        width: 296
-        height: 618
+        x: 38
+        y: 90
+        width: 245
+        height: 397
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 76a343ec709e96949a0f7a85149834b3
-      internalID: 1816887584
+      spriteID: dcc400e2c09b90f4f81771112da8dcec
+      internalID: -403841788
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_EmptyGlass
+      rect:
+        serializedVersion: 2
+        x: 293
+        y: 102
+        width: 210
+        height: 328
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a2aff99ea97e94243aca2f5e1efbc5f6
+      internalID: -1330277922
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_Icon_VolWhisper
+      rect:
+        serializedVersion: 2
+        x: 516
+        y: 75
+        width: 285
+        height: 364
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 05655bde220bb044da2656edd3ebdf95
+      internalID: -1723098298
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_Icon_VolJustRight
+      rect:
+        serializedVersion: 2
+        x: 827
+        y: 72
+        width: 337
+        height: 278
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5760aeb3a962e1c4aaf29e8b6918b523
+      internalID: 942877207
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_Icon_VolBigVoice
+      rect:
+        serializedVersion: 2
+        x: 1171
+        y: 60
+        width: 359
+        height: 403
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aae44f9171240904c8ce3b5cfb266142
+      internalID: 774257446
       vertices: []
       indices: 
       edges: []
@@ -251,14 +335,16 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      "Character \u2014 Meera U8 SA _0": 880759706
-      "Character \u2014 Meera U8 SA _2": -651506700
-      "Character \u2014 Meera U8 SA _3": -1660271773
-      "Character \u2014 Meera U8 SA _6": 1538358840
-      SPR_Meera_Happy: -130774010
-      SPR_Meera_PumpSoap: 1816887584
-      SPR_Meera_Slip: -844708181
-      SPR_Meera_Unimpressed: 270251113
+      SPR_EmptyGlass: -1330277922
+      SPR_FX_Confetti: 1803598159
+      SPR_Icon_GoldStar: -775619421
+      SPR_Icon_StarOutline: 1574219645
+      SPR_Icon_VolBigVoice: 774257446
+      SPR_Icon_VolJustRight: 942877207
+      SPR_Icon_VolWhisper: -1723098298
+      SPR_Prop_FishTank: -1483410335
+      SPR_Spoon_and_Fork: -403841788
+      U6 MA Props, Icons & Stars Sprite Sheet_3: 644991724
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
