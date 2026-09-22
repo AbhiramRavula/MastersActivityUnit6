@@ -9,7 +9,7 @@ namespace Googolplex.Unit10
     {
         public string habitKey;        // "Water", "Sleep", "Outside", "Read", "Quiet", "Walk", "Give", "Family"
         public string habitTitle;      // e.g. "Drink Water"
-        public string habitPrompt;     // e.g. "Who drank fresh water every day this week?"
+        public string habitPrompt;     // e.g. "Who drank their water most days this week?"
         public string habitBookQuote;  // e.g. "Drink your water -- inside and outside."
         public int growthStage;        // 1 to 6
         public int totalCheckins;      // Number of weeks completed

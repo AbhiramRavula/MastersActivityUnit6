@@ -67,21 +67,21 @@ graph TD
 
 #### Screen 3: End of Term Harvest Screen (`U10_EndTermScreen_Masters_Activity.cs`)
 * Week 12 harvest celebration:
-  * Golden Certificate awarding mastery of **The Three Es: Energy, Empathy, and Excellence**.
+  * Golden Class Certificate: **THE THREE Es: ENERGY · ENTHUSIASM · EMPATHY** (Awarded to CLASS ______ for growing a golden garden).
   * Summary tally of weeks completed, kindness marbles collected, and golden blooms harvested.
 
 ---
 
 ### 4. Golden Lines of the Week (12-Week Rotation)
-1. **Week 1**: *"The Golden Life begins with the simple things you do every day."*
-2. **Week 2**: *"Drink your water -- inside and outside."*
-3. **Week 3**: *"Sleep early, rise strong and joyful."*
-4. **Week 4**: *"Play outside -- the world is wide and green."*
-5. **Week 5**: *"A good book is a doorway to a thousand adventures."*
-6. **Week 6**: *"Sit quietly for ten minutes. Listen to the calm world."*
-7. **Week 7**: *"Walk with confidence, and greet others with a smile."*
-8. **Week 8**: *"Giving from the heart makes both people glow."*
-9. **Week 9**: *"Family time is the warmest sunshine of life."*
-10. **Week 10**: *"Every small good habit grows into a giant strong tree."*
-11. **Week 11**: *"Every act of kindness is a shining marble in your jar."*
-12. **Week 12**: *"The Three Es of Golden Life: Energy, Empathy, Excellence!"*
+1. **Week 1**: *"Every day is a new chance."*
+2. **Week 2**: *"If today was not good, tomorrow can still be better."*
+3. **Week 3**: *"You do not have to be like anybody else."*
+4. **Week 4**: *"Say something kind about somebody today."*
+5. **Week 5**: *"Give something to somebody. It can be very small."*
+6. **Week 6**: *"Some days are not fair. It is still a good life."*
+7. **Week 7**: *"Spend some time with your family today."*
+8. **Week 8**: *"Nothing stays the same forever."*
+9. **Week 9**: *"If somebody is sad, sit with them."*
+10. **Week 10**: *"Do the thing you have been putting off."*
+11. **Week 11**: *"Be excited about something small today."*
+12. **Week 12**: *"Look at our garden. You grew all of that."*

@@ -55,11 +55,11 @@ python Assets/SeniorsActivityUnit10/SFX/generate_sfx.py
 
 ## 4. Screen Architecture
 
-* **SetupScreen (`U10_SetupScreen_Masters_Activity.cs`)**: Allows selecting 4 of 8 golden habits at term start.
-* **GardenScreen (`U10_GardenScreen_Masters_Activity.cs`)**: Living garden board with 4 growing terracotta pots, Kindness Jar (0 to 50+ marbles), and navigation bar.
-* **WeeklyCheckScreen (`U10_WeeklyCheckScreen_Masters_Activity.cs`)**: 2-minute weekly check-in routine stepping through the 4 chosen habits with show of hands.
-* **EndTermScreen (`U10_EndTermScreen_Masters_Activity.cs`)**: Week 12 Harvest Celebration certificate honoring **The Three Es: Energy, Empathy, and Excellence**.
-* **GoldenLineModal (`U10_GoldenLineModal_Masters_Activity.cs`)**: Clean popup modal displaying the weekly inspirational quote.
+* **SetupScreen (`U10_SetupScreen_Masters_Activity.cs`)**: Allows selecting 4 of 8 golden habits at term start with white cards turning green on selection.
+* **GardenScreen (`U10_GardenScreen_Masters_Activity.cs`)**: Living garden board with 4 growing terracotta pots, Kindness Jar (0 to 50+ marbles), and dynamic weekly pulse.
+* **WeeklyCheckScreen (`U10_WeeklyCheckScreen_Masters_Activity.cs`)**: 2-minute weekly check-in routine stepping through the 4 chosen habits with show of hands (`SFX_Tally`).
+* **EndTermScreen (`U10_EndTermScreen_Masters_Activity.cs`)**: Week 12 Harvest Celebration certificate honoring **The Three Es: Energy, Enthusiasm, and Empathy**.
+* **GoldenLineModal (`U10_GoldenLineModal_Masters_Activity.cs`)**: Clean popup modal displaying the 12-week inspirational quotes from Section 4.
 
 ---
 
