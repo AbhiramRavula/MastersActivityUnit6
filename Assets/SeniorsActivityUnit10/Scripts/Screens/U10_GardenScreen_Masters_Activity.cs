@@ -33,6 +33,9 @@ namespace Googolplex.Unit10
         [Header("Jar Sprites (Empty to Full)")]
         [SerializeField] private Sprite[] jarStageSprites; // 5 sprites
 
+        [Header("Voiceover Audio Clips")]
+        [SerializeField] private AudioClip voGardenWelcome;
+
         private void Start()
         {
             InitButtonListeners();
@@ -44,18 +47,21 @@ namespace Googolplex.Unit10
             {
                 addMarbleButton.onClick.RemoveAllListeners();
                 addMarbleButton.onClick.AddListener(OnAddMarbleClicked);
+                EnsureButtonAnimation(addMarbleButton);
             }
 
             if (weeklyCheckButton != null)
             {
                 weeklyCheckButton.onClick.RemoveAllListeners();
                 weeklyCheckButton.onClick.AddListener(OnWeeklyCheckClicked);
+                EnsureButtonAnimation(weeklyCheckButton);
             }
 
             if (endTermButton != null)
             {
                 endTermButton.onClick.RemoveAllListeners();
                 endTermButton.onClick.AddListener(OnEndTermClicked);
+                EnsureButtonAnimation(endTermButton);
             }
 
             if (showQuoteButton != null)
@@ -125,10 +131,37 @@ namespace Googolplex.Unit10
             // Update Kindness Jar
             UpdateJarDisplay(data.totalMarbles);
 
+            // Weekly Check Button: Dynamic action text and attention pulsing
+            if (weeklyCheckButton != null)
+            {
+                var btnText = weeklyCheckButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (btnText != null)
+                {
+                    btnText.text = $"Start Week {data.currentWeek} Check-In!";
+                }
+
+                var pulse = weeklyCheckButton.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+                if (pulse == null)
+                {
+                    pulse = weeklyCheckButton.gameObject.AddComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+                }
+                pulse.PopIn(0.15f);
+            }
+
             // Button states
             if (endTermButton != null)
             {
-                endTermButton.gameObject.SetActive(data.currentWeek >= 12);
+                bool isTermEnd = data.currentWeek >= 12;
+                endTermButton.gameObject.SetActive(isTermEnd);
+                if (isTermEnd)
+                {
+                    var termPulse = endTermButton.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+                    if (termPulse == null)
+                    {
+                        termPulse = endTermButton.gameObject.AddComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+                    }
+                    termPulse.PopIn(0.25f);
+                }
             }
 
             // Ensure teacher menu starts closed
@@ -139,7 +172,10 @@ namespace Googolplex.Unit10
 
             if (data.currentWeek == 1 && data.totalMarbles == 0)
             {
-                U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_01");
+                if (voGardenWelcome != null)
+                    U10_AudioManager_Masters_Activity.Instance?.PlayVOClip(voGardenWelcome);
+                else
+                    U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_01");
             }
         }
 
@@ -219,6 +255,14 @@ namespace Googolplex.Unit10
             U10_AudioManager_Masters_Activity.Instance?.PlaySFX("SFX_Tap");
             U10_GameManager_Masters_Activity.Instance?.ResetTermData();
             if (teacherMenuPanel != null) teacherMenuPanel.SetActive(false);
+        }
+
+        private void EnsureButtonAnimation(Button btn)
+        {
+            if (btn != null && btn.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>() == null)
+            {
+                btn.gameObject.AddComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+            }
         }
     }
 }

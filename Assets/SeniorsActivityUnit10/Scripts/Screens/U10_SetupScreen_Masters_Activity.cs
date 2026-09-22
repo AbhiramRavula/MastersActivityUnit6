@@ -21,11 +21,25 @@ namespace Googolplex.Unit10
         [SerializeField] private List<TextMeshProUGUI> habitQuoteTexts = new List<TextMeshProUGUI>();
         [SerializeField] private List<Image> habitIconImages = new List<Image>();
 
+        [Header("Card Theme & Selection Colors")]
+        [SerializeField] private Color defaultCardColor = Color.white; // Pure white by default
+        [SerializeField] private Color selectedCardColor = new Color(0.24f, 0.72f, 0.38f, 1f); // Vibrant green when selected
+        [SerializeField] private Color defaultTitleColor = new Color(0.06f, 0.20f, 0.10f); // Dark Forest Green
+        [SerializeField] private Color selectedTitleColor = Color.white; // Crisp White for maximum contrast
+        [SerializeField] private Color defaultQuoteColor = new Color(0.15f, 0.32f, 0.20f); // Dark Slate
+        [SerializeField] private Color selectedQuoteColor = new Color(0.94f, 0.99f, 0.95f); // Soft Mint White
+
+        [Header("Voiceover Audio Clips")]
+        [SerializeField] private AudioClip voSetupIntro;
+        
         private HashSet<int> selectedIndices = new HashSet<int>();
 
         private void OnEnable()
         {
-            U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_02");
+            if (voSetupIntro != null)
+                U10_AudioManager_Masters_Activity.Instance?.PlayVOClip(voSetupIntro);
+            else
+                U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_02");
         }
 
         private void Start()
@@ -93,7 +107,17 @@ namespace Googolplex.Unit10
                 var btnImg = habitOptionButtons[i].GetComponent<Image>();
                 if (btnImg != null)
                 {
-                    btnImg.color = isSelected ? new Color(0.88f, 0.98f, 0.9f, 1f) : Color.white;
+                    btnImg.color = isSelected ? selectedCardColor : defaultCardColor;
+                }
+
+                if (habitTitleTexts.Count > i && habitTitleTexts[i] != null)
+                {
+                    habitTitleTexts[i].color = isSelected ? selectedTitleColor : defaultTitleColor;
+                }
+
+                if (habitQuoteTexts.Count > i && habitQuoteTexts[i] != null)
+                {
+                    habitQuoteTexts[i].color = isSelected ? selectedQuoteColor : defaultQuoteColor;
                 }
             }
 
@@ -105,7 +129,16 @@ namespace Googolplex.Unit10
 
             if (plantGardenButton != null)
             {
-                plantGardenButton.interactable = (selectedIndices.Count == 4);
+                bool wasInteractable = plantGardenButton.interactable;
+                bool nowInteractable = (selectedIndices.Count == 4);
+                plantGardenButton.interactable = nowInteractable;
+
+                if (!wasInteractable && nowInteractable)
+                {
+                    var pulse = plantGardenButton.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+                    if (pulse == null) pulse = plantGardenButton.gameObject.AddComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+                    pulse.PopIn(0f, 0.45f);
+                }
             }
         }
 

@@ -28,32 +28,32 @@ All audio assets are 16-bit 44.1kHz mono WAV files, procedurally synthesized and
 
 ---
 
-## 3. Spoken Lines & Voiceover Tracks (25 Files per Section 7.1)
+## 3. Spoken Lines & Voiceover Tracks (25 Files per Section 7.1 - EngSnap Neural TTS: en-IN-NeerjaNeural)
 
-| Filename | Speaker | Spoken Line Content | Screen / Trigger |
+| Filename | Speaker / Voice | Spoken Line Content | Screen / Trigger |
 |---|---|---|---|
-| `VO_U10_01.wav` | Narrator | *"This is our golden garden."* | Garden Screen (Week 1 initial visit) |
-| `VO_U10_02.wav` | Narrator | *"Choose four things to look after this term."* | Setup Screen (Habit picker opening) |
-| `VO_U10_03.wav` | Narrator | *"Time for our weekly check!"* | Weekly Check-in start |
-| `VO_U10_04.wav` | Narrator | *"Who drank their water most days this week?"* | Habit 1 Check-in prompt |
-| `VO_U10_05.wav` | Narrator | *"Who went to bed early most days?"* | Habit 2 Check-in prompt |
-| `VO_U10_06.wav` | Narrator | *"Who played outside this week?"* | Habit 3 Check-in prompt |
-| `VO_U10_07.wav` | Narrator | *"Who read a book this week?"* | Habit 4 Check-in prompt |
-| `VO_U10_08.wav` | Narrator | *"Who sat quietly for ten minutes?"* | Habit 5 Check-in prompt |
-| `VO_U10_09.wav` | Narrator | *"Who went for a walk?"* | Habit 6 Check-in prompt |
-| `VO_U10_10.wav` | Narrator | *"Who gave something to somebody?"* | Habit 7 Check-in prompt |
-| `VO_U10_11.wav` | Narrator | *"Who spent time with their family?"* | Habit 8 Check-in prompt |
-| `VO_U10_12.wav` | Narrator | *"Look how it is growing!"* | Weekly Check Plant Growth animation |
-| `VO_U10_13_01.wav` | Narrator | *"We speak with gentle words."* | Golden Line Modal (Week 1) |
-| `VO_U10_13_02.wav` | Narrator | *"We listen when others share."* | Golden Line Modal (Week 2) |
-| `VO_U10_13_03.wav` | Narrator | *"We take care of our bodies with fresh water."* | Golden Line Modal (Week 3) |
-| `VO_U10_13_04.wav` | Narrator | *"We rest our minds with quiet sleep."* | Golden Line Modal (Week 4) |
-| `VO_U10_13_05.wav` | Narrator | *"We enjoy nature and play with joy."* | Golden Line Modal (Week 5) |
-| `VO_U10_13_06.wav` | Narrator | *"We open books and discover new worlds."* | Golden Line Modal (Week 6) |
-| `VO_U10_13_07.wav` | Narrator | *"We practice stillness and calm."* | Golden Line Modal (Week 7) |
-| `VO_U10_13_08.wav` | Narrator | *"We step forward with energy and confidence."* | Golden Line Modal (Week 8) |
-| `VO_U10_13_09.wav` | Narrator | *"We share our gifts and help those in need."* | Golden Line Modal (Week 9) |
-| `VO_U10_13_10.wav` | Narrator | *"We cherish our family and respect our elders."* | Golden Line Modal (Week 10) |
-| `VO_U10_13_11.wav` | Narrator | *"We practice kindness every single day."* | Golden Line Modal (Week 11) |
-| `VO_U10_13_12.wav` | Narrator | *"Excellence is not an act, but our daily habit."* | Golden Line Modal (Week 12) |
-| `VO_U10_14.wav` | Narrator | *"Look at our garden. You grew all of that."* | Harvest Celebration / Certificate Screen |
+| `VO_U10_01.mp3` | Narrator (NeerjaNeural) | *"This is our golden garden."* | Garden Screen (Week 1 initial visit) |
+| `VO_U10_02.mp3` | Narrator (NeerjaNeural) | *"Choose four things to look after this term."* | Setup Screen (Habit picker opening) |
+| `VO_U10_03.mp3` | Narrator (NeerjaNeural) | *"Time for our weekly check!"* | Weekly Check-in start |
+| `VO_U10_04.mp3` | Narrator (NeerjaNeural) | *"Who drank their water most days this week?"* | Habit 1 Check-in prompt |
+| `VO_U10_05.mp3` | Narrator (NeerjaNeural) | *"Who went to bed early most days?"* | Habit 2 Check-in prompt |
+| `VO_U10_06.mp3` | Narrator (NeerjaNeural) | *"Who played outside this week?"* | Habit 3 Check-in prompt |
+| `VO_U10_07.mp3` | Narrator (NeerjaNeural) | *"Who read a book this week?"* | Habit 4 Check-in prompt |
+| `VO_U10_08.mp3` | Narrator (NeerjaNeural) | *"Who sat quietly for ten minutes?"* | Habit 5 Check-in prompt |
+| `VO_U10_09.mp3` | Narrator (NeerjaNeural) | *"Who went for a walk?"* | Habit 6 Check-in prompt |
+| `VO_U10_10.mp3` | Narrator (NeerjaNeural) | *"Who gave something to somebody?"* | Habit 7 Check-in prompt |
+| `VO_U10_11.mp3` | Narrator (NeerjaNeural) | *"Who spent time with their family?"* | Habit 8 Check-in prompt |
+| `VO_U10_12.mp3` | Narrator (NeerjaNeural) | *"Look how it is growing!"* | Weekly Check Plant Growth animation |
+| `VO_U10_13_01.mp3` | Narrator (NeerjaNeural) | *"The Golden Life begins with the simple things you do every day."* | Golden Line Modal (Week 1) |
+| `VO_U10_13_02.mp3` | Narrator (NeerjaNeural) | *"Drink your water -- inside and outside."* | Golden Line Modal (Week 2) |
+| `VO_U10_13_03.mp3` | Narrator (NeerjaNeural) | *"Sleep early, rise strong and joyful."* | Golden Line Modal (Week 3) |
+| `VO_U10_13_04.mp3` | Narrator (NeerjaNeural) | *"Play outside -- the world is wide and green."* | Golden Line Modal (Week 4) |
+| `VO_U10_13_05.mp3` | Narrator (NeerjaNeural) | *"A good book is a doorway to a thousand adventures."* | Golden Line Modal (Week 5) |
+| `VO_U10_13_06.mp3` | Narrator (NeerjaNeural) | *"Sit quietly for ten minutes. Listen to the calm world."* | Golden Line Modal (Week 6) |
+| `VO_U10_13_07.mp3` | Narrator (NeerjaNeural) | *"Walk with confidence, and greet others with a smile."* | Golden Line Modal (Week 7) |
+| `VO_U10_13_08.mp3` | Narrator (NeerjaNeural) | *"Giving from the heart makes both people glow."* | Golden Line Modal (Week 8) |
+| `VO_U10_13_09.mp3` | Narrator (NeerjaNeural) | *"Family time is the warmest sunshine of life."* | Golden Line Modal (Week 9) |
+| `VO_U10_13_10.mp3` | Narrator (NeerjaNeural) | *"Every small good habit grows into a giant strong tree."* | Golden Line Modal (Week 10) |
+| `VO_U10_13_11.mp3` | Narrator (NeerjaNeural) | *"Every act of kindness is a shining marble in your jar."* | Golden Line Modal (Week 11) |
+| `VO_U10_13_12.mp3` | Narrator (NeerjaNeural) | *"The Three Es of Golden Life: Energy, Empathy, Excellence!"* | Golden Line Modal (Week 12) |
+| `VO_U10_14.mp3` | Narrator (NeerjaNeural) | *"Look at our garden. You grew all of that."* | Harvest Celebration / Certificate Screen |

@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,7 +15,11 @@ namespace Googolplex.Unit10
         [SerializeField] private TextMeshProUGUI quoteText;
         [SerializeField] private Button closeButton;
 
+        [Header("Golden Line Voiceovers (12 Weeks)")]
+        [SerializeField] private List<AudioClip> goldenLineVoiceovers = new List<AudioClip>();
+
         private Action onCloseCallback;
+        private Coroutine audioGateRoutine;
 
         private void Awake()
         {
@@ -21,6 +27,11 @@ namespace Googolplex.Unit10
             {
                 closeButton.onClick.RemoveAllListeners();
                 closeButton.onClick.AddListener(CloseModal);
+
+                if (closeButton.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>() == null)
+                {
+                    closeButton.gameObject.AddComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+                }
             }
         }
 
@@ -48,11 +59,51 @@ namespace Googolplex.Unit10
 
             U10_AudioManager_Masters_Activity.Instance?.PlaySFX("SFX_GoldenLine");
             int voWeek = Mathf.Clamp(weekNumber, 1, 12);
-            U10_AudioManager_Masters_Activity.Instance?.PlayVO($"VO_U10_13_{voWeek:D2}");
+            float duration = 3.5f;
+
+            if (goldenLineVoiceovers != null && goldenLineVoiceovers.Count >= voWeek && goldenLineVoiceovers[voWeek - 1] != null)
+            {
+                duration = U10_AudioManager_Masters_Activity.Instance?.PlayVOClip(goldenLineVoiceovers[voWeek - 1]) ?? 3.5f;
+            }
+            else
+            {
+                duration = U10_AudioManager_Masters_Activity.Instance?.PlayVO($"VO_U10_13_{voWeek:D2}") ?? 3.5f;
+            }
+
+            if (audioGateRoutine != null) StopCoroutine(audioGateRoutine);
+            audioGateRoutine = StartCoroutine(WaitForQuoteVOThenUnlock(duration));
+        }
+
+        private IEnumerator WaitForQuoteVOThenUnlock(float duration)
+        {
+            if (closeButton != null)
+            {
+                closeButton.interactable = false;
+                closeButton.transform.localScale = Vector3.one * 0.9f;
+            }
+
+            float waitTime = Mathf.Max(duration + 0.2f, 1.5f);
+            yield return new WaitForSeconds(waitTime);
+
+            if (closeButton != null)
+            {
+                closeButton.interactable = true;
+                var pulse = closeButton.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+                if (pulse != null) pulse.PopIn(0f, 0.45f);
+                else closeButton.transform.localScale = Vector3.one;
+            }
+
+            audioGateRoutine = null;
         }
 
         public void CloseModal()
         {
+            if (audioGateRoutine != null)
+            {
+                StopCoroutine(audioGateRoutine);
+                audioGateRoutine = null;
+            }
+
             U10_AudioManager_Masters_Activity.Instance?.StopVO();
             U10_AudioManager_Masters_Activity.Instance?.PlaySFX("SFX_Tap");
 

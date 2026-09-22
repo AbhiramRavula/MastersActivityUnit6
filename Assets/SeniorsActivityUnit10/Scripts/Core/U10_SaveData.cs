@@ -43,30 +43,30 @@ namespace Googolplex.Unit10
 
         public static readonly (string key, string title, string prompt, string quote)[] ALL_AVAILABLE_HABITS = new[]
         {
-            ("Water", "Drink Water", "Who drank fresh water every day this week?", "Drink your water -- inside and outside."),
-            ("Sleep", "Sleep Early", "Who went to sleep on time and rested well?", "Sleep early, wake up fresh and ready."),
-            ("Outside", "Play Outside", "Who ran and played in the fresh open air?", "Play outside -- run under the open sky."),
-            ("Read", "Read a Book", "Who enjoyed reading a story or book?", "Read a book -- every page holds a wonder."),
-            ("Quiet", "Sit Quietly", "Who took ten quiet minutes to sit and relax?", "Sit quietly for ten minutes. Listen to the calm."),
-            ("Walk", "Walk and Smile", "Who walked politely and shared warm smiles?", "Walk with good posture, and greet others with a smile."),
-            ("Give", "Give with Heart", "Who shared or gave something to someone?", "Give something to somebody with a happy heart."),
-            ("Family", "Family Time", "Who spent loving quality time with family?", "Spend time with your family every single day.")
+            ("Water", "Drink Water", "Who drank their water most days this week?", "Drink your water -- inside and outside."),
+            ("Sleep", "Sleep Early", "Who went to bed early most days?", "Sleep early, wake up fresh and ready."),
+            ("Outside", "Play Outside", "Who played outside this week?", "Play outside -- run under the open sky."),
+            ("Read", "Read a Book", "Who read a book this week?", "Read a book -- every page holds a wonder."),
+            ("Quiet", "Sit Quietly", "Who sat quietly for ten minutes?", "Sit quietly for ten minutes. Listen to the calm."),
+            ("Walk", "Walk and Smile", "Who went for a walk?", "Walk with good posture, and greet others with a smile."),
+            ("Give", "Give with Heart", "Who gave something to somebody?", "Give something to somebody with a happy heart."),
+            ("Family", "Family Time", "Who spent time with their family?", "Spend time with your family every single day.")
         };
 
         public static readonly string[] GOLDEN_LINES_BY_WEEK = new[]
         {
-            "The Golden Life begins with the simple things you do every day.",
-            "Drink your water -- inside and outside.",
-            "Sleep early, rise strong and joyful.",
-            "Play outside -- the world is wide and green.",
-            "A good book is a doorway to a thousand adventures.",
-            "Sit quietly for ten minutes. Listen to the calm world.",
-            "Walk with confidence, and greet others with a smile.",
-            "Giving from the heart makes both people glow.",
-            "Family time is the warmest sunshine of life.",
-            "Every small good habit grows into a giant strong tree.",
-            "Every act of kindness is a shining marble in your jar.",
-            "The Three Es of Golden Life: Energy, Empathy, Excellence!"
+            "Every day is a new chance.",
+            "If today was not good, tomorrow can still be better.",
+            "You do not have to be like anybody else.",
+            "Say something kind about somebody today.",
+            "Give something to somebody. It can be very small.",
+            "Some days are not fair. It is still a good life.",
+            "Spend some time with your family today.",
+            "Nothing stays the same forever.",
+            "If somebody is sad, sit with them.",
+            "Do the thing you have been putting off.",
+            "Be excited about something small today.",
+            "Look at our garden. You grew all of that."
         };
 
         public static void Save(U10_ClassGardenSaveData data)

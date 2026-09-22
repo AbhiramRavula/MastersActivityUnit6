@@ -39,8 +39,48 @@ namespace Googolplex.Unit10
             Instance = this;
 
             InitAudioSources();
+
+#if UNITY_EDITOR
+            if (allAudioClips == null || allAudioClips.Count == 0 || clipMap.Count == 0)
+            {
+                AutoPopulateClips();
+            }
+            else
+            {
+                RegisterClips();
+            }
+#else
+            RegisterClips();
+#endif
+        }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (allAudioClips == null || allAudioClips.Count == 0)
+            {
+                AutoPopulateClips();
+            }
+        }
+
+        public void AutoPopulateClips()
+        {
+            if (allAudioClips == null) allAudioClips = new List<AudioClip>();
+            
+            string[] searchFolders = new[] { "Assets/SeniorsActivityUnit10/SFX", "Assets/SeniorsActivityUnit10/Audio" };
+            string[] guids = UnityEditor.AssetDatabase.FindAssets("t:AudioClip", searchFolders);
+            foreach (var guid in guids)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                AudioClip clip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                if (clip != null && !allAudioClips.Contains(clip))
+                {
+                    allAudioClips.Add(clip);
+                }
+            }
             RegisterClips();
         }
+#endif
 
         private void Start()
         {
@@ -77,7 +117,7 @@ namespace Googolplex.Unit10
             }
         }
 
-        private void RegisterClips()
+        public void RegisterClips()
         {
             clipMap.Clear();
             AddClip("SFX_PlantGrow", sfxPlantGrow);
@@ -91,26 +131,59 @@ namespace Googolplex.Unit10
             AddClip("MUS_Garden", musGarden);
             AddClip("MUS_EndTerm", musEndTerm);
 
-            foreach (var clip in allAudioClips)
+            if (allAudioClips != null)
             {
-                if (clip != null)
+                foreach (var clip in allAudioClips)
                 {
-                    AddClip(clip.name, clip);
+                    if (clip != null)
+                    {
+                        AddClip(clip.name, clip);
+                    }
                 }
             }
         }
 
         private void AddClip(string name, AudioClip clip)
         {
-            if (clip != null)
+            if (clip != null && !string.IsNullOrEmpty(name))
             {
                 clipMap[name] = clip;
             }
         }
 
+        public AudioClip GetClip(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+
+            if (clipMap.TryGetValue(name, out AudioClip clip) && clip != null)
+            {
+                return clip;
+            }
+
+#if UNITY_EDITOR
+            // Dynamic fallback search in project
+            string[] searchFolders = new[] { "Assets/SeniorsActivityUnit10/SFX", "Assets/SeniorsActivityUnit10/Audio" };
+            string[] guids = UnityEditor.AssetDatabase.FindAssets($"{name} t:AudioClip", searchFolders);
+            if (guids != null && guids.Length > 0)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+                AudioClip found = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                if (found != null)
+                {
+                    AddClip(name, found);
+                    AddClip(found.name, found);
+                    if (!allAudioClips.Contains(found)) allAudioClips.Add(found);
+                    return found;
+                }
+            }
+#endif
+            return null;
+        }
+
         public void PlaySFX(string clipName)
         {
-            if (clipMap.TryGetValue(clipName, out AudioClip clip))
+            AudioClip clip = GetClip(clipName);
+            if (clip != null)
             {
                 sfxSource.PlayOneShot(clip);
             }
@@ -120,9 +193,15 @@ namespace Googolplex.Unit10
             }
         }
 
-        public void PlayVO(string voName)
+        public float PlayVO(string voName)
         {
-            if (clipMap.TryGetValue(voName, out AudioClip clip))
+            AudioClip clip = GetClip(voName);
+            return PlayVOClip(clip);
+        }
+
+        public float PlayVOClip(AudioClip clip)
+        {
+            if (clip != null)
             {
                 if (voSource != null)
                 {
@@ -130,12 +209,18 @@ namespace Googolplex.Unit10
                     voSource.clip = clip;
                     voSource.Play();
                 }
+                return clip.length;
             }
-            else
-            {
-                Debug.LogWarning($"[U10_AudioManager] VO clip not found: {voName}");
-            }
+            return 0f;
         }
+
+        public float GetClipDuration(string clipName)
+        {
+            AudioClip clip = GetClip(clipName);
+            return clip != null ? clip.length : 0f;
+        }
+
+        public bool IsVOPlaying => voSource != null && voSource.isPlaying;
 
         public void StopVO()
         {
@@ -144,7 +229,8 @@ namespace Googolplex.Unit10
 
         public void PlayMusic(string clipName, bool loop = true)
         {
-            if (clipMap.TryGetValue(clipName, out AudioClip clip))
+            AudioClip clip = GetClip(clipName);
+            if (clip != null)
             {
                 if (musicSource.clip == clip && musicSource.isPlaying) return;
                 musicSource.clip = clip;
@@ -155,9 +241,10 @@ namespace Googolplex.Unit10
 
         public void PlayAmbience()
         {
-            if (ambGarden != null && ambienceSource != null)
+            AudioClip clip = ambGarden != null ? ambGarden : GetClip("AMB_Garden");
+            if (clip != null && ambienceSource != null)
             {
-                ambienceSource.clip = ambGarden;
+                ambienceSource.clip = clip;
                 ambienceSource.loop = true;
                 ambienceSource.Play();
             }

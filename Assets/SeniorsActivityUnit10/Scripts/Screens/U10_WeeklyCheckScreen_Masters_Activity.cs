@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -19,13 +20,35 @@ namespace Googolplex.Unit10
         [SerializeField] private Button skipHabitButton;
         [SerializeField] private TextMeshProUGUI statusFeedbackText;
         [SerializeField] private Button backToGardenButton;
+        [SerializeField] private Button closeCardButton;
 
         [Header("Habit Icons Database")]
         [SerializeField] private List<Sprite> allHabitIcons = new List<Sprite>();
 
+        [Header("Voiceover Clips (Inspector Assigned)")]
+        [SerializeField] private AudioClip voWeeklyCheckStart;
+        [SerializeField] private AudioClip voWater;
+        [SerializeField] private AudioClip voSleep;
+        [SerializeField] private AudioClip voOutside;
+        [SerializeField] private AudioClip voRead;
+        [SerializeField] private AudioClip voQuiet;
+        [SerializeField] private AudioClip voWalk;
+        [SerializeField] private AudioClip voGive;
+        [SerializeField] private AudioClip voFamily;
+        [SerializeField] private AudioClip voPlantGrowing;
+
         private List<U10_HabitData> habitsToCheck;
         private int currentHabitIndex = 0;
         private bool hasAnsweredCurrent = false;
+        private Coroutine audioGateRoutine;
+
+        private void Awake()
+        {
+            EnsureButtonAnimation(handsRaisedButton);
+            EnsureButtonAnimation(skipHabitButton);
+            EnsureButtonAnimation(closeCardButton);
+            EnsureButtonAnimation(backToGardenButton);
+        }
 
         public void StartWeeklyCheck(List<U10_HabitData> habits, int weekNumber)
         {
@@ -56,9 +79,18 @@ namespace Googolplex.Unit10
                 backToGardenButton.onClick.AddListener(OnBackToGardenClicked);
             }
 
+            if (closeCardButton != null)
+            {
+                closeCardButton.onClick.RemoveAllListeners();
+                closeCardButton.onClick.AddListener(OnBackToGardenClicked);
+            }
+
             if (currentHabitIndex == 0)
             {
-                U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_03");
+                if (voWeeklyCheckStart != null)
+                    U10_AudioManager_Masters_Activity.Instance?.PlayVOClip(voWeeklyCheckStart);
+                else
+                    U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_03");
             }
 
             ShowCurrentHabit();
@@ -95,15 +127,6 @@ namespace Googolplex.Unit10
                 habitBookQuoteText.text = $"\"{habit.habitBookQuote}\"";
             }
 
-            if (statusFeedbackText != null)
-            {
-                statusFeedbackText.text = "Raise your hand if you practiced this week!";
-                statusFeedbackText.color = new Color(0.06f, 0.35f, 0.16f);
-            }
-
-            // Play specific habit prompt voiceover
-            PlayHabitPromptVO(habit.habitKey);
-
             // Dynamically set correct habit icon
             if (habitIconImage != null)
             {
@@ -118,20 +141,87 @@ namespace Googolplex.Unit10
                     habitIconImage.color = Color.white;
                 }
             }
+
+            // Play specific habit prompt voiceover & start audio-gate lock
+            float voDuration = PlayHabitPromptVO(habit.habitKey);
+
+            if (audioGateRoutine != null) StopCoroutine(audioGateRoutine);
+            audioGateRoutine = StartCoroutine(WaitForVOThenUnlockButtons(voDuration));
         }
 
-        private void PlayHabitPromptVO(string habitKey)
+        private float PlayHabitPromptVO(string habitKey)
         {
-            if (string.IsNullOrEmpty(habitKey)) return;
+            if (string.IsNullOrEmpty(habitKey)) return 0f;
             string key = habitKey.ToLower();
-            if (key.Contains("water")) U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_04");
-            else if (key.Contains("sleep")) U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_05");
-            else if (key.Contains("outside")) U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_06");
-            else if (key.Contains("read")) U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_07");
-            else if (key.Contains("quiet")) U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_08");
-            else if (key.Contains("walk")) U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_09");
-            else if (key.Contains("give")) U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_10");
-            else if (key.Contains("family")) U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_11");
+            AudioClip targetClip = null;
+            string voKey = null;
+
+            if (key.Contains("water")) { targetClip = voWater; voKey = "VO_U10_04"; }
+            else if (key.Contains("sleep")) { targetClip = voSleep; voKey = "VO_U10_05"; }
+            else if (key.Contains("outside")) { targetClip = voOutside; voKey = "VO_U10_06"; }
+            else if (key.Contains("read")) { targetClip = voRead; voKey = "VO_U10_07"; }
+            else if (key.Contains("quiet")) { targetClip = voQuiet; voKey = "VO_U10_08"; }
+            else if (key.Contains("walk")) { targetClip = voWalk; voKey = "VO_U10_09"; }
+            else if (key.Contains("give")) { targetClip = voGive; voKey = "VO_U10_10"; }
+            else if (key.Contains("family")) { targetClip = voFamily; voKey = "VO_U10_11"; }
+
+            if (targetClip != null)
+            {
+                return U10_AudioManager_Masters_Activity.Instance?.PlayVOClip(targetClip) ?? targetClip.length;
+            }
+            else if (!string.IsNullOrEmpty(voKey))
+            {
+                return U10_AudioManager_Masters_Activity.Instance?.PlayVO(voKey) ?? 2.5f;
+            }
+            return 2.0f;
+        }
+
+        private IEnumerator WaitForVOThenUnlockButtons(float duration)
+        {
+            // Lock buttons while audio is playing
+            if (handsRaisedButton != null)
+            {
+                handsRaisedButton.interactable = false;
+                handsRaisedButton.transform.localScale = Vector3.one * 0.95f;
+            }
+            if (skipHabitButton != null)
+            {
+                skipHabitButton.interactable = false;
+                skipHabitButton.transform.localScale = Vector3.one * 0.95f;
+            }
+
+            if (statusFeedbackText != null)
+            {
+                statusFeedbackText.text = "Listen carefully to the habit question...";
+                statusFeedbackText.color = new Color(0.35f, 0.45f, 0.4f);
+            }
+
+            // Wait for full audio duration
+            float waitTime = Mathf.Max(duration + 0.2f, 1.2f);
+            yield return new WaitForSeconds(waitTime);
+
+            // Unlock and smoothly pop-in buttons with attention animation!
+            if (handsRaisedButton != null)
+            {
+                handsRaisedButton.interactable = true;
+                var pulse = handsRaisedButton.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+                if (pulse != null) pulse.PopIn(0f, 0.45f);
+                else handsRaisedButton.transform.localScale = Vector3.one;
+            }
+
+            if (skipHabitButton != null)
+            {
+                skipHabitButton.interactable = true;
+                skipHabitButton.transform.localScale = Vector3.one;
+            }
+
+            if (statusFeedbackText != null)
+            {
+                statusFeedbackText.text = "Raise your hand if you practiced this week!";
+                statusFeedbackText.color = new Color(0.06f, 0.45f, 0.16f);
+            }
+
+            audioGateRoutine = null;
         }
 
         public Sprite GetIconForHabit(string habitKey)
@@ -150,6 +240,12 @@ namespace Googolplex.Unit10
             if (hasAnsweredCurrent) return;
             hasAnsweredCurrent = true;
 
+            if (audioGateRoutine != null)
+            {
+                StopCoroutine(audioGateRoutine);
+                audioGateRoutine = null;
+            }
+
             var habit = habitsToCheck[currentHabitIndex];
             habit.totalCheckins++;
 
@@ -159,7 +255,7 @@ namespace Googolplex.Unit10
             if (statusFeedbackText != null)
             {
                 statusFeedbackText.text = $"Wonderful! {habit.habitTitle} is growing!";
-                statusFeedbackText.color = new Color(0.04f, 0.48f, 0.15f);
+                statusFeedbackText.color = new Color(0.04f, 0.52f, 0.15f);
             }
 
             U10_AudioManager_Masters_Activity.Instance?.PlaySFX("SFX_Tally");
@@ -173,6 +269,12 @@ namespace Googolplex.Unit10
         {
             if (hasAnsweredCurrent) return;
             hasAnsweredCurrent = true;
+
+            if (audioGateRoutine != null)
+            {
+                StopCoroutine(audioGateRoutine);
+                audioGateRoutine = null;
+            }
 
             if (statusFeedbackText != null)
             {
@@ -213,8 +315,23 @@ namespace Googolplex.Unit10
 
         private void OnBackToGardenClicked()
         {
+            if (audioGateRoutine != null)
+            {
+                StopCoroutine(audioGateRoutine);
+                audioGateRoutine = null;
+            }
+
+            U10_AudioManager_Masters_Activity.Instance?.StopVO();
             U10_AudioManager_Masters_Activity.Instance?.PlaySFX("SFX_Tap");
             U10_GameManager_Masters_Activity.Instance?.ChangeState(U10_GardenState.Garden);
+        }
+
+        private void EnsureButtonAnimation(Button btn)
+        {
+            if (btn != null && btn.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>() == null)
+            {
+                btn.gameObject.AddComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+            }
         }
     }
 }

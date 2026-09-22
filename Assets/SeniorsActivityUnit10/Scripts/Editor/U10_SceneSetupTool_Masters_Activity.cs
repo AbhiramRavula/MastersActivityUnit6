@@ -83,6 +83,366 @@ namespace Googolplex.Unit10
             Debug.Log("<color=green>[U10_SceneSetupTool] Setup Screen successfully refreshed in place with large 3D icons & bold text!</color>");
         }
 
+        [MenuItem("Googolplex/Unit 10/Non-Destructive/Skin All Buttons In Active Scene")]
+        public static void SkinAllButtonsInActiveScene()
+        {
+            ReimportTexturesAsSprites();
+            Dictionary<string, Sprite> spriteDict = LoadAllSprites();
+
+            Sprite greenBtn = GetSprite(spriteDict, "UI_Button_Green");
+            Sprite goldBtn = GetSprite(spriteDict, "UI_Button_Gold");
+            Sprite blueBtn = GetSprite(spriteDict, "UI_Button_Blue");
+            Sprite orangeBtn = GetSprite(spriteDict, "UI_Button_Orange");
+            Sprite purpleBtn = GetSprite(spriteDict, "UI_Button_Purple");
+            Sprite redBtn = GetSprite(spriteDict, "UI_Button_Red");
+            Sprite greyBtn = GetSprite(spriteDict, "UI_Button_Grey");
+            Sprite closeIcon = GetSprite(spriteDict, "Icon_Close_Circle");
+            Sprite roundedBox = GetSprite(spriteDict, "UI_RoundedBox_9Slice");
+
+            var allButtons = Object.FindObjectsOfType<Button>(true);
+            int skinnedCount = 0;
+
+            foreach (var btn in allButtons)
+            {
+                if (btn == null) continue;
+                string bName = btn.gameObject.name.ToLower();
+
+                // Skip close icon buttons so we don't overwrite circular X icon
+                if (bName.Contains("close") && bName.Contains("card"))
+                {
+                    var cImg = btn.GetComponent<Image>();
+                    if (cImg != null && closeIcon != null)
+                    {
+                        Undo.RecordObject(cImg, "Skin Card Close Button");
+                        cImg.sprite = closeIcon;
+                        cImg.color = Color.white;
+                        cImg.preserveAspect = true;
+                    }
+                    continue;
+                }
+
+                Sprite targetSprite = null;
+
+                if (bName.Contains("weekly") || bName.Contains("plant") || bName.Contains("handsraised") || bName.Contains("startnewterm") || bName.Contains("resetnewterm"))
+                {
+                    targetSprite = greenBtn;
+                }
+                else if (bName.Contains("quote") || bName.Contains("golden") || bName.Contains("endterm") || bName.Contains("harvest"))
+                {
+                    targetSprite = goldBtn;
+                }
+                else if (bName.Contains("marble"))
+                {
+                    targetSprite = orangeBtn;
+                }
+                else if (bName.Contains("teacher") && !bName.Contains("close"))
+                {
+                    targetSprite = purpleBtn;
+                }
+                else if (bName.Contains("return") || bName.Contains("nextweek") || bName.Contains("garden"))
+                {
+                    targetSprite = blueBtn;
+                }
+                else if (bName.Contains("reset") || bName.Contains("delete") || bName.Contains("danger"))
+                {
+                    targetSprite = redBtn;
+                }
+                else if (bName.Contains("skip") || bName.Contains("next") || bName.Contains("close") || bName.Contains("cancel") || bName.Contains("modalclose"))
+                {
+                    targetSprite = greyBtn;
+                }
+                else if (bName.StartsWith("habitoptionbtn") || bName.StartsWith("card_"))
+                {
+                    targetSprite = roundedBox;
+                }
+                else
+                {
+                    targetSprite = greenBtn;
+                }
+
+                if (targetSprite != null)
+                {
+                    var img = btn.GetComponent<Image>();
+                    if (img != null)
+                    {
+                        Undo.RecordObject(img, "Skin Button Sprite");
+                        img.sprite = targetSprite;
+                        img.type = Image.Type.Sliced;
+                        img.color = Color.white;
+                    }
+
+                    if (btn.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>() == null)
+                    {
+                        btn.gameObject.AddComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+                    }
+
+                    skinnedCount++;
+                }
+            }
+
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            Debug.Log($"<color=green>[U10_SceneSetupTool] Successfully skinned {skinnedCount} buttons across all screens with vibrant 9-slice sprites & attention animations!</color>");
+        }
+
+        [MenuItem("Googolplex/Unit 10/Non-Destructive/Update Weekly Check Close Button & Sprites")]
+        public static void UpdateWeeklyCheckCloseButtonAndSprites()
+        {
+            ReimportTexturesAsSprites();
+            var checkScreen = Object.FindObjectOfType<U10_WeeklyCheckScreen_Masters_Activity>(true);
+            if (checkScreen == null)
+            {
+                Debug.LogWarning("[U10_SceneSetupTool] WeeklyCheckScreen component not found in active scene.");
+                return;
+            }
+
+            Dictionary<string, Sprite> spriteDict = LoadAllSprites();
+            Sprite closeIconSprite = GetSprite(spriteDict, "Icon_Close_Circle");
+            Sprite greenBtnSprite = GetSprite(spriteDict, "UI_Button_Green");
+            Sprite greyBtnSprite = GetSprite(spriteDict, "UI_Button_Grey");
+
+            // Locate HabitStepCard
+            Transform cardT = checkScreen.transform.Find("HabitStepCard");
+            if (cardT == null)
+            {
+                foreach (Transform child in checkScreen.transform)
+                {
+                    if (child.name.Contains("Card") || child.name.Contains("Step") || child.name.Contains("Habit"))
+                    {
+                        cardT = child;
+                        break;
+                    }
+                }
+            }
+
+            if (cardT != null)
+            {
+                // Create or find CloseCardBtn on top right corner of the card
+                Transform existingClose = cardT.Find("CloseCardBtn");
+                GameObject closeBtnObj;
+                if (existingClose == null)
+                {
+                    closeBtnObj = new GameObject("CloseCardBtn", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+                    closeBtnObj.transform.SetParent(cardT, false);
+                    Undo.RegisterCreatedObjectUndo(closeBtnObj, "Create Card Close Button");
+                }
+                else
+                {
+                    closeBtnObj = existingClose.gameObject;
+                }
+
+                RectTransform rt = closeBtnObj.GetComponent<RectTransform>();
+                rt.anchorMin = new Vector2(1f, 1f);
+                rt.anchorMax = new Vector2(1f, 1f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.anchoredPosition = new Vector2(-42, -42);
+                rt.sizeDelta = new Vector2(64, 64);
+
+                Image img = closeBtnObj.GetComponent<Image>();
+                img.sprite = closeIconSprite;
+                img.color = Color.white;
+                img.preserveAspect = true;
+
+                Button closeBtn = closeBtnObj.GetComponent<Button>();
+                if (closeBtnObj.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>() == null)
+                {
+                    closeBtnObj.AddComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+                }
+
+                // Hide old top-bar ReturnToGardenBtn
+                Transform oldBackBtn = checkScreen.transform.Find("BackToGardenBtn");
+                if (oldBackBtn != null)
+                {
+                    oldBackBtn.gameObject.SetActive(false);
+                }
+
+                // Wire to WeeklyCheckScreen component
+                SerializedObject so = new SerializedObject(checkScreen);
+                so.FindProperty("closeCardButton").objectReferenceValue = closeBtn;
+
+                // Update HandsRaised button to green styled 9-slice
+                var handsBtnProp = so.FindProperty("handsRaisedButton");
+                if (handsBtnProp != null && handsBtnProp.objectReferenceValue != null)
+                {
+                    Button handsBtn = handsBtnProp.objectReferenceValue as Button;
+                    if (handsBtn != null && greenBtnSprite != null)
+                    {
+                        var bImg = handsBtn.GetComponent<Image>();
+                        if (bImg != null)
+                        {
+                            bImg.sprite = greenBtnSprite;
+                            bImg.type = Image.Type.Sliced;
+                            bImg.color = Color.white;
+                        }
+                        if (handsBtn.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>() == null)
+                        {
+                            handsBtn.gameObject.AddComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+                        }
+                    }
+                }
+
+                // Update Skip button to grey styled 9-slice
+                var skipBtnProp = so.FindProperty("skipHabitButton");
+                if (skipBtnProp != null && skipBtnProp.objectReferenceValue != null)
+                {
+                    Button skipBtn = skipBtnProp.objectReferenceValue as Button;
+                    if (skipBtn != null && greyBtnSprite != null)
+                    {
+                        var bImg = skipBtn.GetComponent<Image>();
+                        if (bImg != null)
+                        {
+                            bImg.sprite = greyBtnSprite;
+                            bImg.type = Image.Type.Sliced;
+                            bImg.color = Color.white;
+                        }
+                        if (skipBtn.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>() == null)
+                        {
+                            skipBtn.gameObject.AddComponent<U10_ButtonAttentionPulse_Masters_Activity>();
+                        }
+                    }
+                }
+
+                so.ApplyModifiedProperties();
+                EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+                Debug.Log("<color=green>[U10_SceneSetupTool] Successfully updated WeeklyCheckScreen with top-right Card Close Button and styled button sprites without altering existing layout!</color>");
+            }
+        }
+
+        [MenuItem("Googolplex/Unit 10/Non-Destructive/Assign All Inspector Fields In Active Scene")]
+        public static void AssignAllInspectorFieldsInActiveScene()
+        {
+            ReimportTexturesAsSprites();
+            Dictionary<string, Sprite> spriteDict = LoadAllSprites();
+            Dictionary<string, AudioClip> audioDict = LoadAllAudio();
+
+            int populatedComponents = 0;
+
+            // 1. Weekly Check Screen
+            var weeklyScreen = Object.FindObjectOfType<U10_WeeklyCheckScreen_Masters_Activity>(true);
+            if (weeklyScreen != null)
+            {
+                SerializedObject so = new SerializedObject(weeklyScreen);
+                SetClipProp(so, "voWeeklyCheckStart", audioDict, "VO_U10_03");
+                SetClipProp(so, "voWater", audioDict, "VO_U10_04");
+                SetClipProp(so, "voSleep", audioDict, "VO_U10_05");
+                SetClipProp(so, "voOutside", audioDict, "VO_U10_06");
+                SetClipProp(so, "voRead", audioDict, "VO_U10_07");
+                SetClipProp(so, "voQuiet", audioDict, "VO_U10_08");
+                SetClipProp(so, "voWalk", audioDict, "VO_U10_09");
+                SetClipProp(so, "voGive", audioDict, "VO_U10_10");
+                SetClipProp(so, "voFamily", audioDict, "VO_U10_11");
+                SetClipProp(so, "voPlantGrowing", audioDict, "VO_U10_12");
+
+                List<Sprite> habitIcons = new List<Sprite>();
+                foreach (var h in U10_SaveSystem.ALL_AVAILABLE_HABITS)
+                {
+                    Sprite s = GetSprite(spriteDict, $"Icon_{h.key}");
+                    if (s != null) habitIcons.Add(s);
+                }
+                SetObjectList(so.FindProperty("allHabitIcons"), habitIcons);
+
+                so.ApplyModifiedProperties();
+                populatedComponents++;
+            }
+
+            // 2. Golden Line Modal
+            var modal = Object.FindObjectOfType<U10_GoldenLineModal_Masters_Activity>(true);
+            if (modal != null)
+            {
+                SerializedObject so = new SerializedObject(modal);
+                List<AudioClip> goldenClips = new List<AudioClip>();
+                for (int w = 1; w <= 12; w++)
+                {
+                    string key = $"VO_U10_13_{w:D2}";
+                    if (audioDict.TryGetValue(key, out AudioClip clip))
+                    {
+                        goldenClips.Add(clip);
+                    }
+                }
+                SetObjectList(so.FindProperty("goldenLineVoiceovers"), goldenClips);
+                so.ApplyModifiedProperties();
+                populatedComponents++;
+            }
+
+            // 3. Setup Screen
+            var setupScreen = Object.FindObjectOfType<U10_SetupScreen_Masters_Activity>(true);
+            if (setupScreen != null)
+            {
+                SerializedObject so = new SerializedObject(setupScreen);
+                SetClipProp(so, "voSetupIntro", audioDict, "VO_U10_02");
+                so.ApplyModifiedProperties();
+                populatedComponents++;
+            }
+
+            // 4. Garden Screen
+            var gardenScreen = Object.FindObjectOfType<U10_GardenScreen_Masters_Activity>(true);
+            if (gardenScreen != null)
+            {
+                SerializedObject so = new SerializedObject(gardenScreen);
+                SetClipProp(so, "voGardenWelcome", audioDict, "VO_U10_01");
+
+                Sprite[] jarSprites = new Sprite[]
+                {
+                    GetSprite(spriteDict, "Jar_Glass_Empty"),
+                    GetSprite(spriteDict, "Jar_Glass_Stage1"),
+                    GetSprite(spriteDict, "Jar_Glass_Stage2"),
+                    GetSprite(spriteDict, "Jar_Glass_Stage3"),
+                    GetSprite(spriteDict, "Jar_Glass_Full")
+                };
+                SerializedProperty jarArr = so.FindProperty("jarStageSprites");
+                if (jarArr != null)
+                {
+                    jarArr.arraySize = jarSprites.Length;
+                    for (int j = 0; j < jarSprites.Length; j++)
+                    {
+                        jarArr.GetArrayElementAtIndex(j).objectReferenceValue = jarSprites[j];
+                    }
+                }
+
+                so.ApplyModifiedProperties();
+                populatedComponents++;
+            }
+
+            // 5. End Term Screen
+            var endTermScreen = Object.FindObjectOfType<U10_EndTermScreen_Masters_Activity>(true);
+            if (endTermScreen != null)
+            {
+                SerializedObject so = new SerializedObject(endTermScreen);
+                SetClipProp(so, "voHarvestCelebration", audioDict, "VO_U10_14");
+                so.ApplyModifiedProperties();
+                populatedComponents++;
+            }
+
+            // 6. Audio Manager
+            var am = Object.FindObjectOfType<U10_AudioManager_Masters_Activity>(true);
+            if (am != null)
+            {
+                WireAudioManager(am, audioDict);
+                populatedComponents++;
+            }
+
+            // 7. Game Manager
+            var gm = Object.FindObjectOfType<U10_GameManager_Masters_Activity>(true);
+            if (gm != null)
+            {
+                SerializedObject so = new SerializedObject(gm);
+                so.FindProperty("potSprite").objectReferenceValue = GetSprite(spriteDict, "Pot_Terracotta");
+                List<Sprite> allPlants = new List<Sprite>();
+                foreach (var kv in spriteDict)
+                {
+                    if (kv.Key.StartsWith("Plant_"))
+                    {
+                        allPlants.Add(kv.Value);
+                    }
+                }
+                SetObjectList(so.FindProperty("allPlantSprites"), allPlants);
+                so.ApplyModifiedProperties();
+                populatedComponents++;
+            }
+
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            Debug.Log($"<color=green>[U10_SceneSetupTool] Successfully assigned all Inspector serialized fields (VO Clips, Sprites, Audio) across {populatedComponents} components in active scene!</color>");
+        }
+
         [MenuItem("Googolplex/Unit 10/Generate Complete Scene Hierarchy")]
         public static void GenerateCompleteScene()
         {
@@ -187,6 +547,11 @@ namespace Googolplex.Unit10
                     if (assetPath.Contains("UI_RoundedBox_9Slice"))
                     {
                         importer.spriteBorder = new Vector4(32, 32, 32, 32);
+                        changed = true;
+                    }
+                    else if (assetPath.Contains("UI_Button_"))
+                    {
+                        importer.spriteBorder = new Vector4(24, 24, 24, 24);
                         changed = true;
                     }
                     if (changed)

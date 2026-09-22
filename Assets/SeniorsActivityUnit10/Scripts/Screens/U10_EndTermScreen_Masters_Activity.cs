@@ -22,6 +22,9 @@ namespace Googolplex.Unit10
         [Header("Celebration Plants")]
         [SerializeField] private List<U10_PlantDisplayUI_Masters_Activity> celebrationPlantDisplays = new List<U10_PlantDisplayUI_Masters_Activity>();
 
+        [Header("Voiceover Audio Clips")]
+        [SerializeField] private AudioClip voHarvestCelebration;
+
         private void Start()
         {
             if (returnToGardenButton != null)
@@ -41,7 +44,10 @@ namespace Googolplex.Unit10
         {
             U10_AudioManager_Masters_Activity.Instance?.PlayMusic("MUS_EndTerm", true);
             U10_AudioManager_Masters_Activity.Instance?.PlaySFX("SFX_JarFull");
-            U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_14");
+            if (voHarvestCelebration != null)
+                U10_AudioManager_Masters_Activity.Instance?.PlayVOClip(voHarvestCelebration);
+            else
+                U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_14");
 
             if (celebrationHeader != null)
             {
@@ -55,7 +61,7 @@ namespace Googolplex.Unit10
 
             if (threeEsQuoteText != null)
             {
-                threeEsQuoteText.text = "\"Excellence is not an act, but a habit. You have mastered The Three Es: Energy, Empathy, and Excellence.\"";
+                threeEsQuoteText.text = "THE THREE Es: ENERGY · ENTHUSIASM · EMPATHY\nAwarded for growing a golden garden";
             }
 
             if (statsSummaryText != null)
