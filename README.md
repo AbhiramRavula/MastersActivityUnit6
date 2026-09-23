@@ -15,6 +15,7 @@ This repository contains the interactive Senior Etiquette modules designed for c
 | :--- | :--- | :--- | :--- |
 | **Unit 6** | **Eating Out / Table Etiquette** | Patience while waiting, polite ordering, handling mistakes calmly, indoor voice modulation | `Assets/SeniorsActivityUnit6/Scenes/SeniorsActivity_unit6.unity` |
 | **Unit 8** | **Washroom Etiquette ("AFTER YOU")** | Empathy & leaving shared facilities clean for the next student | `Assets/SeniorsActivityUnit8/Scenes/SeniorsActivity_unit8.unity` |
+| **Unit 10** | **The Golden Garden (Golden Life)** | Continuous habit tracking, 11-stage plant growth, kindness marbles, weekly quote reflection, The Three Es certificate | `Assets/SeniorsActivityUnit10/Scenes/SeniorsActivity_unit10.unity` |
 
 ---
 
@@ -57,8 +58,26 @@ MastersActivity-Unit-6/
 │   │   │   └── Editor/                        # U8_SceneSetupTool for 1-click scene generation
 │   │   └── SFX/                               # 24 procedural 16-bit PCM sound effects generator
 │   │
+│   ├── SeniorsActivityUnit10/                 # --- UNIT 10: THE GOLDEN GARDEN (GOLDEN LIFE) ---
+│   │   ├── Art/                               # 88 botanical plant sprites, 9-slice carved boards/cards, terracotta pot, glass jar
+│   │   ├── Audio/ & Audio voices/ & SFX/      # 25 Neural TTS voiceovers, seamless ambient & BGM loops, smooth SFX
+│   │   ├── doc/                               # Design specifications and audio manifests
+│   │   ├── README.md                          # Dedicated Unit 10 documentation
+│   │   ├── CONTEXT.md                         # Unit 10 architecture and asset context
+│   │   ├── Unit_10_Specification.md           # 12-week progression and pedagogical specification
+│   │   ├── Audio_Manifest_Unit_10.md          # Complete Unit 10 audio manifest
+│   │   ├── Scenes/
+│   │   │   └── SeniorsActivity_unit10.unity   # Primary Unit 10 playable scene
+│   │   ├── Scripts/
+│   │   │   ├── Core/                          # U10_GameManager, U10_AudioManager, U10_SaveData
+│   │   │   ├── Screens/                       # SetupScreen, GardenScreen, WeeklyCheckScreen, GoldenLineModal, EndTermScreen
+│   │   │   ├── UI/                            # U10_PlantDisplayUI (dual badges), U10_ButtonAttentionPulse
+│   │   │   └── Editor/                        # U10_SceneSetupTool (generators, non-destructive skinners, pot label fixer)
+│   │   └── SFX/                               # Procedural audio synthesis scripts
+│   │
 │   ├── TextMesh Pro/                          # Fonts, essential resources, and SDF shaders
 │   └── Settings/                              # URP Graphics & quality configuration
+├── .agents/skills/unit10-golden-garden/       # Unit 10 agent skill and workflow guidelines
 └── ProjectSettings/                           # Unity project settings (Tags, Layers, Audio, Input)
 ```
 
@@ -123,6 +142,43 @@ graph TD
 
 ---
 
+## 🌻 Unit 10: The Golden Garden — Architecture & Continuous Flow
+
+### Living Classroom Routine Flow
+
+```mermaid
+graph TD
+    A[Setup Screen<br/>Select 4 of 8 Habits for Term] --> B[Living Garden Screen<br/>4 Pots across 11 Growth Stages]
+    B --> C[Kindness Jar<br/>Add Daily Marble on Good Deeds]
+    B --> D[Weekly Check-in 2-Min Routine<br/>Nested 2-Column Cards]
+    D --> E[Golden Line Modal<br/>Audio-Gated 'Listen' to 'Continue']
+    E --> B
+    B --> F[Teacher Menu<br/>Auto-Growth 'Advance to Next Week']
+    F --> B
+    B --> G[Week 12 Harvest Screen<br/>The Three Es Class Certificate]
+```
+
+### Screen Breakdown
+1. **Setup Screen (`U10_SetupScreen_Masters_Activity.cs`)**: Select 4 of 8 core etiquette habits at the beginning of the term with game-like leaf-trimmed cards (`sub board 7`) and warm parchment selection summary (`sub board 8`).
+2. **Garden Screen (`U10_GardenScreen_Masters_Activity.cs`)**:
+   - **4 Terracotta Pots**: Leaf-first botanical plants evolving smoothly across **11 growth stages** (Sprout $\to$ Leaves $\to$ Bushy Foliage $\to$ Buds $\to$ Golden Bloom).
+   - **Dual Pot Badges**:
+     - **Top (`HabitBadge`)**: Displays habit title (e.g. *Drink Water*, *Sleep Early*).
+     - **Bottom (`StageBadge`)**: Displays live developmental stage (*Stage X of 11* $\to$ *Golden Bloom*).
+   - **Kindness Jar**: Right-hand interactive mason jar tracking good deeds (0 to 50+ marbles).
+   - **Teacher Menu Auto-Growth**: Clicking **"Advance to Next Week"** automatically assumes all students completed all 4 habits, increments growth stage (+1 up to 11), increments check-in counts, awards +3 kindness marbles, and animates immediate plant growth.
+3. **Weekly Check Screen (`U10_WeeklyCheckScreen_Masters_Activity.cs`)**:
+   - **Two-Column Card Structure**: Left `PlantSubCard` (mint-cream botanical card) + Right `ContentSubCard` (warm ivory paper card with golden corner filigree).
+   - High-contrast charcoal text (`#1f242e`) for high readability on smartboards and tablets.
+4. **Golden Line Modal (`U10_GoldenLineModal_Masters_Activity.cs`)**:
+   - Displays 12 weekly rotating positive quotes.
+   - **Audio-Gated Listening Routine**: Action button reads **`Listen`** in disabled state while narrator audio plays, springing to **`Continue`** with pop-in attention animation once finished.
+5. **End of Term Harvest Screen (`U10_EndTermScreen_Masters_Activity.cs`)**:
+   - Week 12 Harvest Celebration honoring **The Three Es: Energy, Empathy, and Excellence**.
+   - Custom class name support (`customClassName`) for customized printable certificate.
+
+---
+
 ## 🔊 Audio System & Standardized Naming Convention
 
 All audio assets in the project use strict naming IDs matching the curriculum design specification.
@@ -135,11 +191,16 @@ All audio assets in the project use strict naming IDs matching the curriculum de
 - **Ambience & Music:** `AMB_Restaurant`, `AMB_RestaurantHush`, `MUS_Restaurant` (alias `MUS_Loop`), `MUS_Win`
 - **Sound Effects:** `SFX_MenuOpen`, `SFX_PlateDown`, `SFX_ForkDrop`, `SFX_GlassTing`, `SFX_ChairWobble`, `SFX_BabyCry`, `SFX_DoorChime` (alias `SFX_DoorBell`), `SFX_Bubble` (alias `SFX_SliderZone`), `SFX_PadWrite`, `SFX_Sparkle`, `SFX_Star`, `SFX_Confetti`, `SFX_Clap`, `SFX_Chirp`
 
+### Unit 10 Audio Manifest
+- **Narrator (NeerjaNeural):** `VO_U10_01` to `VO_U10_12`, `VO_U10_13_01` to `VO_U10_13_12` (12 Weekly Quotes), `VO_U10_14` (Harvest)
+- **Ambience & Music:** `AMB_Garden` (16.0s seamless warm harmonic pad), `MUS_Garden` (16.0s seamless C Major Rhodes/Strings), `MUS_EndTerm` (6.0s celebratory fanfare)
+- **Sound Effects:** `SFX_PlantGrow`, `SFX_Flower`, `SFX_Marble`, `SFX_JarFull`, `SFX_GoldenLine`, `SFX_Tally`, `SFX_Tap` (all with smooth raised-cosine attacks $\ge 45\text{ms}$)
+
 ### Audio Manager Implementation
-Both `U6_AudioManager_Masters_Activity.cs` and `U8_AudioManager_Masters_Activity.cs` provide:
+`U6_AudioManager`, `U8_AudioManager`, and `U10_AudioManager` provide:
 - **Zero-Drop 2D Playback:** `spatialBlend = 0f` ensures uniform audio on any stereo speaker or smartboard without 3D attenuation.
 - **Dedicated Audio Channels:** Separate `AudioSource` channels for BGM, Ambience, Voiceover, and SFX to allow distinct volume ducking and mixing.
-- **On-Demand Editor Asset Loading:** Falls back dynamically to find audio clips by exact ID or legacy alias (`MUS_Loop` $\leftrightarrow$ `MUS_Restaurant`, `SFX_DoorBell` $\leftrightarrow$ `SFX_DoorChime`, `SFX_SliderZone` $\leftrightarrow$ `SFX_Bubble`).
+- **On-Demand Editor Asset Loading:** Falls back dynamically to find audio clips by exact ID or legacy aliases.
 
 ---
 
@@ -153,9 +214,10 @@ Both `U6_AudioManager_Masters_Activity.cs` and `U8_AudioManager_Masters_Activity
 1. Open the project folder in **Unity Hub**.
 2. To test **Unit 6**: Open `Assets/SeniorsActivityUnit6/Scenes/SeniorsActivity_unit6.unity` and press **Play**.
 3. To test **Unit 8**: Open `Assets/SeniorsActivityUnit8/Scenes/SeniorsActivity_unit8.unity` and press **Play**.
+4. To test **Unit 10**: Open `Assets/SeniorsActivityUnit10/Scenes/SeniorsActivity_unit10.unity` and press **Play**.
 
 ### 3. Editor Menu Automation Tools
-Both units feature top-level Unity Editor menu automation under **`Googolplex`**:
+All units feature top-level Unity Editor menu automation under **`Googolplex`**:
 
 #### Unit 8 Editor Tools (`Googolplex > Unit 8`)
 - **`Setup Complete Unit 8 Scene`**: Rebuilds the entire 6-screen UI hierarchy, card layouts, mobile typography (32–38pt), and wire bindings.
@@ -167,10 +229,18 @@ Both units feature top-level Unity Editor menu automation under **`Googolplex`**
 - **`Clean Duplicate UI Buttons`**: Cleans up any loose duplicate choice buttons in the hierarchy.
 - **`Sanitize All UI Text Glyphs`**: Cleans all TextMeshPro labels in the scene, replacing unsupported unicode characters with clean ASCII/standard characters.
 
+#### Unit 10 Editor Tools (`Googolplex > Unit 10`)
+- **`Generate Complete Scene Hierarchy`**: Full automatic scene generator configuring all sprites (single, sliced), audio clips, screens, and wire connections.
+- **`Non-Destructive > Apply Game-Like Card and Plaque Sprites`**: Skins all title plaques, containers, sub-cards, and footer bars with 9-sliced storybook assets from `U10 borad card Bg sprites.png`, setting safe padding margins to prevent text distortion or leaf clipping.
+- **`Non-Destructive > Fix Pot Labels and Badges`**: Formats the dual pot labels (`HabitBadge` = Habit Title, `StageBadge` = `Stage 1 of 11`).
+- **`Non-Destructive > Skin All Buttons In Active Scene`**: Applies kid-friendly 3D pill button sprites and attention pulses.
+- **`Non-Destructive > Assign All Inspector Fields In Active Scene`**: Non-destructively wires all serialized references to `[GameManager]` and `U10_AudioManager`.
+
 ---
 
 ## 📐 Best Practices & Coding Standards
 
-1. **Normal Text over Special Unicode:** Keep TextMeshPro strings to standard alphanumeric and punctuation characters to prevent missing font glyph square boxes (`\u25A1`).
+1. **Normal Text over Special Unicode:** Keep TextMeshPro strings to standard alphanumeric and punctuation characters to prevent missing font glyph square boxes (`\u25A1`). Never use emojis or `<` / `>` angle brackets in UI labels.
 2. **2D Audio Guarantees:** Always assign `AudioSource.spatialBlend = 0.0f` to prevent distance attenuation in 2D educational apps.
 3. **Responsive UI Anchoring:** Use `CanvasScaler` in `Scale With Screen Size` (1920x1080, Match Width/Height = 0.5) so that all panels render crisply across laptops, iPads, tablets, and interactive smartboards.
+4. **Non-Destructive Scene Polish**: Always prefer non-destructive editor tools when updating UI sprites or labels to preserve teacher camera setups and manual inspector tweaks.

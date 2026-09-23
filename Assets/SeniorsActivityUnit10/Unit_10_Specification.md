@@ -48,17 +48,25 @@ graph TD
 * Clicking **"Plant Our Garden"** initializes the 4 pots and persists save data to `U10_SaveData`.
 
 #### Screen 1: The Golden Garden (`U10_GardenScreen_Masters_Activity.cs`)
-* **Header**: "The Golden Garden", "Week X of 12", Class Name.
-* **4 Terracotta Pots**: Displays the 4 chosen plants evolving progressively across 11 weeks (Seedling at Week 1 to Full Golden Bloom at Week 11).
-* **Pot Labels**: Displays the habit name (e.g. `WATER`, `SLEEP`, `READ`, `GIVE`) with rounded container pill, displaying `Golden Bloom` at full growth (no artificial numerical "Stage X of 6" counters as per Section 2.2).
+* **Header**: Carved wooden plaque with golden trim and green leaves displaying "The Golden Garden", "Week X of 12", and Class Name (customizable via `customClassName` in Inspector).
+* **4 Terracotta Pots**: Displays the 4 chosen plants evolving progressively across 11 weeks (Sprout at Week 1 to Full Golden Bloom at Week 11), with 75–80% leaf volume and mathematically attached foliage.
+* **Dual Pot Badges**:
+  * **`HabitBadge` (Top)**: Displays the habit name (e.g. *Drink Water*, *Sleep Early*, *Read a Book*, *Give with Heart*).
+  * **`StageBadge` (Bottom)**: Displays the live stage progress (*Stage X of 11*), transitioning to *Golden Bloom* at full maturity.
 * **Kindness Jar**: Right-hand mason jar with dynamic marble count (0 to 50+). Tap **"Add Kindness Marble"** on observed good deeds.
 * **Navigation Bar**:
   * `Weekly Check (2 Min)`: Launches the 2-minute class routine.
-  * `Golden Quote`: Displays this week's quote modal.
-  * `Teacher Menu`: Centered popup overlay modal with **"Advance to Next Week"**, **"Reset for New Term"**, and **"Close Menu"**.
+  * `Golden Quote`: Displays this week's quote modal with audio-gated `"Listen"` $\to$ `"Continue"` button.
+  * `Teacher Menu`: Centered popup overlay modal with:
+    * **"Advance to Next Week"**: Automatically assumes all students completed all 4 chosen habits, advances each plant's growth stage (+1 up to 11), increments total check-ins, adds +3 kindness marbles, increments the week, and triggers immediate visual plant growth animations.
+    * **"Reset for New Term"**: Clears save data and restarts at Week 1.
+    * **"Close Menu"**: Dismisses the overlay.
   * `Harvest Celebration`: Activates at Week 12.
 
 #### Screen 2: Weekly Check-In Screen (`U10_WeeklyCheckScreen_Masters_Activity.cs`)
+* Nested two-column card container within caramel wooden frame (`HabitStepCard`):
+  * **Left Sub-Card (`PlantSubCard`)**: Mint-cream botanical card holding the terracotta pot and growing plant.
+  * **Right Sub-Card (`ContentSubCard`)**: Warm ivory parchment card with golden corner filigree, holding the habit icon, title, question prompt, quote, status feedback, and action buttons with high-contrast text.
 * 4-step interactive routine:
   1. Teacher reads habit question (e.g. *"Who drank fresh water every day this week?"*).
   2. Ask for show of hands.
@@ -68,8 +76,8 @@ graph TD
 
 #### Screen 3: End of Term Harvest Screen (`U10_EndTermScreen_Masters_Activity.cs`)
 * Week 12 harvest celebration:
-  * Golden Class Certificate: **THE THREE Es: ENERGY · ENTHUSIASM · EMPATHY** (Awarded to CLASS ______ for growing a golden garden).
-  * Summary tally of weeks completed, kindness marbles collected, and golden blooms harvested.
+  * Golden Class Certificate: **THE THREE Es: ENERGY · EMPATHY · EXCELLENCE** (Awarded to CLASS ______ for growing a golden garden, with live `customClassName` support).
+  * Harvest showcase of all 4 mature golden blooms, the full kindness jar, and summary statistics.
 
 ---
 

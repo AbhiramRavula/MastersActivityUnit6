@@ -5,17 +5,25 @@
 Assets/SeniorsActivityUnit10/
 ├── Art/
 │   ├── BG_Garden_Smartboard.png (1920x1080 Storybook Garden Background)
+│   ├── U10 borad card Bg sprites.png (Sliced multiple-sprite sheet: Header plaque, Main board, Sub boards 7 & 8)
+│   ├── UI_Title_Plaque_Wood.png & .meta (Carved wood & gold title board plaque)
+│   ├── UI_Card_Container_Main.png & .meta (Caramel wood framed warm parchment container)
+│   ├── UI_SubCard_Plant.png & .meta (Botanical mint-cream card with pedestal)
+│   ├── UI_SubCard_Content.png & .meta (Ivory paper card with golden corner filigree)
+│   ├── UI_Habit_Card_Normal.png & .meta (Warm recipe card for habit picker)
+│   ├── UI_Bar_Footer_Parchment.png & .meta (Warm parchment summary bar)
 │   ├── UI_RoundedBox_9Slice.png (128x128 9-slice card with 32px borders)
 │   ├── UI_Button_[Green,Gold,Blue,Orange,Purple,Red,Grey,Disabled].png (9-Slice Tactile UI Buttons)
 │   ├── Icon_Close_Circle.png (Circular Flat X Close Button)
 │   ├── Pot_Terracotta.png (3D Ceramic Rounded Pot)
-│   ├── Plant_[Habit]_[1-6].png (48 Sprites - 8 habits x 6 stages)
+│   ├── Plant_[Habit]_[1-11].png (88 Sprites - 8 habits x 11 stages, leaf-first botanical growth)
 │   ├── Jar_Glass_[Empty,Stage1-3,Full].png (5 Mason Jar Sprites)
 │   ├── Marble_Golden.png (Golden Sphere Marble)
-│   ├── Icon_[Water,Sleep,Outside,Read,Quiet,Walk,Give,Family].png (8 Circular Habit Icons)
+│   ├── Habit_Icons_Spritesheet.png (8 Circular Habit Icons: Water, Sleep, Outside, Read, Quiet, Walk, Give, Family)
 │   ├── Certificate_Gold_Border.png
 │   ├── Icon_Ribbon_Gold.png
-│   ├── generate_unit10_art.py
+│   ├── generate_improved_plants.py (88-sprite botanical generator with 75-80% leaf volume)
+│   ├── generate_card_sprites.py
 │   ├── generate_button_sprites.py
 │   └── generate_spritesheets.py
 ├── Audio/ & Audio voices/ & SFX/
@@ -40,18 +48,18 @@ Assets/SeniorsActivityUnit10/
 │   ├── Core/
 │   │   ├── U10_SaveData.cs (JSON/PlayerPrefs class-level persistence, 8 habits, 12 quotes)
 │   │   ├── U10_AudioManager_Masters_Activity.cs (Audio manager with Inspector & key playback)
-│   │   └── U10_GameManager_Masters_Activity.cs (State machine coordinator)
+│   │   └── U10_GameManager_Masters_Activity.cs (State machine coordinator + auto-growth handler)
 │   ├── Screens/
-│   │   ├── U10_SetupScreen_Masters_Activity.cs (Start of term 4-habit selector with white/green cards)
-│   │   ├── U10_GardenScreen_Masters_Activity.cs (Main living garden board + Kindness Jar + dynamic weekly pulse)
-│   │   ├── U10_WeeklyCheckScreen_Masters_Activity.cs (2-minute weekly check-in with audio-gating & show-of-hands tally)
-│   │   ├── U10_GoldenLineModal_Masters_Activity.cs (12-week inspiring Golden Quote popup modal)
-│   │   └── U10_EndTermScreen_Masters_Activity.cs (Week 12 Harvest Celebration & The Three Es Class Certificate)
+│   │   ├── U10_SetupScreen_Masters_Activity.cs (Start of term 4-habit selector with game-like cards)
+│   │   ├── U10_GardenScreen_Masters_Activity.cs (Main living garden board + Kindness Jar + dynamic weekly pulse + customClassName)
+│   │   ├── U10_WeeklyCheckScreen_Masters_Activity.cs (2-minute check-in with dedicated left plant & right content sub-cards)
+│   │   ├── U10_GoldenLineModal_Masters_Activity.cs (12-week quote popup modal with audio-gated "Listen" -> "Continue")
+│   │   └── U10_EndTermScreen_Masters_Activity.cs (Week 12 Harvest Celebration & The Three Es Class Certificate + customClassName)
 │   ├── UI/
-│   │   ├── U10_PlantDisplayUI_Masters_Activity.cs (Pot growth stage presenter)
+│   │   ├── U10_PlantDisplayUI_Masters_Activity.cs (Pot presenter with separated HabitBadge and StageBadge)
 │   │   └── U10_ButtonAttentionPulse_Masters_Activity.cs (Attention pop-in, pulse breathing & tactile click)
 │   └── Editor/
-│       └── U10_SceneSetupTool_Masters_Activity.cs (Non-destructive Inspector assigner, button skinner & scene builder)
+│       └── U10_SceneSetupTool_Masters_Activity.cs (Non-destructive menu tools: card skinner, pot badge fixer, field assigner)
 ├── Unit_10_Specification.md
 ├── Audio_Manifest_Unit_10.md
 ├── CONTEXT.md
@@ -59,17 +67,22 @@ Assets/SeniorsActivityUnit10/
 ```
 
 ## 2. Key Architecture & Design Decisions
-* **Data Persistence**: `U10_SaveData.cs` automatically stores chosen habits, positive growth stages (1-6), marble counts, and week counters in `PlayerPrefs` (`U10_GoldenGarden_SaveData_v1`). Zero individual child data is recorded.
-* **Child-Centric Intuitive Visual Guidance**:
-  - **Dynamic Attention Guidance**: `U10_ButtonAttentionPulse_Masters_Activity` gives primary action buttons an elastic pop-in bounce and continuous breathing pulse ($1.0 \leftrightarrow 1.045\times$).
-  - **Dynamic Action Labels**: Weekly check button dynamically displays `Start Week X Check-In!`.
-  - **Tactile 9-Slice Buttons**: Vibrant, kid-friendly 9-sliced button assets (`UI_Button_Green`, `UI_Button_Gold`, etc.) with drop shadows and top gloss highlights.
+* **Data Persistence**: `U10_SaveData.cs` automatically stores chosen habits, positive growth stages (1-11), marble counts, and week counters in `PlayerPrefs` (`U10_GoldenGarden_SaveData_v1`). Zero individual child data is recorded.
+* **11-Week Plant Growth Progression**:
+  - Plants evolve through 11 rich botanical stages (Weeks 1 to 11), with 75–80% leaf volume and mathematically attached foliage nodes (zero floating leaves), reaching full Golden Bloom at harvest.
+* **Game-Like Tactile Card UI**:
+  - Replaces plain stark white backgrounds with 9-sliced storybook assets:
+    - **Title Plaques**: Carved wood with golden trim and side leaves (`border: {175, 40, 175, 40}`).
+    - **Main Containers**: Caramel wood frame with round corner studs (`border: {75, 75, 75, 75}`).
+    - **Sub-Cards**: Botanical mint-cream cards for plants and warm ivory parchment cards for dialogue/prompts.
+* **Teacher Menu Auto-Growth**:
+  - Clicking "Advance to Next Week" automatically assumes all students completed all 4 chosen habits, increments `growthStage` (+1 up to 11), adds +3 kindness marbles, advances the week, and triggers immediate visual plant growth animations.
+* **Dual Badge Pot Labels**:
+  - **`HabitBadge`**: Displays the chosen habit name (e.g. *Drink Water*).
+  - **`StageBadge`**: Displays the live growth progress (*Stage X of 11*, transitioning to *Golden Bloom* at Stage 11).
 * **Audio-Gated Listening Routine**:
-  - In `U10_WeeklyCheckScreen` and `U10_GoldenLineModal`, proceed/skip buttons are locked during spoken narration and smoothly unlock and pop-in once the voice track finishes.
-* **Non-Destructive Scene Integration**:
-  - Tools under `Googolplex > Unit 10 > Non-Destructive > ...` allow the developer to skin buttons, attach close icons, and populate all Inspector serialized fields without overwriting manual scene hierarchy adjustments.
-* **Audio Standard**:
-  - All 25 voice tracks are generated using the project's standard **EngSnap Neural TTS** (`en-IN-NeerjaNeural`, calm `-5%` rate).
+  - In `U10_GoldenLineModal`, the action button displays **`Listen`** in disabled muted slate while voiceover is active, then springs to **`Continue`** with pop-in attention animation once audio completes.
+* **Custom Class Name Support**:
+  - Both `U10_GardenScreen` and `U10_EndTermScreen` feature a serialized `customClassName` field with live `OnValidate()` editor preview.
 * **The Three Es Certificate**:
-  - Celebrates mastery of **Energy, Enthusiasm, and Empathy** as a single shared class certificate.
-```
+  - Celebrates mastery of **Energy, Empathy, and Excellence** as a single shared class certificate.
