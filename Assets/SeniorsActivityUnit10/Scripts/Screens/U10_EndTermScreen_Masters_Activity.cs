@@ -19,11 +19,25 @@ namespace Googolplex.Unit10
         [SerializeField] private Button resetForNewTermButton;
         [SerializeField] private Image certificateBackground;
 
+        [Header("Certificate Class Configuration")]
+        [Tooltip("Type the class name here in the Inspector (e.g. Class 3-A, Class 4-B, Class 3 and 4).")]
+        [SerializeField] private string customClassName = "Class 3 and 4";
+
         [Header("Celebration Plants")]
         [SerializeField] private List<U10_PlantDisplayUI_Masters_Activity> celebrationPlantDisplays = new List<U10_PlantDisplayUI_Masters_Activity>();
 
         [Header("Voiceover Audio Clips")]
         [SerializeField] private AudioClip voHarvestCelebration;
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (classNameText != null && !string.IsNullOrEmpty(customClassName))
+            {
+                classNameText.text = $"Awarded to {customClassName}";
+            }
+        }
+#endif
 
         private void Start()
         {
@@ -54,9 +68,15 @@ namespace Googolplex.Unit10
                 celebrationHeader.text = "Golden Garden Harvest Celebration!";
             }
 
+            string displayClass = !string.IsNullOrEmpty(customClassName) ? customClassName : (data != null && !string.IsNullOrEmpty(data.className) ? data.className : "Class 3 and 4");
             if (classNameText != null)
             {
-                classNameText.text = $"Awarded to {data.className}";
+                classNameText.text = $"Awarded to {displayClass}";
+            }
+
+            if (data != null)
+            {
+                data.className = displayClass;
             }
 
             if (threeEsQuoteText != null)
@@ -69,7 +89,7 @@ namespace Googolplex.Unit10
                 statsSummaryText.text = $"12 Weeks Completed   |   {data.totalMarbles} Kindness Marbles Collected   |   4 Golden Blooms Harvested";
             }
 
-            // Animate celebration blooms
+            // Animate celebration blooms to full Stage 11 Golden Bloom
             StartCoroutine(CelebrationTimeLapseRoutine(data));
         }
 
@@ -80,7 +100,7 @@ namespace Googolplex.Unit10
             {
                 if (plant != null && plant.gameObject.activeInHierarchy)
                 {
-                    plant.TriggerGrowthAnimation(6);
+                    plant.TriggerGrowthAnimation(11);
                     yield return new WaitForSeconds(0.4f);
                 }
             }

@@ -76,14 +76,43 @@ namespace Googolplex.Unit10
 
         private IEnumerator WaitForQuoteVOThenUnlock(float duration)
         {
+            var btnImg = closeButton != null ? closeButton.GetComponent<Image>() : null;
+            var btnTMP = closeButton != null ? closeButton.GetComponentInChildren<TextMeshProUGUI>() : null;
+            Color originalImgColor = btnImg != null ? btnImg.color : new Color(0.16f, 0.62f, 0.28f, 1f);
+
+            // 1. Visually and interactively lock the button while listening to the quote
             if (closeButton != null)
             {
                 closeButton.interactable = false;
-                closeButton.transform.localScale = Vector3.one * 0.9f;
+                closeButton.transform.localScale = Vector3.one * 0.92f;
+            }
+
+            if (btnImg != null)
+            {
+                // Muted translucent slate while audio is playing
+                btnImg.color = new Color(0.52f, 0.58f, 0.62f, 0.7f);
+            }
+
+            if (btnTMP != null)
+            {
+                btnTMP.text = "Listen";
+                btnTMP.color = new Color(1f, 1f, 1f, 0.6f);
             }
 
             float waitTime = Mathf.Max(duration + 0.2f, 1.5f);
             yield return new WaitForSeconds(waitTime);
+
+            // 2. Unlock and restore vibrant button styling once voiceover finishes
+            if (btnImg != null)
+            {
+                btnImg.color = (originalImgColor.a > 0.1f && originalImgColor.g > 0.3f) ? originalImgColor : new Color(0.16f, 0.62f, 0.28f, 1f);
+            }
+
+            if (btnTMP != null)
+            {
+                btnTMP.text = "Continue";
+                btnTMP.color = Color.white;
+            }
 
             if (closeButton != null)
             {

@@ -49,7 +49,8 @@ graph TD
 
 #### Screen 1: The Golden Garden (`U10_GardenScreen_Masters_Activity.cs`)
 * **Header**: "The Golden Garden", "Week X of 12", Class Name.
-* **4 Terracotta Pots**: Displays the 4 chosen plants evolving across 6 growth stages.
+* **4 Terracotta Pots**: Displays the 4 chosen plants evolving progressively across 11 weeks (Seedling at Week 1 to Full Golden Bloom at Week 11).
+* **Pot Labels**: Displays the habit name (e.g. `WATER`, `SLEEP`, `READ`, `GIVE`) with rounded container pill, displaying `Golden Bloom` at full growth (no artificial numerical "Stage X of 6" counters as per Section 2.2).
 * **Kindness Jar**: Right-hand mason jar with dynamic marble count (0 to 50+). Tap **"Add Kindness Marble"** on observed good deeds.
 * **Navigation Bar**:
   * `Weekly Check (2 Min)`: Launches the 2-minute class routine.

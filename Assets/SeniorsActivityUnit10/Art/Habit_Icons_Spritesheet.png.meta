@@ -136,22 +136,106 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Icon_Quiet
+      name: Icon_Water
       rect:
         serializedVersion: 2
         x: 41
-        y: 46
-        width: 411
-        height: 393
+        y: 444
+        width: 400
+        height: 400
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 925222055dc3d28469ded8c0a7a32ff8
-      internalID: -1319125084
+      spriteID: 65337e49e5d31c04dbe77022e901a162
+      internalID: -1965994873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon_Sleep
+      rect:
+        serializedVersion: 2
+        x: 472
+        y: 445
+        width: 400
+        height: 400
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b9c61aa4fc12c024d83ec13031a1fa90
+      internalID: -405233750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon_Outside
+      rect:
+        serializedVersion: 2
+        x: 898
+        y: 445
+        width: 400
+        height: 400
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a34b809fcedfe8f489b9e433d5320bf6
+      internalID: -443843365
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon_Read
+      rect:
+        serializedVersion: 2
+        x: 1334
+        y: 444
+        width: 400
+        height: 400
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 697c964def6785247bc588a44c547cda
+      internalID: -1117762001
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon_Quiet
+      rect:
+        serializedVersion: 2
+        x: 42
+        y: 46
+        width: 400
+        height: 400
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 25b8641d738a5544b89fab36c412c7f1
+      internalID: -1012394362
       vertices: []
       indices: 
       edges: []
@@ -161,18 +245,18 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 472
-        y: 42
-        width: 398
-        height: 399
+        y: 46
+        width: 400
+        height: 400
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9743582e24303044b8139f6e02dff3a2
-      internalID: 1854188240
+      spriteID: 67f56c7cb01bc204da49e056eb10cbce
+      internalID: 1723639826
       vertices: []
       indices: 
       edges: []
@@ -181,124 +265,40 @@ TextureImporter:
       name: Icon_Give
       rect:
         serializedVersion: 2
-        x: 900
-        y: 47
-        width: 396
-        height: 394
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 5834a10bb7a5d5146a7357b0e013c86e
-      internalID: -306225078
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Icon_Famliy
-      rect:
-        serializedVersion: 2
-        x: 1327
+        x: 895
         y: 46
-        width: 407
-        height: 393
+        width: 400
+        height: 400
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a4e765f68bacf1d40beaca616046f562
-      internalID: -847521124
+      spriteID: c8a5449e7ea3ed84cadf269aa67f95d5
+      internalID: 453788061
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Icon_Read
+      name: Icon_Family
       rect:
         serializedVersion: 2
-        x: 1331
-        y: 448
-        width: 404
-        height: 391
+        x: 1333
+        y: 42
+        width: 400
+        height: 400
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 21e77808619fcdc4e8aed77d24da6bae
-      internalID: -1765087464
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Icon_Outside
-      rect:
-        serializedVersion: 2
-        x: 899
-        y: 450
-        width: 398
-        height: 387
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 03bb2d8f528d8b44fb96b87f2022decd
-      internalID: 1793703316
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Icon_Sleep
-      rect:
-        serializedVersion: 2
-        x: 470
-        y: 448
-        width: 403
-        height: 398
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: f05d7d99b8733a24789c9a32801e98d1
-      internalID: -1949651349
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Icon_Water
-      rect:
-        serializedVersion: 2
-        x: 42
-        y: 449
-        width: 398
-        height: 390
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: ae387aa5a36cde048833061173c5a8a0
-      internalID: 1792570247
+      spriteID: 04ac879bb0ea35f409b9cd301195a88e
+      internalID: -2000959294
       vertices: []
       indices: 
       edges: []
@@ -314,14 +314,14 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      Icon_Famliy: -847521124
-      Icon_Give: -306225078
-      Icon_Outside: 1793703316
-      Icon_Quiet: -1319125084
-      Icon_Read: -1765087464
-      Icon_Sleep: -1949651349
-      Icon_Walk: 1854188240
-      Icon_Water: 1792570247
+      Icon_Family: -2000959294
+      Icon_Give: 453788061
+      Icon_Outside: -443843365
+      Icon_Quiet: -1012394362
+      Icon_Read: -1117762001
+      Icon_Sleep: -405233750
+      Icon_Walk: 1723639826
+      Icon_Water: -1965994873
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

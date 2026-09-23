@@ -11,7 +11,7 @@ namespace Googolplex.Unit10
         public string habitTitle;      // e.g. "Drink Water"
         public string habitPrompt;     // e.g. "Who drank their water most days this week?"
         public string habitBookQuote;  // e.g. "Drink your water -- inside and outside."
-        public int growthStage;        // 1 to 6
+        public int growthStage;        // 1 to 11 (Week 1 sprout to Week 11 full bloom)
         public int totalCheckins;      // Number of weeks completed
 
         public U10_HabitData() { }

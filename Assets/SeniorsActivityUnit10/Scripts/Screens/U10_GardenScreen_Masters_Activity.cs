@@ -11,6 +11,18 @@ namespace Googolplex.Unit10
         [SerializeField] private TextMeshProUGUI titleText;
         [SerializeField] private TextMeshProUGUI weekStatusText;
         [SerializeField] private TextMeshProUGUI classNameText;
+        [Tooltip("Type the class name here in the Inspector (e.g. Class 3-A, Class 4-B, Class 3 and 4).")]
+        [SerializeField] private string customClassName = "Class 3 and 4";
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (classNameText != null && !string.IsNullOrEmpty(customClassName))
+            {
+                classNameText.text = customClassName;
+            }
+        }
+#endif
 
         [Header("Plant Displays (4 Pots)")]
         [SerializeField] private List<U10_PlantDisplayUI_Masters_Activity> plantDisplays = new List<U10_PlantDisplayUI_Masters_Activity>();
@@ -111,7 +123,7 @@ namespace Googolplex.Unit10
 
             if (classNameText != null)
             {
-                classNameText.text = data.className;
+                classNameText.text = !string.IsNullOrEmpty(customClassName) ? customClassName : data.className;
             }
 
             // Update 4 Plant Pots
@@ -243,10 +255,23 @@ namespace Googolplex.Unit10
             }
         }
 
+        public void AnimatePlantsGrowth()
+        {
+            var data = U10_GameManager_Masters_Activity.Instance?.ActiveData;
+            if (data == null || data.chosenHabits == null) return;
+            for (int i = 0; i < plantDisplays.Count; i++)
+            {
+                if (i < data.chosenHabits.Count && plantDisplays[i] != null)
+                {
+                    plantDisplays[i].TriggerGrowthAnimation(data.chosenHabits[i].growthStage);
+                }
+            }
+        }
+
         private void OnNextWeekClicked()
         {
             U10_AudioManager_Masters_Activity.Instance?.PlaySFX("SFX_Tap");
-            U10_GameManager_Masters_Activity.Instance?.AdvanceToNextWeek();
+            U10_GameManager_Masters_Activity.Instance?.AdvanceToNextWeek(true);
             if (teacherMenuPanel != null) teacherMenuPanel.SetActive(false);
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -34,6 +35,7 @@ namespace Googolplex.Unit10
 
         public U10_ClassGardenSaveData ActiveData => activeData;
         public U10_GardenState CurrentState => currentState;
+        public Sprite PotSprite => potSprite;
 
         private void Awake()
         {
@@ -150,18 +152,38 @@ namespace Googolplex.Unit10
             }
         }
 
-        public void AdvanceToNextWeek()
+        public void AdvanceToNextWeek(bool autoCheckInHabits = true)
         {
-            if (activeData.currentWeek < 12)
+            if (activeData != null)
             {
-                activeData.currentWeek++;
+                // Auto-check in: Assume learner has done all 4 chosen habits, grow plants and award marbles
+                if (autoCheckInHabits && activeData.chosenHabits != null)
+                {
+                    foreach (var habit in activeData.chosenHabits)
+                    {
+                        habit.totalCheckins++;
+                        habit.growthStage = Mathf.Clamp(habit.growthStage + 1, 1, 11);
+                    }
+                    activeData.totalMarbles += 3;
+                }
+
+                if (activeData.currentWeek < 12)
+                {
+                    activeData.currentWeek++;
+                }
+
+                U10_SaveSystem.Save(activeData);
             }
-            U10_SaveSystem.Save(activeData);
 
             if (currentState == U10_GardenState.Garden && gardenScreen != null)
             {
                 var gScript = gardenScreen.GetComponent<U10_GardenScreen_Masters_Activity>();
                 gScript?.RefreshGarden(activeData);
+                if (autoCheckInHabits)
+                {
+                    gScript?.AnimatePlantsGrowth();
+                    U10_AudioManager_Masters_Activity.Instance?.PlaySFX("SFX_PlantGrow");
+                }
             }
         }
 
@@ -177,19 +199,66 @@ namespace Googolplex.Unit10
             U10_SaveSystem.Save(activeData);
         }
 
-        public void ShowGoldenLineModal(Action onClose)
+        public void CompleteWeeklyCheck()
+        {
+            StartCoroutine(WeeklyCheckCompletionRoutine());
+        }
+
+        private IEnumerator WeeklyCheckCompletionRoutine()
+        {
+            SaveCurrentGarden();
+            // Reveal the full garden with grown plants
+            ChangeState(U10_GardenState.Garden);
+            RefreshAllScreens();
+
+            // Allow children to see their full garden a little fuller than last week (1.5s)
+            yield return new WaitForSeconds(1.5f);
+
+            // Step 5: Golden Line Modal appears with the week's quote
+            ShowGoldenLineModal(() =>
+            {
+                AdvanceToNextWeek(false);
+                ChangeState(U10_GardenState.Garden);
+            });
+        }
+
+        public void ShowGoldenLineModal(Action onClose = null)
         {
             if (goldenLineModal != null)
             {
-                var modal = goldenLineModal.GetComponent<U10_GoldenLineModal_Masters_Activity>();
-                if (modal != null)
+                goldenLineModal.SetActive(true);
+                var modalScript = goldenLineModal.GetComponent<U10_GoldenLineModal_Masters_Activity>();
+                if (modalScript != null)
                 {
-                    modal.ShowQuote(activeData.currentWeek, onClose);
+                    modalScript.ShowQuote(activeData.currentWeek, onClose);
+                }
+                else
+                {
+                    onClose?.Invoke();
                 }
             }
             else
             {
                 onClose?.Invoke();
+            }
+        }
+
+        public void RefreshAllScreens()
+        {
+            RefreshGardenDisplay();
+        }
+
+        public void RefreshGardenDisplay()
+        {
+            if (gardenScreen != null)
+            {
+                gardenScreen.SetActive(true);
+                var gScript = gardenScreen.GetComponent<U10_GardenScreen_Masters_Activity>();
+                if (gScript != null)
+                {
+                    InitPlantDisplays(gScript);
+                    gScript.RefreshGarden(activeData);
+                }
             }
         }
 
@@ -211,11 +280,29 @@ namespace Googolplex.Unit10
 
         public Sprite[] GetSpritesForHabit(string habitKey)
         {
+            if (string.IsNullOrEmpty(habitKey)) return new Sprite[0];
+
             List<Sprite> list = new List<Sprite>();
-            for (int stage = 1; stage <= 6; stage++)
+            for (int stage = 1; stage <= 11; stage++)
             {
                 string targetName = $"Plant_{habitKey}_{stage}";
-                Sprite s = allPlantSprites.Find(x => x != null && x.name == targetName);
+                Sprite s = allPlantSprites.Find(x => x != null && x.name.Equals(targetName, StringComparison.OrdinalIgnoreCase));
+                
+                if (s == null)
+                {
+                    // Fallback search in loaded Sprites
+                    var allLoaded = Resources.FindObjectsOfTypeAll<Sprite>();
+                    foreach (var loaded in allLoaded)
+                    {
+                        if (loaded != null && loaded.name.Equals(targetName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            s = loaded;
+                            allPlantSprites.Add(s);
+                            break;
+                        }
+                    }
+                }
+
                 if (s != null) list.Add(s);
             }
             return list.ToArray();

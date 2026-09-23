@@ -22,6 +22,10 @@ namespace Googolplex.Unit10
         [SerializeField] private Button backToGardenButton;
         [SerializeField] private Button closeCardButton;
 
+        [Header("Potted Plant Growth Display (On Card)")]
+        [SerializeField] private U10_PlantDisplayUI_Masters_Activity cardPlantDisplay;
+        [SerializeField] private Sprite potSprite;
+
         [Header("Habit Icons Database")]
         [SerializeField] private List<Sprite> allHabitIcons = new List<Sprite>();
 
@@ -142,6 +146,15 @@ namespace Googolplex.Unit10
                 }
             }
 
+            // Live Potted Plant on Card: Shows plant growth right in front of the children!
+            if (cardPlantDisplay != null)
+            {
+                Sprite pot = potSprite != null ? potSprite : U10_GameManager_Masters_Activity.Instance?.PotSprite;
+                Sprite[] stageSprites = U10_GameManager_Masters_Activity.Instance?.GetSpritesForHabit(habit.habitKey);
+                cardPlantDisplay.gameObject.SetActive(true);
+                cardPlantDisplay.BindHabit(habit, stageSprites, pot);
+            }
+
             // Play specific habit prompt voiceover & start audio-gate lock
             float voDuration = PlayHabitPromptVO(habit.habitKey);
 
@@ -249,8 +262,15 @@ namespace Googolplex.Unit10
             var habit = habitsToCheck[currentHabitIndex];
             habit.totalCheckins++;
 
-            int newStage = Mathf.Clamp((habit.totalCheckins / 2) + 1, 1, 6);
+            // Progressively increase growth stage by +1 each weekly check-in up to Stage 11 (Full Bloom)
+            int newStage = Mathf.Clamp(habit.growthStage + 1, 1, 11);
             habit.growthStage = newStage;
+
+            // Animate growth directly on the card plant pot!
+            if (cardPlantDisplay != null)
+            {
+                cardPlantDisplay.TriggerGrowthAnimation(newStage);
+            }
 
             if (statusFeedbackText != null)
             {
@@ -259,10 +279,9 @@ namespace Googolplex.Unit10
             }
 
             U10_AudioManager_Masters_Activity.Instance?.PlaySFX("SFX_Tally");
-            U10_AudioManager_Masters_Activity.Instance?.PlaySFX("SFX_PlantGrow");
             U10_AudioManager_Masters_Activity.Instance?.PlayVO("VO_U10_12");
 
-            Invoke(nameof(AdvanceToNextStep), 1.5f);
+            Invoke(nameof(AdvanceToNextStep), 1.6f);
         }
 
         private void OnSkipHabitClicked()
@@ -304,12 +323,8 @@ namespace Googolplex.Unit10
             var gm = U10_GameManager_Masters_Activity.Instance;
             if (gm != null)
             {
-                gm.SaveCurrentGarden();
-                gm.ShowGoldenLineModal(() =>
-                {
-                    gm.AdvanceToNextWeek();
-                    gm.ChangeState(U10_GardenState.Garden);
-                });
+                // Run completion coroutine on GameManager so it is never prematurely killed when WeeklyCheckScreen deactivates
+                gm.CompleteWeeklyCheck();
             }
         }
 

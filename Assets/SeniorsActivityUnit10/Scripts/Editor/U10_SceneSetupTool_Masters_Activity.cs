@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using System.IO;
 using TMPro;
@@ -7,6 +8,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace Googolplex.Unit10
 {
@@ -175,13 +177,29 @@ namespace Googolplex.Unit10
                     {
                         btn.gameObject.AddComponent<U10_ButtonAttentionPulse_Masters_Activity>();
                     }
-
                     skinnedCount++;
                 }
             }
 
+            // Also skin all StageBadge backgrounds in the scene to smooth rounded 9-slice pills
+            var allStageBadges = Object.FindObjectsOfType<TextMeshProUGUI>(true);
+            foreach (var tmp in allStageBadges)
+            {
+                if (tmp != null && (tmp.gameObject.name.Contains("Stage") || tmp.transform.parent.name.Contains("StageBadge")))
+                {
+                    var pImg = tmp.transform.parent.GetComponent<Image>() ?? tmp.GetComponent<Image>();
+                    if (pImg != null && roundedBox != null)
+                    {
+                        Undo.RecordObject(pImg, "Skin Stage Badge Rounded Box");
+                        pImg.sprite = roundedBox;
+                        pImg.type = Image.Type.Sliced;
+                        pImg.color = new Color(0.12f, 0.45f, 0.22f, 0.95f);
+                    }
+                }
+            }
+
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-            Debug.Log($"<color=green>[U10_SceneSetupTool] Successfully skinned {skinnedCount} buttons across all screens with vibrant 9-slice sprites & attention animations!</color>");
+            Debug.Log($"<color=green>[U10_SceneSetupTool] Successfully skinned {skinnedCount} buttons and all Stage Badges with smooth rounded 9-slice sprites!</color>");
         }
 
         [MenuItem("Googolplex/Unit 10/Non-Destructive/Update Weekly Check Close Button & Sprites")]
@@ -199,6 +217,7 @@ namespace Googolplex.Unit10
             Sprite closeIconSprite = GetSprite(spriteDict, "Icon_Close_Circle");
             Sprite greenBtnSprite = GetSprite(spriteDict, "UI_Button_Green");
             Sprite greyBtnSprite = GetSprite(spriteDict, "UI_Button_Grey");
+            Sprite roundedBox = GetSprite(spriteDict, "UI_Card_White_Soft");
 
             // Locate HabitStepCard
             Transform cardT = checkScreen.transform.Find("HabitStepCard");
@@ -216,6 +235,14 @@ namespace Googolplex.Unit10
 
             if (cardT != null)
             {
+                // Resize HabitStepCard to spacious 1200x640 2-column layout
+                RectTransform cardRT = cardT.GetComponent<RectTransform>();
+                if (cardRT != null)
+                {
+                    cardRT.sizeDelta = new Vector2(1200, 640);
+                    cardRT.anchoredPosition = new Vector2(0, -20);
+                }
+
                 // Create or find CloseCardBtn on top right corner of the card
                 Transform existingClose = cardT.Find("CloseCardBtn");
                 GameObject closeBtnObj;
@@ -234,8 +261,8 @@ namespace Googolplex.Unit10
                 rt.anchorMin = new Vector2(1f, 1f);
                 rt.anchorMax = new Vector2(1f, 1f);
                 rt.pivot = new Vector2(0.5f, 0.5f);
-                rt.anchoredPosition = new Vector2(-42, -42);
-                rt.sizeDelta = new Vector2(64, 64);
+                rt.anchoredPosition = new Vector2(-38, -38);
+                rt.sizeDelta = new Vector2(58, 58);
 
                 Image img = closeBtnObj.GetComponent<Image>();
                 img.sprite = closeIconSprite;
@@ -255,23 +282,84 @@ namespace Googolplex.Unit10
                     oldBackBtn.gameObject.SetActive(false);
                 }
 
+                // Reposition Step Indicator Badge (Top Center)
+                Transform stepBadgeT = cardT.Find("StepIndicatorBadge");
+                if (stepBadgeT != null)
+                {
+                    RectTransform srt = stepBadgeT.GetComponent<RectTransform>();
+                    srt.anchoredPosition = new Vector2(0, 275);
+                    srt.sizeDelta = new Vector2(260, 46);
+                }
+
+                // Reposition Habit Icon (Right Column top)
+                Transform iconT = cardT.Find("HabitIcon") ?? cardT.Find("Icon");
+                if (iconT != null)
+                {
+                    RectTransform irt = iconT.GetComponent<RectTransform>();
+                    irt.anchoredPosition = new Vector2(180, 200);
+                    irt.sizeDelta = new Vector2(95, 95);
+                }
+
+                // Reposition Habit Title Box (Right Column)
+                Transform titleT = cardT.Find("HabitTitleBox") ?? cardT.Find("TitleText") ?? cardT.Find("Title");
+                if (titleT != null)
+                {
+                    RectTransform trt = titleT.GetComponent<RectTransform>();
+                    trt.anchoredPosition = new Vector2(180, 125);
+                    trt.sizeDelta = new Vector2(700, 48);
+                }
+
+                // Reposition Habit Prompt / Question Box (Right Column)
+                Transform promptT = cardT.Find("HabitPromptBox") ?? cardT.Find("QuestionText") ?? cardT.Find("Question");
+                if (promptT != null)
+                {
+                    RectTransform prt = promptT.GetComponent<RectTransform>();
+                    prt.anchoredPosition = new Vector2(180, 55);
+                    prt.sizeDelta = new Vector2(700, 70);
+                }
+
+                // Reposition Habit Quote Box (Right Column)
+                Transform quoteT = cardT.Find("HabitQuoteBox") ?? cardT.Find("QuoteText") ?? cardT.Find("Quote");
+                if (quoteT != null)
+                {
+                    RectTransform qrt = quoteT.GetComponent<RectTransform>();
+                    qrt.anchoredPosition = new Vector2(180, -15);
+                    qrt.sizeDelta = new Vector2(700, 55);
+                }
+
+                // Reposition Status Feedback Box (Right Column)
+                Transform statusT = cardT.Find("StatusFeedbackBox") ?? cardT.Find("StatusFeedbackText") ?? cardT.Find("PromptText");
+                if (statusT != null)
+                {
+                    RectTransform srt = statusT.GetComponent<RectTransform>();
+                    srt.anchoredPosition = new Vector2(180, -75);
+                    srt.sizeDelta = new Vector2(700, 48);
+                }
+
                 // Wire to WeeklyCheckScreen component
                 SerializedObject so = new SerializedObject(checkScreen);
                 so.FindProperty("closeCardButton").objectReferenceValue = closeBtn;
 
-                // Update HandsRaised button to green styled 9-slice
+                // Reposition & update HandsRaised button (Right Column bottom-left)
                 var handsBtnProp = so.FindProperty("handsRaisedButton");
                 if (handsBtnProp != null && handsBtnProp.objectReferenceValue != null)
                 {
                     Button handsBtn = handsBtnProp.objectReferenceValue as Button;
-                    if (handsBtn != null && greenBtnSprite != null)
+                    if (handsBtn != null)
                     {
-                        var bImg = handsBtn.GetComponent<Image>();
-                        if (bImg != null)
+                        RectTransform hrt = handsBtn.GetComponent<RectTransform>();
+                        hrt.anchoredPosition = new Vector2(30, -170);
+                        hrt.sizeDelta = new Vector2(300, 74);
+
+                        if (greenBtnSprite != null)
                         {
-                            bImg.sprite = greenBtnSprite;
-                            bImg.type = Image.Type.Sliced;
-                            bImg.color = Color.white;
+                            var bImg = handsBtn.GetComponent<Image>();
+                            if (bImg != null)
+                            {
+                                bImg.sprite = greenBtnSprite;
+                                bImg.type = Image.Type.Sliced;
+                                bImg.color = Color.white;
+                            }
                         }
                         if (handsBtn.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>() == null)
                         {
@@ -280,19 +368,26 @@ namespace Googolplex.Unit10
                     }
                 }
 
-                // Update Skip button to grey styled 9-slice
+                // Reposition & update Skip button (Right Column bottom-right)
                 var skipBtnProp = so.FindProperty("skipHabitButton");
                 if (skipBtnProp != null && skipBtnProp.objectReferenceValue != null)
                 {
                     Button skipBtn = skipBtnProp.objectReferenceValue as Button;
-                    if (skipBtn != null && greyBtnSprite != null)
+                    if (skipBtn != null)
                     {
-                        var bImg = skipBtn.GetComponent<Image>();
-                        if (bImg != null)
+                        RectTransform srt = skipBtn.GetComponent<RectTransform>();
+                        srt.anchoredPosition = new Vector2(360, -170);
+                        srt.sizeDelta = new Vector2(240, 74);
+
+                        if (greyBtnSprite != null)
                         {
-                            bImg.sprite = greyBtnSprite;
-                            bImg.type = Image.Type.Sliced;
-                            bImg.color = Color.white;
+                            var bImg = skipBtn.GetComponent<Image>();
+                            if (bImg != null)
+                            {
+                                bImg.sprite = greyBtnSprite;
+                                bImg.type = Image.Type.Sliced;
+                                bImg.color = Color.white;
+                            }
                         }
                         if (skipBtn.GetComponent<U10_ButtonAttentionPulse_Masters_Activity>() == null)
                         {
@@ -301,9 +396,142 @@ namespace Googolplex.Unit10
                     }
                 }
 
+                // Ensure Live Plant Display is on the Left Column of the Card (x = -380)
+                Transform existingPlantDisplay = cardT.Find("CardPlantDisplay");
+                GameObject potObj;
+                U10_PlantDisplayUI_Masters_Activity plantUI;
+                Image plantImg;
+                Image potImg;
+                TextMeshProUGUI stageTMP;
+
+                if (existingPlantDisplay == null)
+                {
+                    potObj = new GameObject("CardPlantDisplay", typeof(RectTransform));
+                    potObj.transform.SetParent(cardT, false);
+                    Undo.RegisterCreatedObjectUndo(potObj, "Create Card Plant Display");
+                    plantUI = potObj.AddComponent<U10_PlantDisplayUI_Masters_Activity>();
+
+                    // Plant Sprite (Tall and centered above the pot rim)
+                    GameObject plantSpObj = new GameObject("PlantSprite", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                    plantSpObj.transform.SetParent(potObj.transform, false);
+                    RectTransform plantSpRT = plantSpObj.GetComponent<RectTransform>();
+                    plantSpRT.anchoredPosition = new Vector2(0, 75);
+                    plantSpRT.sizeDelta = new Vector2(250, 260);
+                    plantImg = plantSpObj.GetComponent<Image>();
+                    plantImg.sprite = GetSprite(spriteDict, "Plant_Water_1");
+                    plantImg.preserveAspect = true;
+                    plantImg.raycastTarget = false;
+
+                    // Pot Sprite (Terracotta pot)
+                    GameObject potImgObj = new GameObject("PotSprite", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                    potImgObj.transform.SetParent(potObj.transform, false);
+                    RectTransform potImgRT = potImgObj.GetComponent<RectTransform>();
+                    potImgRT.anchoredPosition = new Vector2(0, -65);
+                    potImgRT.sizeDelta = new Vector2(240, 175);
+                    potImg = potImgObj.GetComponent<Image>();
+                    potImg.sprite = GetSprite(spriteDict, "Pot_Terracotta");
+                    potImg.preserveAspect = true;
+                    potImg.raycastTarget = false;
+
+                    // Pot Label Badge (Pill beneath pot displaying habit name)
+                    GameObject stageCard = CreateUIBox(potObj.transform, "StageBadge", "Habit Name", 24, new Vector2(0, -175), new Vector2(220, 44), new Color(0.12f, 0.45f, 0.22f), Color.white, roundedBox);
+                    stageTMP = stageCard.GetComponentInChildren<TextMeshProUGUI>();
+                }
+                else
+                {
+                    potObj = existingPlantDisplay.gameObject;
+                    plantUI = potObj.GetComponent<U10_PlantDisplayUI_Masters_Activity>() ?? potObj.AddComponent<U10_PlantDisplayUI_Masters_Activity>();
+
+                    // Reposition existing PlantSprite
+                    Transform pst = potObj.transform.Find("PlantSprite");
+                    if (pst != null)
+                    {
+                        RectTransform prt = pst.GetComponent<RectTransform>();
+                        prt.anchoredPosition = new Vector2(0, 75);
+                        prt.sizeDelta = new Vector2(250, 260);
+                        plantImg = pst.GetComponent<Image>();
+                    }
+                    else
+                    {
+                        GameObject plantSpObj = new GameObject("PlantSprite", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                        plantSpObj.transform.SetParent(potObj.transform, false);
+                        RectTransform plantSpRT = plantSpObj.GetComponent<RectTransform>();
+                        plantSpRT.anchoredPosition = new Vector2(0, 75);
+                        plantSpRT.sizeDelta = new Vector2(250, 260);
+                        plantImg = plantSpObj.GetComponent<Image>();
+                        plantImg.sprite = GetSprite(spriteDict, "Plant_Water_1");
+                        plantImg.preserveAspect = true;
+                    }
+
+                    // Reposition existing PotSprite
+                    Transform potSt = potObj.transform.Find("PotSprite");
+                    if (potSt != null)
+                    {
+                        RectTransform port = potSt.GetComponent<RectTransform>();
+                        port.anchoredPosition = new Vector2(0, -65);
+                        port.sizeDelta = new Vector2(240, 175);
+                        potImg = potSt.GetComponent<Image>();
+                    }
+                    else
+                    {
+                        GameObject potImgObj = new GameObject("PotSprite", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                        potImgObj.transform.SetParent(potObj.transform, false);
+                        RectTransform potImgRT = potImgObj.GetComponent<RectTransform>();
+                        potImgRT.anchoredPosition = new Vector2(0, -65);
+                        potImgRT.sizeDelta = new Vector2(240, 175);
+                        potImg = potImgObj.GetComponent<Image>();
+                        potImg.sprite = GetSprite(spriteDict, "Pot_Terracotta");
+                        potImg.preserveAspect = true;
+                    }
+
+                    // Reposition StageBadge
+                    Transform sbt = potObj.transform.Find("StageBadge");
+                    if (sbt != null)
+                    {
+                        RectTransform sbrt = sbt.GetComponent<RectTransform>();
+                        sbrt.anchoredPosition = new Vector2(0, -175);
+                        sbrt.sizeDelta = new Vector2(220, 44);
+                        stageTMP = sbt.GetComponentInChildren<TextMeshProUGUI>();
+
+                        var sImg = sbt.GetComponent<Image>();
+                        if (sImg != null && roundedBox != null)
+                        {
+                            sImg.sprite = roundedBox;
+                            sImg.type = Image.Type.Sliced;
+                            sImg.color = new Color(0.12f, 0.45f, 0.22f, 0.95f);
+                        }
+                    }
+                    else
+                    {
+                        GameObject stageCard = CreateUIBox(potObj.transform, "StageBadge", "Habit Name", 24, new Vector2(0, -175), new Vector2(220, 44), new Color(0.12f, 0.45f, 0.22f), Color.white, roundedBox);
+                        stageTMP = stageCard.GetComponentInChildren<TextMeshProUGUI>();
+                    }
+
+                    // Disable any old blank square glow object
+                    Transform glowT = potObj.transform.Find("Glow");
+                    if (glowT != null) glowT.gameObject.SetActive(false);
+                }
+
+                RectTransform potContainerRT = potObj.GetComponent<RectTransform>();
+                potContainerRT.anchorMin = new Vector2(0.5f, 0.5f);
+                potContainerRT.anchorMax = new Vector2(0.5f, 0.5f);
+                potContainerRT.pivot = new Vector2(0.5f, 0.5f);
+                potContainerRT.anchoredPosition = new Vector2(-380, -10);
+                potContainerRT.sizeDelta = new Vector2(320, 500);
+
+                // Wire PlantDisplayUI
+                SerializedObject pso = new SerializedObject(plantUI);
+                pso.FindProperty("potImage").objectReferenceValue = potImg;
+                pso.FindProperty("plantImage").objectReferenceValue = plantImg;
+                pso.FindProperty("stageBadgeText").objectReferenceValue = stageTMP;
+                pso.ApplyModifiedProperties();
+
+                so.FindProperty("cardPlantDisplay").objectReferenceValue = plantUI;
+                so.FindProperty("potSprite").objectReferenceValue = GetSprite(spriteDict, "Pot_Terracotta");
+
                 so.ApplyModifiedProperties();
                 EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-                Debug.Log("<color=green>[U10_SceneSetupTool] Successfully updated WeeklyCheckScreen with top-right Card Close Button and styled button sprites without altering existing layout!</color>");
+                Debug.Log("<color=green>[U10_SceneSetupTool] Successfully updated WeeklyCheckScreen into spacious 2-column layout with Left Potted Plant and Right Content!</color>");
             }
         }
 
@@ -331,6 +559,13 @@ namespace Googolplex.Unit10
                 SetClipProp(so, "voGive", audioDict, "VO_U10_10");
                 SetClipProp(so, "voFamily", audioDict, "VO_U10_11");
                 SetClipProp(so, "voPlantGrowing", audioDict, "VO_U10_12");
+
+                so.FindProperty("potSprite").objectReferenceValue = GetSprite(spriteDict, "Pot_Terracotta");
+                var cardPlant = weeklyScreen.GetComponentInChildren<U10_PlantDisplayUI_Masters_Activity>(true);
+                if (cardPlant != null)
+                {
+                    so.FindProperty("cardPlantDisplay").objectReferenceValue = cardPlant;
+                }
 
                 List<Sprite> habitIcons = new List<Sprite>();
                 foreach (var h in U10_SaveSystem.ALL_AVAILABLE_HABITS)
@@ -425,6 +660,22 @@ namespace Googolplex.Unit10
             if (gm != null)
             {
                 SerializedObject so = new SerializedObject(gm);
+                if (modal != null)
+                {
+                    so.FindProperty("goldenLineModal").objectReferenceValue = modal.gameObject;
+                }
+                var setup = Object.FindObjectOfType<U10_SetupScreen_Masters_Activity>(true);
+                if (setup != null) so.FindProperty("setupScreen").objectReferenceValue = setup.gameObject;
+
+                var garden = Object.FindObjectOfType<U10_GardenScreen_Masters_Activity>(true);
+                if (garden != null) so.FindProperty("gardenScreen").objectReferenceValue = garden.gameObject;
+
+                var check = Object.FindObjectOfType<U10_WeeklyCheckScreen_Masters_Activity>(true);
+                if (check != null) so.FindProperty("weeklyCheckScreen").objectReferenceValue = check.gameObject;
+
+                var endTerm = Object.FindObjectOfType<U10_EndTermScreen_Masters_Activity>(true);
+                if (endTerm != null) so.FindProperty("endTermScreen").objectReferenceValue = endTerm.gameObject;
+
                 so.FindProperty("potSprite").objectReferenceValue = GetSprite(spriteDict, "Pot_Terracotta");
                 List<Sprite> allPlants = new List<Sprite>();
                 foreach (var kv in spriteDict)
@@ -441,6 +692,362 @@ namespace Googolplex.Unit10
 
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             Debug.Log($"<color=green>[U10_SceneSetupTool] Successfully assigned all Inspector serialized fields (VO Clips, Sprites, Audio) across {populatedComponents} components in active scene!</color>");
+        }
+
+        [MenuItem("Googolplex/Unit 10/Non-Destructive/Fix Pot Labels and Badges")]
+        public static void FixPotLabelsAndBadges()
+        {
+            var spriteDict = LoadAllSprites();
+            Sprite roundedBox = GetSprite(spriteDict, "UI_RoundedBox_9Slice") ?? GetSprite(spriteDict, "Card_Parchment");
+
+            var plantDisplays = Object.FindObjectsOfType<U10_PlantDisplayUI_Masters_Activity>(true);
+            int fixedCount = 0;
+            for (int i = 0; i < plantDisplays.Length; i++)
+            {
+                var pd = plantDisplays[i];
+                Transform habitBadgeT = pd.transform.Find("HabitBadge");
+                if (habitBadgeT != null)
+                {
+                    var htmp = habitBadgeT.GetComponentInChildren<TextMeshProUGUI>(true);
+                    if (htmp != null)
+                    {
+                        Undo.RecordObject(htmp, "Set HabitBadge Text");
+                        htmp.text = $"Habit {i + 1}";
+                    }
+                }
+
+                Transform stageBadgeT = pd.transform.Find("StageBadge");
+                if (stageBadgeT != null)
+                {
+                    var img = stageBadgeT.GetComponent<Image>();
+                    if (img != null && roundedBox != null)
+                    {
+                        Undo.RecordObject(img, "Set StageBadge Sprite");
+                        img.sprite = roundedBox;
+                        img.type = Image.Type.Sliced;
+                        img.color = new Color(0.12f, 0.45f, 0.22f, 0.95f);
+                    }
+                    var btmp = stageBadgeT.GetComponentInChildren<TextMeshProUGUI>(true);
+                    if (btmp != null)
+                    {
+                        Undo.RecordObject(btmp, "Set StageBadge Text");
+                        btmp.text = "Stage 1 of 11";
+                    }
+                }
+
+                // Ensure serialized references are linked properly
+                SerializedObject pso = new SerializedObject(pd);
+                if (habitBadgeT != null)
+                {
+                    pso.FindProperty("titleText").objectReferenceValue = habitBadgeT.GetComponentInChildren<TextMeshProUGUI>(true);
+                }
+                if (stageBadgeT != null)
+                {
+                    pso.FindProperty("stageBadgeText").objectReferenceValue = stageBadgeT.GetComponentInChildren<TextMeshProUGUI>(true);
+                }
+                pso.ApplyModifiedProperties();
+
+                fixedCount++;
+            }
+
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            Debug.Log($"<color=green>[U10_SceneSetupTool] Fixed pot labels and badges on {fixedCount} plant display objects (Habit Badge = Habit Name, Stage Badge = Stage Progress)!</color>");
+        }
+
+        [MenuItem("Googolplex/Unit 10/Non-Destructive/Apply Game-Like Card and Plaque Sprites")]
+        public static void ApplyGameLikeCardAndPlaqueSprites()
+        {
+            ReimportTexturesAsSprites();
+            var spriteDict = LoadAllSprites();
+
+            Sprite plaqueWood = FindBestSprite(spriteDict, "Header sprite U10 borad card Bg sprites_0", "Header sprite", "UI_Title_Plaque_Wood");
+            Sprite cardContainer = FindBestSprite(spriteDict, "Main board U10 borad card Bg sprites_1", "Main board", "UI_Card_Container_Main");
+            Sprite subcardPlant = FindBestSprite(spriteDict, "sub board U10 borad card Bg sprites_7", "sub board", "UI_SubCard_Plant");
+            Sprite subcardContent = FindBestSprite(spriteDict, "sub boardU10 borad card Bg sprites_8", "sub boardU10", "UI_SubCard_Content");
+            Sprite habitCardNormal = FindBestSprite(spriteDict, "sub board U10 borad card Bg sprites_7", "UI_Habit_Card_Normal", "UI_SubCard_Plant");
+            Sprite footerParchment = FindBestSprite(spriteDict, "sub boardU10 borad card Bg sprites_8", "UI_Bar_Footer_Parchment", "UI_SubCard_Content");
+
+            void SetSpriteToImage(Image img, Sprite sp)
+            {
+                if (img == null || sp == null) return;
+                img.sprite = sp;
+                img.type = (sp.border != Vector4.zero) ? Image.Type.Sliced : Image.Type.Simple;
+                img.preserveAspect = false;
+                img.color = Color.white;
+            }
+
+            int appliedCount = 0;
+
+            // 1. Title Banners across SetupScreen, GardenScreen, and WeeklyCheckScreen
+            var allTMPs = Object.FindObjectsOfType<TextMeshProUGUI>(true);
+            foreach (var tmp in allTMPs)
+            {
+                string pName = tmp.transform.parent != null ? tmp.transform.parent.name : "";
+                if (pName.Equals("HeaderBanner", StringComparison.OrdinalIgnoreCase) ||
+                    pName.Equals("WeeklyHeaderBox", StringComparison.OrdinalIgnoreCase) ||
+                    pName.Equals("EndTermHeaderBox", StringComparison.OrdinalIgnoreCase) ||
+                    pName.Equals("HeaderBox", StringComparison.OrdinalIgnoreCase))
+                {
+                    var parentT = tmp.transform.parent;
+                    var img = parentT.GetComponent<Image>();
+                    if (img != null && plaqueWood != null)
+                    {
+                        Undo.RecordObject(img, "Apply Title Plaque");
+                        SetSpriteToImage(img, plaqueWood);
+
+                        // Give plaque adequate height and text side margins so leaves never squeeze text
+                        RectTransform pRT = parentT.GetComponent<RectTransform>();
+                        if (pRT != null)
+                        {
+                            Undo.RecordObject(pRT, "Adjust Plaque Height");
+                            float targetWidth = pRT.sizeDelta.x;
+                            if (pName.Equals("HeaderBox", StringComparison.OrdinalIgnoreCase) || pName.Equals("EndTermHeaderBox", StringComparison.OrdinalIgnoreCase))
+                            {
+                                targetWidth = Mathf.Min(targetWidth, 1150f);
+                            }
+                            else
+                            {
+                                targetWidth = Mathf.Min(targetWidth, 880f);
+                            }
+                            pRT.sizeDelta = new Vector2(targetWidth, 122f);
+                        }
+
+                        // Add horizontal padding inside the plaque so text stays inside the central wooden board
+                        Undo.RecordObject(tmp, "Adjust Plaque Text Margins");
+                        tmp.margin = new Vector4(125f, 6f, 125f, 6f);
+                        tmp.alignment = TextAlignmentOptions.Center;
+
+                        appliedCount++;
+                    }
+                }
+                else if (pName.Equals("SelectionSummaryBar", StringComparison.OrdinalIgnoreCase) ||
+                         pName.Equals("BottomBar", StringComparison.OrdinalIgnoreCase))
+                {
+                    var parentT = tmp.transform.parent;
+                    var img = parentT.GetComponent<Image>();
+                    if (img != null && footerParchment != null)
+                    {
+                        Undo.RecordObject(img, "Apply Footer Bar");
+                        SetSpriteToImage(img, footerParchment);
+
+                        RectTransform bBarRT = parentT.GetComponent<RectTransform>();
+                        if (bBarRT != null)
+                        {
+                            Undo.RecordObject(bBarRT, "Adjust Footer Bar Size");
+                            bBarRT.sizeDelta = new Vector2(1240f, 110f);
+                        }
+
+                        appliedCount++;
+                    }
+                }
+            }
+
+            // 2. Setup Screen: 8 Habit Cards (Keep text & icons safely inside central area)
+            var setup = Object.FindObjectOfType<U10_SetupScreen_Masters_Activity>(true);
+            if (setup != null && habitCardNormal != null)
+            {
+                var buttons = setup.GetComponentsInChildren<Button>(true);
+                foreach (var b in buttons)
+                {
+                    if (b.gameObject.name.StartsWith("HabitOptionBtn_") || b.gameObject.name.StartsWith("Card_"))
+                    {
+                        var img = b.GetComponent<Image>();
+                        if (img != null)
+                        {
+                            Undo.RecordObject(img, "Apply Habit Card Normal Sprite");
+                            SetSpriteToImage(img, habitCardNormal);
+                            appliedCount++;
+                        }
+
+                        // Adjust Icon padding away from top leaves
+                        Transform iconT = b.transform.Find("Icon");
+                        if (iconT != null)
+                        {
+                            RectTransform irt = iconT.GetComponent<RectTransform>();
+                            Undo.RecordObject(irt, "Adjust Icon Size & Pos");
+                            irt.sizeDelta = new Vector2(88f, 88f);
+                            irt.anchoredPosition = new Vector2(0f, -18f);
+                        }
+
+                        // Adjust Title padding away from side leaf accents
+                        Transform titleT = b.transform.Find("Title");
+                        if (titleT != null)
+                        {
+                            RectTransform trt = titleT.GetComponent<RectTransform>();
+                            Undo.RecordObject(trt, "Adjust Title Size & Pos");
+                            trt.sizeDelta = new Vector2(290f, 36f);
+                            trt.anchoredPosition = new Vector2(0f, -118f);
+                            var ttmp = titleT.GetComponent<TextMeshProUGUI>();
+                            if (ttmp != null) ttmp.fontSize = 28f;
+                        }
+
+                        // Adjust Quote padding away from bottom leaf accents
+                        Transform quoteT = b.transform.Find("Quote");
+                        if (quoteT != null)
+                        {
+                            RectTransform qrt = quoteT.GetComponent<RectTransform>();
+                            Undo.RecordObject(qrt, "Adjust Quote Size & Pos");
+                            qrt.sizeDelta = new Vector2(290f, 68f);
+                            qrt.anchoredPosition = new Vector2(0f, -176f);
+                            var qtmp = quoteT.GetComponent<TextMeshProUGUI>();
+                            if (qtmp != null) qtmp.fontSize = 19f;
+                        }
+                    }
+                }
+            }
+
+            // 3. Weekly Check Screen: HabitStepCard + PlantSubCard + ContentSubCard
+            var checkScreen = Object.FindObjectOfType<U10_WeeklyCheckScreen_Masters_Activity>(true);
+            if (checkScreen != null)
+            {
+                Transform habitCardT = checkScreen.transform.Find("HabitStepCard");
+                if (habitCardT != null)
+                {
+                    // Apply main container parchment sprite
+                    var mainImg = habitCardT.GetComponent<Image>();
+                    if (mainImg != null && cardContainer != null)
+                    {
+                        Undo.RecordObject(mainImg, "Apply Main Card Container Sprite");
+                        SetSpriteToImage(mainImg, cardContainer);
+                        appliedCount++;
+                    }
+
+                    // A. Left Child Sub-Card for Plant
+                    Transform plantSubCardT = habitCardT.Find("PlantSubCard");
+                    if (plantSubCardT == null)
+                    {
+                        GameObject pscObj = new GameObject("PlantSubCard", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                        pscObj.transform.SetParent(habitCardT, false);
+                        Undo.RegisterCreatedObjectUndo(pscObj, "Create PlantSubCard");
+
+                        RectTransform prt = pscObj.GetComponent<RectTransform>();
+                        prt.anchorMin = new Vector2(0.5f, 0.5f);
+                        prt.anchorMax = new Vector2(0.5f, 0.5f);
+                        prt.pivot = new Vector2(0.5f, 0.5f);
+                        prt.anchoredPosition = new Vector2(-365, -10);
+                        prt.sizeDelta = new Vector2(400, 560);
+
+                        Image pImg = pscObj.GetComponent<Image>();
+                        SetSpriteToImage(pImg, subcardPlant);
+                        plantSubCardT = pscObj.transform;
+                        appliedCount++;
+                    }
+                    else
+                    {
+                        RectTransform prt = plantSubCardT.GetComponent<RectTransform>();
+                        if (prt != null)
+                        {
+                            prt.anchoredPosition = new Vector2(-365, -10);
+                            prt.sizeDelta = new Vector2(400, 560);
+                        }
+                        Image pImg = plantSubCardT.GetComponent<Image>();
+                        if (pImg != null && subcardPlant != null)
+                        {
+                            Undo.RecordObject(pImg, "Update PlantSubCard Sprite");
+                            SetSpriteToImage(pImg, subcardPlant);
+                            appliedCount++;
+                        }
+                    }
+
+                    // Reparent CardPlantDisplay into PlantSubCard
+                    Transform cpdT = habitCardT.Find("CardPlantDisplay") ?? plantSubCardT.Find("CardPlantDisplay");
+                    if (cpdT != null)
+                    {
+                        Undo.SetTransformParent(cpdT, plantSubCardT, "Parent CardPlantDisplay to PlantSubCard");
+                        RectTransform cpdRT = cpdT.GetComponent<RectTransform>();
+                        cpdRT.anchorMin = new Vector2(0.5f, 0.5f);
+                        cpdRT.anchorMax = new Vector2(0.5f, 0.5f);
+                        cpdRT.pivot = new Vector2(0.5f, 0.5f);
+                        cpdRT.anchoredPosition = Vector2.zero;
+                    }
+
+                    // B. Right Child Sub-Card for Content
+                    Transform contentSubCardT = habitCardT.Find("ContentSubCard");
+                    if (contentSubCardT == null)
+                    {
+                        GameObject cscObj = new GameObject("ContentSubCard", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                        cscObj.transform.SetParent(habitCardT, false);
+                        Undo.RegisterCreatedObjectUndo(cscObj, "Create ContentSubCard");
+
+                        RectTransform crt = cscObj.GetComponent<RectTransform>();
+                        crt.anchorMin = new Vector2(0.5f, 0.5f);
+                        crt.anchorMax = new Vector2(0.5f, 0.5f);
+                        crt.pivot = new Vector2(0.5f, 0.5f);
+                        crt.anchoredPosition = new Vector2(215, -10);
+                        crt.sizeDelta = new Vector2(700, 560);
+
+                        Image cImg = cscObj.GetComponent<Image>();
+                        SetSpriteToImage(cImg, subcardContent);
+                        contentSubCardT = cscObj.transform;
+                        appliedCount++;
+                    }
+                    else
+                    {
+                        RectTransform crt = contentSubCardT.GetComponent<RectTransform>();
+                        if (crt != null)
+                        {
+                            crt.anchoredPosition = new Vector2(215, -10);
+                            crt.sizeDelta = new Vector2(700, 560);
+                        }
+                        Image cImg = contentSubCardT.GetComponent<Image>();
+                        if (cImg != null && subcardContent != null)
+                        {
+                            Undo.RecordObject(cImg, "Update ContentSubCard Sprite");
+                            SetSpriteToImage(cImg, subcardContent);
+                            appliedCount++;
+                        }
+                    }
+
+                    // Reparent all right content elements into ContentSubCard with balanced offsets & width constrained to 560
+                    string[] contentElementNames = { "HabitIcon", "HabitTitleBox", "HabitPromptBox", "HabitQuoteBox", "StatusFeedbackBox", "HandsRaisedBtn", "SkipBtn" };
+                    Vector2[] targetPositions = {
+                        new Vector2(0, 190),
+                        new Vector2(0, 120),
+                        new Vector2(0, 50),
+                        new Vector2(0, -20),
+                        new Vector2(0, -80),
+                        new Vector2(-150, -175),
+                        new Vector2(165, -175)
+                    };
+
+                    for (int ce = 0; ce < contentElementNames.Length; ce++)
+                    {
+                        Transform ceT = habitCardT.Find(contentElementNames[ce]) ?? contentSubCardT.Find(contentElementNames[ce]);
+                        if (ceT != null)
+                        {
+                            Undo.SetTransformParent(ceT, contentSubCardT, $"Parent {contentElementNames[ce]} to ContentSubCard");
+                            RectTransform ceRT = ceT.GetComponent<RectTransform>();
+                            ceRT.anchorMin = new Vector2(0.5f, 0.5f);
+                            ceRT.anchorMax = new Vector2(0.5f, 0.5f);
+                            ceRT.pivot = new Vector2(0.5f, 0.5f);
+                            ceRT.anchoredPosition = targetPositions[ce];
+
+                            // Constrain text boxes to 560 width so they never collide with the golden corner ornaments
+                            if (contentElementNames[ce].Contains("Box"))
+                            {
+                                ceRT.sizeDelta = new Vector2(560f, ceRT.sizeDelta.y);
+                                var tmpComp = ceT.GetComponentInChildren<TextMeshProUGUI>();
+                                if (tmpComp != null)
+                                {
+                                    tmpComp.color = new Color(0.12f, 0.14f, 0.18f); // High contrast dark charcoal
+                                }
+                            }
+                        }
+                    }
+
+                    // Adjust close button so it doesn't overlap the top-right corner stud
+                    Transform closeBtnT = habitCardT.Find("CloseBtn") ?? habitCardT.Find("WeeklyCheckCloseBtn");
+                    if (closeBtnT != null)
+                    {
+                        RectTransform cbrt = closeBtnT.GetComponent<RectTransform>();
+                        Undo.RecordObject(cbrt, "Adjust Close Button Offset");
+                        cbrt.anchoredPosition = new Vector2(540f, 275f);
+                    }
+                }
+            }
+
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            Debug.Log($"<color=green>[U10_SceneSetupTool] Successfully replaced plain white backgrounds with game-like card & plaque sprites across {appliedCount} elements!</color>");
         }
 
         [MenuItem("Googolplex/Unit 10/Generate Complete Scene Hierarchy")]
@@ -534,6 +1141,12 @@ namespace Googolplex.Unit10
             foreach (string file in pngFiles)
             {
                 string assetPath = file.Replace('\\', '/');
+                // CRITICAL: NEVER touch or modify multiple sprite sheets or manually sliced icon sheets
+                if (assetPath.Contains("Spritesheet") || assetPath.Contains("sprites") || assetPath.Contains("Icons"))
+                {
+                    continue;
+                }
+
                 TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
                 if (importer != null)
                 {
@@ -566,17 +1179,39 @@ namespace Googolplex.Unit10
         private static Dictionary<string, Sprite> LoadAllSprites()
         {
             Dictionary<string, Sprite> dict = new Dictionary<string, Sprite>();
-            string[] guids = AssetDatabase.FindAssets("t:Sprite", new[] { ART_PATH });
+            string[] guids = AssetDatabase.FindAssets("t:Texture2D", new[] { ART_PATH });
             foreach (string guid in guids)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
-                Sprite s = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                if (s != null && !dict.ContainsKey(s.name))
+                Object[] subAssets = AssetDatabase.LoadAllAssetsAtPath(path);
+                foreach (var obj in subAssets)
                 {
-                    dict[s.name] = s;
+                    if (obj is Sprite s && s != null && !dict.ContainsKey(s.name))
+                    {
+                        dict[s.name] = s;
+                    }
                 }
             }
             return dict;
+        }
+
+        private static Sprite FindBestSprite(Dictionary<string, Sprite> dict, params string[] candidates)
+        {
+            foreach (string c in candidates)
+            {
+                if (dict.TryGetValue(c, out Sprite exact) && exact != null) return exact;
+            }
+            foreach (string c in candidates)
+            {
+                foreach (var kvp in dict)
+                {
+                    if (kvp.Key.IndexOf(c, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return kvp.Value;
+                    }
+                }
+            }
+            return null;
         }
 
         private static Dictionary<string, AudioClip> LoadAllAudio()
@@ -872,8 +1507,8 @@ namespace Googolplex.Unit10
                 GameObject titleCard = CreateUIBox(potObj.transform, "HabitBadge", $"Habit {i}", 28, new Vector2(0, -165), new Vector2(240, 48), new Color(0.96f, 0.99f, 0.96f, 0.98f), new Color(0.05f, 0.18f, 0.08f), roundedBox);
                 TextMeshProUGUI plantTitleTMP = titleCard.GetComponentInChildren<TextMeshProUGUI>();
 
-                // Stage Badge
-                GameObject stageCard = CreateUIBox(potObj.transform, "StageBadge", "Stage 1 of 6", 24, new Vector2(0, -215), new Vector2(210, 40), new Color(0.12f, 0.45f, 0.22f), Color.white, roundedBox);
+                // Pot Label Badge (Displays habit title e.g. Water, Sleep)
+                GameObject stageCard = CreateUIBox(potObj.transform, "StageBadge", "Habit Name", 24, new Vector2(0, -215), new Vector2(210, 40), new Color(0.12f, 0.45f, 0.22f), Color.white, roundedBox);
                 TextMeshProUGUI stageTMP = stageCard.GetComponentInChildren<TextMeshProUGUI>();
 
                 // Wire PlantDisplayUI
@@ -989,50 +1624,92 @@ namespace Googolplex.Unit10
             GameObject headerBox = CreateUIBox(screenObj.transform, "WeeklyHeaderBox", "Weekly Check-in\n<size=26><color=#0e3015>Show of hands for our class habits</color></size>", 38, new Vector2(0, -35), new Vector2(860, 90), new Color(0.96f, 0.99f, 0.96f, 0.98f), new Color(0.05f, 0.18f, 0.08f), roundedBox, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
             TextMeshProUGUI weekTitleTMP = headerBox.GetComponentInChildren<TextMeshProUGUI>();
 
-            // Habit Step Card (Center Anchor - 1120x670 nicely spaced)
-            GameObject habitCard = CreateUIBox(screenObj.transform, "HabitStepCard", "", 32, new Vector2(0, -20), new Vector2(1120, 670), new Color(0.98f, 0.99f, 0.98f, 0.98f), Color.black, roundedBox, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            // Habit Step Card (Center Anchor - 1200x640 2-column layout)
+            GameObject habitCard = CreateUIBox(screenObj.transform, "HabitStepCard", "", 32, new Vector2(0, -20), new Vector2(1200, 640), new Color(0.98f, 0.99f, 0.98f, 0.98f), Color.black, roundedBox, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
 
-            // Step Indicator Badge
-            GameObject stepBadge = CreateUIBox(habitCard.transform, "StepIndicatorBadge", "Habit 1 of 4", 28, new Vector2(0, 280), new Vector2(280, 52), new Color(0.16f, 0.48f, 0.3f), Color.white, roundedBox);
+            // Step Indicator Badge (Top Center)
+            GameObject stepBadge = CreateUIBox(habitCard.transform, "StepIndicatorBadge", "Habit 1 of 4", 28, new Vector2(0, 275), new Vector2(260, 46), new Color(0.16f, 0.48f, 0.3f), Color.white, roundedBox);
             TextMeshProUGUI stepTMP = stepBadge.GetComponentInChildren<TextMeshProUGUI>();
 
-            // Habit Icon
+            // Habit Icon (Right Column top)
             GameObject iconObj = new GameObject("HabitIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             iconObj.transform.SetParent(habitCard.transform, false);
             RectTransform iconRT = iconObj.GetComponent<RectTransform>();
-            iconRT.anchoredPosition = new Vector2(0, 185);
-            iconRT.sizeDelta = new Vector2(120, 120);
+            iconRT.anchoredPosition = new Vector2(180, 200);
+            iconRT.sizeDelta = new Vector2(95, 95);
             Image habitIconImg = iconObj.GetComponent<Image>();
             habitIconImg.sprite = GetSprite(sprites, "Icon_Water");
             habitIconImg.preserveAspect = true;
             habitIconImg.raycastTarget = false;
 
-            // Habit Title
-            GameObject titleObj = CreateUIBox(habitCard.transform, "HabitTitleBox", "Drink Water", 46, new Vector2(0, 95), new Vector2(900, 58), Color.clear, new Color(0.05f, 0.18f, 0.08f));
+            // Habit Title (Right Column)
+            GameObject titleObj = CreateUIBox(habitCard.transform, "HabitTitleBox", "Drink Water", 42, new Vector2(180, 125), new Vector2(700, 48), Color.clear, new Color(0.05f, 0.18f, 0.08f));
             TextMeshProUGUI habitTitleTMP = titleObj.GetComponentInChildren<TextMeshProUGUI>();
             habitTitleTMP.fontStyle = FontStyles.Bold;
 
-            // Habit Question Prompt
-            GameObject promptObj = CreateUIBox(habitCard.transform, "HabitPromptBox", "Who drank fresh water every day this week?", 36, new Vector2(0, 25), new Vector2(1000, 75), Color.clear, new Color(0.08f, 0.25f, 0.12f));
+            // Habit Question Prompt (Right Column)
+            GameObject promptObj = CreateUIBox(habitCard.transform, "HabitPromptBox", "Who drank fresh water every day this week?", 28, new Vector2(180, 55), new Vector2(700, 70), Color.clear, new Color(0.08f, 0.25f, 0.12f));
             TextMeshProUGUI habitPromptTMP = promptObj.GetComponentInChildren<TextMeshProUGUI>();
             habitPromptTMP.fontStyle = FontStyles.Bold;
 
-            // Habit Book Quote
-            GameObject quoteObj = CreateUIBox(habitCard.transform, "HabitQuoteBox", "\"Drink your water -- inside and outside.\"", 30, new Vector2(0, -48), new Vector2(1000, 55), Color.clear, new Color(0.16f, 0.36f, 0.2f));
+            // Habit Book Quote (Right Column)
+            GameObject quoteObj = CreateUIBox(habitCard.transform, "HabitQuoteBox", "\"Drink your water -- inside and outside.\"", 24, new Vector2(180, -15), new Vector2(700, 55), Color.clear, new Color(0.16f, 0.36f, 0.2f));
             TextMeshProUGUI habitQuoteTMP = quoteObj.GetComponentInChildren<TextMeshProUGUI>();
             habitQuoteTMP.fontStyle = FontStyles.Bold;
 
-            // Status Feedback Text
-            GameObject statusObj = CreateUIBox(habitCard.transform, "StatusFeedbackBox", "Raise your hand if you practiced this week!", 34, new Vector2(0, -118), new Vector2(980, 55), Color.clear, new Color(0.06f, 0.45f, 0.18f));
+            // Status Feedback Text (Right Column)
+            GameObject statusObj = CreateUIBox(habitCard.transform, "StatusFeedbackBox", "Raise your hand if you practiced this week!", 26, new Vector2(180, -75), new Vector2(700, 48), Color.clear, new Color(0.06f, 0.45f, 0.18f));
             TextMeshProUGUI statusTMP = statusObj.GetComponentInChildren<TextMeshProUGUI>();
             statusTMP.fontStyle = FontStyles.Bold;
 
-            // Action Buttons Container
-            GameObject handsBtnObj = CreateUIButton(habitCard.transform, "HandsRaisedBtn", "Yes, We Practiced!", 36, new Vector2(-225, -230), new Vector2(440, 86), new Color(0.16f, 0.62f, 0.28f), roundedBox);
+            // Action Buttons (Right Column bottom)
+            GameObject handsBtnObj = CreateUIButton(habitCard.transform, "HandsRaisedBtn", "Yes, We Practiced!", 34, new Vector2(30, -170), new Vector2(300, 74), new Color(0.16f, 0.62f, 0.28f), roundedBox);
             Button handsBtn = handsBtnObj.GetComponent<Button>();
 
-            GameObject skipBtnObj = CreateUIButton(habitCard.transform, "SkipBtn", "Next Habit", 32, new Vector2(245, -230), new Vector2(320, 86), new Color(0.45f, 0.5f, 0.56f), roundedBox);
+            GameObject skipBtnObj = CreateUIButton(habitCard.transform, "SkipBtn", "Next Habit", 30, new Vector2(360, -170), new Vector2(240, 74), new Color(0.45f, 0.5f, 0.56f), roundedBox);
             Button skipBtn = skipBtnObj.GetComponent<Button>();
+
+            // Card Plant Display (Left Column: x = -380)
+            GameObject cardPlantObj = new GameObject("CardPlantDisplay", typeof(RectTransform));
+            cardPlantObj.transform.SetParent(habitCard.transform, false);
+            RectTransform cardPlantRT = cardPlantObj.GetComponent<RectTransform>();
+            cardPlantRT.anchoredPosition = new Vector2(-380, -10);
+            cardPlantRT.sizeDelta = new Vector2(320, 500);
+
+            var plantUI = cardPlantObj.AddComponent<U10_PlantDisplayUI_Masters_Activity>();
+
+            // Plant Sprite (Tall & prominent above the pot)
+            GameObject plantSpObj = new GameObject("PlantSprite", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            plantSpObj.transform.SetParent(cardPlantObj.transform, false);
+            RectTransform plantSpRT = plantSpObj.GetComponent<RectTransform>();
+            plantSpRT.anchoredPosition = new Vector2(0, 75);
+            plantSpRT.sizeDelta = new Vector2(250, 260);
+            Image plantImg = plantSpObj.GetComponent<Image>();
+            plantImg.sprite = GetSprite(sprites, "Plant_Water_1");
+            plantImg.preserveAspect = true;
+            plantImg.raycastTarget = false;
+
+            // Pot Sprite (Terracotta pot)
+            GameObject potImgObj = new GameObject("PotSprite", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            potImgObj.transform.SetParent(cardPlantObj.transform, false);
+            RectTransform potImgRT = potImgObj.GetComponent<RectTransform>();
+            potImgRT.anchoredPosition = new Vector2(0, -65);
+            potImgRT.sizeDelta = new Vector2(240, 175);
+            Image potImg = potImgObj.GetComponent<Image>();
+            potImg.sprite = GetSprite(sprites, "Pot_Terracotta");
+            potImg.preserveAspect = true;
+            potImg.raycastTarget = false;
+
+            // Pot Label Badge (Displays habit title e.g. Water, Sleep)
+            GameObject stageCard = CreateUIBox(cardPlantObj.transform, "StageBadge", "Habit Name", 24, new Vector2(0, -175), new Vector2(220, 44), new Color(0.12f, 0.45f, 0.22f), Color.white, roundedBox);
+            TextMeshProUGUI stageTMP = stageCard.GetComponentInChildren<TextMeshProUGUI>();
+
+            // Wire PlantDisplayUI
+            SerializedObject pso = new SerializedObject(plantUI);
+            pso.FindProperty("potImage").objectReferenceValue = potImg;
+            pso.FindProperty("plantImage").objectReferenceValue = plantImg;
+            pso.FindProperty("stageBadgeText").objectReferenceValue = stageTMP;
+            pso.ApplyModifiedProperties();
 
             // Wire SerializedObject
             SerializedObject so = new SerializedObject(comp);
@@ -1046,6 +1723,8 @@ namespace Googolplex.Unit10
             so.FindProperty("skipHabitButton").objectReferenceValue = skipBtn;
             so.FindProperty("statusFeedbackText").objectReferenceValue = statusTMP;
             so.FindProperty("backToGardenButton").objectReferenceValue = backBtn;
+            so.FindProperty("cardPlantDisplay").objectReferenceValue = plantUI;
+            so.FindProperty("potSprite").objectReferenceValue = GetSprite(sprites, "Pot_Terracotta");
 
             List<Sprite> allIcons = new List<Sprite>();
             foreach (var kv in sprites)
