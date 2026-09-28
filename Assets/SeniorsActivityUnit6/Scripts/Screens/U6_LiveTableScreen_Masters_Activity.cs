@@ -91,7 +91,7 @@ namespace Googolplex.Unit6
             
             if (feedbackPanel == null)
             {
-                Transform fb = transform.Find("FeedbackPanel");
+                Transform fb = transform.Find("FeedbackPanel") ?? transform.Find("SafeArea/FeedbackPanel");
                 if (fb != null) feedbackPanel = fb.gameObject;
             }
             if (feedbackText == null && feedbackPanel != null) feedbackText = feedbackPanel.GetComponentInChildren<TextMeshProUGUI>(true);
@@ -99,6 +99,9 @@ namespace Googolplex.Unit6
             if (anuCharacterImage == null)
             {
                 Transform t = transform.Find("AnuAvatar") 
+                           ?? transform.Find("SafeArea/AnuAvatar")
+                           ?? transform.Find("AnuCharacterVisual")
+                           ?? transform.Find("SafeArea/AnuCharacterVisual")
                            ?? transform.Find("AnuCharacterImage") 
                            ?? transform.Find("AnuVisual")
                            ?? transform.Find("Anu");
@@ -121,7 +124,8 @@ namespace Googolplex.Unit6
             if (otherTablesLooking == null || otherTablesLooking.Length == 0)
             {
                 List<GameObject> lookings = new List<GameObject>();
-                foreach (Transform child in transform)
+                Transform[] allChildren = GetComponentsInChildren<Transform>(true);
+                foreach (Transform child in allChildren)
                 {
                     string name = child.name.ToLower();
                     if (name.Contains("look") || name.Contains("lokk") || name.Contains("turn") || name.Contains("stare") || name.Contains("react"))
@@ -135,7 +139,8 @@ namespace Googolplex.Unit6
             if (otherTablesNormal == null || otherTablesNormal.Length == 0)
             {
                 List<GameObject> normals = new List<GameObject>();
-                foreach (Transform child in transform)
+                Transform[] allChildren = GetComponentsInChildren<Transform>(true);
+                foreach (Transform child in allChildren)
                 {
                     string name = child.name.ToLower();
                     if ((name.Contains("diner") || name.Contains("dinner") || name.Contains("table")) && !name.Contains("look") && !name.Contains("lokk") && !name.Contains("turn") && !name.Contains("stare") && !name.Contains("react"))
@@ -181,11 +186,11 @@ namespace Googolplex.Unit6
                 return null;
             }
 
-            anuSittingStraightSprite = GetSprite("SPR_Anu_SittingStraight");
-            Sprite fidgetFish = GetSprite("SPR_Anu_SlidingChair");
-            Sprite fidgetGlass = GetSprite("SPR_Anu_TappingGlass");
-            Sprite fidgetHungry = GetSprite("SPR_Anu_ShoutingHungry");
-            Sprite fidgetKneel = GetSprite("SPR_Anu_KneelingChair");
+            anuSittingStraightSprite = GetSprite("U6_MAct_Family_SittingStraight") ?? GetSprite("SPR_Anu_SittingStraight");
+            Sprite fidgetFish = GetSprite("U6_MAct_Family_SlidingChair") ?? GetSprite("SPR_Anu_SlidingChair");
+            Sprite fidgetGlass = GetSprite("U6_MAct_Family_TappingGlass") ?? GetSprite("SPR_Anu_TappingGlass");
+            Sprite fidgetHungry = GetSprite("U6_MAct_Family_ShoutingHungry") ?? GetSprite("SPR_Anu_ShoutingHungry");
+            Sprite fidgetKneel = GetSprite("U6_MAct_Family_KneelingChair") ?? GetSprite("SPR_Anu_KneelingChair");
 
             waitingEvents.Clear();
 

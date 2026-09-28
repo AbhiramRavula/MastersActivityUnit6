@@ -127,7 +127,16 @@ public class EngSnap_VoiceGeneratorWindow : EditorWindow
         string jsonPath = Path.Combine(Application.temporaryCachePath, "voice_gen_data.json");
         File.WriteAllText(jsonPath, sb.ToString());
 
-        string pyScriptPath = Path.Combine(Application.dataPath, "Editor", "VoiceGen", "unity_voice_gen.py");
+        string pyScriptPath = Path.Combine(Application.dataPath, "SeniorsActivityUnit6", "Editor", "VoiceGen", "unity_voice_gen.py");
+        if (!File.Exists(pyScriptPath))
+        {
+            pyScriptPath = Path.Combine(Application.dataPath, "Editor", "VoiceGen", "unity_voice_gen.py");
+        }
+        if (!File.Exists(pyScriptPath))
+        {
+            string[] found = Directory.GetFiles(Application.dataPath, "unity_voice_gen.py", SearchOption.AllDirectories);
+            if (found.Length > 0) pyScriptPath = found[0];
+        }
 
         var startInfo = new ProcessStartInfo
         {

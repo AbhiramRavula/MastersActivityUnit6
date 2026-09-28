@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: e8d0764053f33fd45838eab005886d79
+guid: fa14a354aed74a647aa5eff92675e5ec
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -49,7 +49,7 @@ TextureImporter:
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
-  spriteBorder: {x: 332, y: 605, z: 310, w: 106}
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -136,64 +136,169 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: U6 MA table_0
+      name: SPR_FamilyTable_SittingStraight
       rect:
         serializedVersion: 2
-        x: 81
-        y: 22
-        width: 1759
-        height: 731
+        x: 0
+        y: 434
+        width: 510
+        height: 434
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 318343d8e9b6e0f4f9a0d36430754180
-      internalID: 458001729
+      spriteID: 327ff0106a66d2c468b1e034e7693462
+      internalID: 1087377
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: U6 MA table_1
+      name: SPR_FamilyTable_SlidingChair
       rect:
         serializedVersion: 2
-        x: 3
-        y: 368
-        width: 558
-        height: 441
+        x: 519
+        y: 434
+        width: 397
+        height: 434
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 1edd027a8d4986c4aa64411b2e0ab4c8
-      internalID: 1384650173
+      spriteID: cc6278e644c87f44cab2e226ced73a2f
+      internalID: 444743784
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: U6 MA table_2
+      name: SPR_FamilyTable_WaitingHappy
       rect:
         serializedVersion: 2
-        x: 28
-        y: 449
-        width: 1856
-        height: 335
+        x: 922
+        y: 434
+        width: 413
+        height: 434
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 54f4fdac1771a1a4d86ee8893da6a544
-      internalID: 33712202
+      spriteID: 641d4ff44540960408f07eb99736c332
+      internalID: 1413621011
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FamilyTable_TappingGlass
+      rect:
+        serializedVersion: 2
+        x: 1334
+        y: 433
+        width: 440
+        height: 434
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0ac5a58ab7df2804992b6c13ad9dfce0
+      internalID: -1802324460
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FamilyTable_ShoutingHungry
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 503
+        height: 434
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a501d49fc68e01c4888f4a73f6d90f90
+      internalID: -1488961543
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FamilyTable_CrawlingFloor
+      rect:
+        serializedVersion: 2
+        x: 508
+        y: 0
+        width: 417
+        height: 434
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4355043f523092d4c8046f4cde6f70b0
+      internalID: -1647160096
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FamilyTable_HandRaise
+      rect:
+        serializedVersion: 2
+        x: 926
+        y: 0
+        width: 407
+        height: 434
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d4ff2a366cd261a41914ff6da867e587
+      internalID: -331706176
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_FamilyTable_CallingWaiter
+      rect:
+        serializedVersion: 2
+        x: 1334
+        y: 0
+        width: 440
+        height: 434
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 083f077501fe12c4397817bc8b2895b2
+      internalID: 1791559391
       vertices: []
       indices: 
       edges: []
@@ -202,16 +307,21 @@ TextureImporter:
     physicsShape: []
     bones: []
     spriteID: 5e97eb03825dee720800000000000000
-    internalID: 1537655665
+    internalID: 0
     vertices: []
     indices: 
     edges: []
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      U6 MA table_0: 458001729
-      U6 MA table_1: 1384650173
-      U6 MA table_2: 33712202
+      SPR_FamilyTable_CallingWaiter: 1791559391
+      SPR_FamilyTable_CrawlingFloor: -1647160096
+      SPR_FamilyTable_HandRaise: -331706176
+      SPR_FamilyTable_ShoutingHungry: -1488961543
+      SPR_FamilyTable_SittingStraight: 1087377
+      SPR_FamilyTable_SlidingChair: 444743784
+      SPR_FamilyTable_TappingGlass: -1802324460
+      SPR_FamilyTable_WaitingHappy: 1413621011
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

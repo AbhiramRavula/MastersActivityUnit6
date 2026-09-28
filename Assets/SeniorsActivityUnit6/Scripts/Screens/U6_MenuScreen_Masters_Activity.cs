@@ -76,8 +76,10 @@ namespace Googolplex.Unit6
         {
             if (waiterStandingVisual == null)
             {
-                Transform t = transform.Find("Waiter_Image");
-                if (t == null) t = transform.Find("WaiterStandingVisual");
+                Transform t = transform.Find("Waiter_Image")
+                           ?? transform.Find("WaiterStandingVisual")
+                           ?? transform.Find("SafeArea/WaiterStandingVisual")
+                           ?? transform.Find("SafeArea/Waiter_Image");
                 if (t != null) waiterStandingVisual = t.GetComponent<Image>();
             }
 

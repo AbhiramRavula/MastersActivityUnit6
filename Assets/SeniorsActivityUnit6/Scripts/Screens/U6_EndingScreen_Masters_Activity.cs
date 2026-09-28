@@ -47,7 +47,10 @@ namespace Googolplex.Unit6
         {
             if (starIcons == null || starIcons.Length == 0)
             {
-                Transform container = transform.Find("StarsContainer") ?? transform.Find("StarsRow") ?? transform.Find("Stars");
+                Transform container = transform.Find("StarsContainer") 
+                                   ?? transform.Find("SafeArea/StarsContainer") 
+                                   ?? transform.Find("StarsRow") 
+                                   ?? transform.Find("Stars");
                 if (container != null)
                 {
                     List<GameObject> stars = new List<GameObject>();
@@ -61,9 +64,10 @@ namespace Googolplex.Unit6
                 else
                 {
                     List<GameObject> stars = new List<GameObject>();
-                    foreach (Transform c in transform)
+                    Transform[] allChildren = GetComponentsInChildren<Transform>(true);
+                    foreach (Transform c in allChildren)
                     {
-                        if (c.name.IndexOf("star", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                        if (c.name.IndexOf("star", System.StringComparison.OrdinalIgnoreCase) >= 0 && c != transform)
                             stars.Add(c.gameObject);
                     }
                     if (stars.Count > 0) starIcons = stars.ToArray();
@@ -72,13 +76,16 @@ namespace Googolplex.Unit6
 
             if (bannerText == null)
             {
-                Transform b = transform.Find("BannerCard") ?? transform.Find("TitleBanner");
+                Transform b = transform.Find("BannerCard") 
+                           ?? transform.Find("SafeArea/BannerCard") 
+                           ?? transform.Find("TitleBanner")
+                           ?? transform.Find("SafeArea/TitleBanner");
                 if (b != null) bannerText = b.GetComponentInChildren<TextMeshProUGUI>(true);
             }
 
             if (reflectionPanel == null)
             {
-                Transform r = transform.Find("ReflectionPanel");
+                Transform r = transform.Find("ReflectionPanel") ?? transform.Find("SafeArea/ReflectionPanel");
                 if (r != null) reflectionPanel = r.gameObject;
             }
 

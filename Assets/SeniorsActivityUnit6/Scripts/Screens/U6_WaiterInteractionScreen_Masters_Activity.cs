@@ -116,7 +116,7 @@ namespace Googolplex.Unit6
             if (promptText == null) promptText = GetComponentInChildren<TextMeshProUGUI>(true);
             if (choiceContainer == null)
             {
-                Transform ct = transform.Find("ChoiceContainer");
+                Transform ct = transform.Find("ChoiceContainer") ?? transform.Find("SafeArea/ChoiceContainer");
                 if (ct != null) choiceContainer = ct.gameObject;
             }
             if (optionA_Button == null && choiceContainer != null)
@@ -131,6 +131,7 @@ namespace Googolplex.Unit6
             if (waiterFullBodyAvatar == null)
             {
                 Transform t = transform.Find("WaiterFullBody") 
+                           ?? transform.Find("SafeArea/WaiterFullBody")
                            ?? transform.Find("WaiterAvatarBox") 
                            ?? transform.Find("Waiter_Image") 
                            ?? transform.Find("RaviAvatar");
@@ -139,6 +140,7 @@ namespace Googolplex.Unit6
             if (anuCharacterAvatar == null)
             {
                 Transform t = transform.Find("AnuAvatar") 
+                           ?? transform.Find("SafeArea/AnuAvatar")
                            ?? transform.Find("Anu_Avatar") 
                            ?? transform.Find("Anu") 
                            ?? transform.Find("AnuCharacter");
@@ -147,6 +149,7 @@ namespace Googolplex.Unit6
             if (propItemImage == null)
             {
                 Transform t = transform.Find("PropItem") 
+                           ?? transform.Find("SafeArea/PropItem")
                            ?? transform.Find("Prop_Item") 
                            ?? transform.Find("Prop") 
                            ?? transform.Find("PropImage") 
@@ -156,13 +159,14 @@ namespace Googolplex.Unit6
             if (waiterExpressionBadge == null)
             {
                 Transform t = transform.Find("ExpressionBadge") 
+                           ?? transform.Find("SafeArea/ExpressionBadge")
                            ?? transform.Find("WaiterBadge")
                            ?? transform.Find("Badge");
                 if (t != null) waiterExpressionBadge = t.GetComponentInChildren<Image>(true);
             }
             if (outcomePanel == null)
             {
-                Transform t = transform.Find("OutcomePanel");
+                Transform t = transform.Find("OutcomePanel") ?? transform.Find("SafeArea/OutcomePanel");
                 if (t != null) outcomePanel = t.gameObject;
             }
             if (outcomeText == null && outcomePanel != null)
@@ -208,8 +212,8 @@ namespace Googolplex.Unit6
             Sprite raviPad = GetSprite("SPR_Ravi_StandingPad");
             Sprite raviPlate = GetSprite("SPR_Ravi_ServingPlate");
 
-            Sprite anuStraight = GetSprite("SPR_Anu_SittingStraight");
-            Sprite anuHandRaise = GetSprite("SPR_Anu_HandRaise");
+            Sprite anuStraight = GetSprite("U6_MAct_Family_SittingStraight") ?? GetSprite("SPR_Anu_SittingStraight");
+            Sprite anuHandRaise = GetSprite("U6_MAct_Family_HandRaise") ?? GetSprite("SPR_Anu_HandRaise");
 
             Sprite emptyGlass = GetSprite("SPR_EmptyGlass");
             Sprite spoonFork = GetSprite("SPR_Spoon_and_Fork");
