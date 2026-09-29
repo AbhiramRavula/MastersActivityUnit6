@@ -13,7 +13,7 @@ audio_items = [
     # 1. Teacher / Narrator
     {"file": "VO_U6_01.mp3", "text": "Today, Anu's family is eating out!", "voice": VOICE_TEACHER},
     {"file": "VO_U6_02.mp3", "text": "The food is not here yet. Watch Anu.", "voice": VOICE_TEACHER},
-    {"file": "VO_U6_03.mp3", "text": "Quick! Tap the button.", "voice": VOICE_TEACHER},
+    {"file": "VO_U6_03.mp3", "text": "Quick! Tap to help Anu!", "voice": VOICE_TEACHER},
     {"file": "VO_U6_04.mp3", "text": "Everybody is happy. One star!", "voice": VOICE_TEACHER},
     {"file": "VO_U6_05.mp3", "text": "Now choose. What will Anu eat?", "voice": VOICE_TEACHER},
     {"file": "VO_U6_06.mp3", "text": "Read first.", "voice": VOICE_TEACHER},
@@ -46,6 +46,7 @@ audio_items = [
     # 4. Parents
     {"file": "VO_U6_DAD_1.mp3", "text": "Sorry? I cannot hear you at all.", "voice": VOICE_DAD},
     {"file": "VO_U6_MUM_1.mp3", "text": "Anu.", "voice": VOICE_MUM},
+    {"file": "VO_U6_MUM_2.mp3", "text": "Anu, indoor voice, please.", "voice": VOICE_MUM},
 ]
 
 async def generate():

@@ -28,6 +28,33 @@ namespace Googolplex.Unit6
         // Menu Items
         // =========================================================================
 
+        [MenuItem("GameObject/Googolplex/Attach Animated Fish Tank to Selected", false, 10)]
+        [MenuItem("Googolplex/Unit 6/Attach Animated Fish Tank to Selected", false, 20)]
+        public static void AttachFishTankAnimatorToSelected()
+        {
+            GameObject selected = Selection.activeGameObject;
+            if (selected == null)
+            {
+                // Try finding FishTankProp in the scene automatically
+                selected = GameObject.Find("FishTankProp");
+                if (selected == null)
+                {
+                    EditorUtility.DisplayDialog("Notice", "Please select the FishTank GameObject in the Hierarchy first, or ensure FishTankProp exists.", "OK");
+                    return;
+                }
+            }
+
+            var animator = selected.GetComponent<U6_FishTankAnimator_Masters_Activity>();
+            if (animator == null)
+            {
+                animator = Undo.AddComponent<U6_FishTankAnimator_Masters_Activity>(selected);
+            }
+
+            animator.AutoLoadFramesFromSpritesheet();
+            EditorUtility.SetDirty(selected);
+            EditorUtility.DisplayDialog("Success", $"Attached U6_FishTankAnimator to {selected.name} and loaded all 16 swimming frames!", "Awesome");
+        }
+
         [MenuItem("Googolplex/Unit 6/Generate Complete Scene Hierarchy", false, 1)]
         [MenuItem("Unit 6/Generate and Assign All Assets & Hierarchy", false, 1)]
         public static void GenerateHierarchy()
@@ -118,6 +145,42 @@ namespace Googolplex.Unit6
             EditorUtility.SetDirty(gmObj);
 
             Debug.Log("<color=#4CAF50><b>[Unit 6] Complete UI Hierarchy successfully generated with Deliberate Pivots, Deliberate Anchors, and Safe-Area Constraints!</b></color>");
+        }
+
+        [MenuItem("Googolplex/Unit 6/Non-Destructive/Update Only Part 2 (MenuScreen & Order Choices)", false, 19)]
+        [MenuItem("Unit 6/Update Only Part 2 (MenuScreen & Order Choices)", false, 19)]
+        public static void UpdateOnlyMenuScreen()
+        {
+            Canvas canvas = Object.FindAnyObjectByType<Canvas>();
+            if (canvas == null)
+            {
+                Debug.LogError("[U6_SceneSetupTool] No Canvas found in scene! Please ensure your Canvas is active.");
+                return;
+            }
+
+            Dictionary<string, Sprite> spriteDict = LoadAllSprites();
+            GameObject menuPanel = CreateOrGetPanel(canvas.transform, "MenuScreen", new Color(0.1f, 0.08f, 0.06f, 0.45f));
+            SetupMenuScreen(menuPanel, spriteDict);
+
+            GameObject gmObj = GameObject.Find("[GameManager]");
+            if (gmObj != null)
+            {
+                var gameMgr = gmObj.GetComponent<U6_GameManager_Masters_Activity>();
+                if (gameMgr != null)
+                {
+                    SerializedObject gmSO = new SerializedObject(gameMgr);
+                    var menuProp = gmSO.FindProperty("menuScreen");
+                    if (menuProp != null)
+                    {
+                        menuProp.objectReferenceValue = menuPanel;
+                        gmSO.ApplyModifiedProperties();
+                    }
+                }
+            }
+
+            Selection.activeGameObject = menuPanel;
+            menuPanel.SetActive(true);
+            Debug.Log("<color=green>[U6_SceneSetupTool] Successfully updated Part 2 (MenuScreen & Order Choices) with deliberate pivots, anchors, and safe area!</color>");
         }
 
         [MenuItem("Googolplex/Unit 6/Non-Destructive/Update Only Part 3 (ChoiceScreen & Waiter Panel)", false, 20)]
@@ -300,7 +363,7 @@ namespace Googolplex.Unit6
             GameObject safeArea = CreateSafeAreaContainer(screenObj.transform);
 
             // 1. Top Header Banner: Pinned to Top-Center, Pivot (0.5, 1)
-            CreateUIBox(safeArea.transform, "TitleBanner", "PART 1: WAITING FOR FOOD", 44,
+            GameObject titleBannerObj = CreateUIBox(safeArea.transform, "TitleBanner", "PART 1: WAITING FOR FOOD", 44,
                 new Vector2(0, -10), new Vector2(920, 75),
                 new Color(0.15f, 0.2f, 0.3f, 0.92f), Color.white,
                 anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f), pivot: new Vector2(0.5f, 1f));
@@ -313,12 +376,17 @@ namespace Googolplex.Unit6
             var promptText = promptBox.GetComponentInChildren<TextMeshProUGUI>();
 
             // 3. Wall Prop (Fish Tank): Anchored to Upper-Right wall, Pivot (0.5, 1)
-            Sprite fishTankSp = GetSprite(sprites, "SPR_Prop_FishTank");
+            Sprite fishTankSp = GetSprite(sprites, "fish_swim_0") ?? GetSprite(sprites, "SPR_Prop_FishTank");
             if (fishTankSp != null)
             {
-                CreateUISpriteBox(safeArea.transform, "FishTankProp", "",
-                    Vector2.zero, new Vector2(240, 160), fishTankSp,
+                GameObject fishTankObj = CreateUISpriteBox(safeArea.transform, "FishTankProp", "",
+                    Vector2.zero, new Vector2(240, 240), fishTankSp,
                     anchorMin: new Vector2(0.78f, 0.82f), anchorMax: new Vector2(0.78f, 0.82f), pivot: new Vector2(0.5f, 1f));
+                if (fishTankObj != null)
+                {
+                    var animator = fishTankObj.AddComponent<U6_FishTankAnimator_Masters_Activity>();
+                    animator.AutoLoadFramesFromSpritesheet();
+                }
             }
 
             // 4. Background Diners: Anchored to background floor line, Pivot (0.5, 0)
@@ -371,23 +439,39 @@ namespace Googolplex.Unit6
 
             // Wire Serialized Properties
             SerializedObject so = new SerializedObject(comp);
-            so.FindProperty("promptText").objectReferenceValue = promptText;
-            so.FindProperty("actionButton").objectReferenceValue = actionBtn;
-            so.FindProperty("actionButtonText").objectReferenceValue = actionBtnText;
-            so.FindProperty("feedbackPanel").objectReferenceValue = feedbackPanel;
-            so.FindProperty("feedbackText").objectReferenceValue = feedbackText;
-            so.FindProperty("anuCharacterImage").objectReferenceValue = anuImg;
-            so.FindProperty("anuSittingStraightSprite").objectReferenceValue = anuStraight;
+            SetPropertyRef(so, "titleBanner", titleBannerObj);
+            SetPropertyRef(so, "promptText", promptText);
+            SetPropertyRef(so, "actionButton", actionBtn);
+            SetPropertyRef(so, "actionButtonText", actionBtnText);
+            SetPropertyRef(so, "feedbackPanel", feedbackPanel);
+            SetPropertyRef(so, "feedbackText", feedbackText);
+            SetPropertyRef(so, "anuCharacterImage", anuImg);
+            SetPropertyRef(so, "anuSittingStraightSprite", anuStraight);
 
             SerializedProperty normArr = so.FindProperty("otherTablesNormal");
-            normArr.arraySize = 2;
-            normArr.GetArrayElementAtIndex(0).objectReferenceValue = normalDiners1;
-            normArr.GetArrayElementAtIndex(1).objectReferenceValue = normalDiners2;
+            if (normArr != null)
+            {
+                normArr.arraySize = 2;
+                normArr.GetArrayElementAtIndex(0).objectReferenceValue = normalDiners1;
+                normArr.GetArrayElementAtIndex(1).objectReferenceValue = normalDiners2;
+            }
 
             SerializedProperty lookArr = so.FindProperty("otherTablesLooking");
-            lookArr.arraySize = 2;
-            lookArr.GetArrayElementAtIndex(0).objectReferenceValue = lookDiners1;
-            lookArr.GetArrayElementAtIndex(1).objectReferenceValue = lookDiners2;
+            if (lookArr != null)
+            {
+                lookArr.arraySize = 2;
+                lookArr.GetArrayElementAtIndex(0).objectReferenceValue = lookDiners1;
+                lookArr.GetArrayElementAtIndex(1).objectReferenceValue = lookDiners2;
+            }
+
+            // 5b. Direct Physical Touch Zone Target on Table Visual
+            GameObject touchZoneObj = new GameObject("DirectTouchZone", typeof(RectTransform));
+            touchZoneObj.transform.SetParent(anuObj.transform, false);
+            var touchZoneComp = touchZoneObj.AddComponent<U6_DirectTouchZone_Masters_Activity>();
+            touchZoneComp.Setup(anuObj.transform);
+            touchZoneObj.SetActive(false);
+
+            SetPropertyRef(so, "directTouchZone", touchZoneComp);
 
             // Populate Waiting Events
             Sprite fidgetFish = GetSprite(sprites, "U6_MAct_Family_SlidingChair") ?? GetSprite(sprites, "SPR_Anu_SlidingChair");
@@ -397,10 +481,10 @@ namespace Googolplex.Unit6
 
             SerializedProperty eventsProp = so.FindProperty("waitingEvents");
             eventsProp.ClearArray();
-            AddWaitingEvent(eventsProp, "Fish Tank", "Anu spots a fish tank and starts sliding off her chair!", "STAY SEATED", "Good job! Anu stays safely in her seat.", "Anu ran across! The waiter had to swerve around her.", "", "", fidgetFish);
-            AddWaitingEvent(eventsProp, "Glass Tapping", "Anu picks up a spoon and starts tapping the glass!", "PUT SPOON DOWN", "Nice! The table remains quiet and polite.", "Ting ting ting! The other tables turn and stare.", "SFX_GlassTing", "", fidgetGlass);
-            AddWaitingEvent(eventsProp, "Hungry Shout", "Anu is about to shout how hungry she is!", "WAIT QUIETLY", "Great patience! Food is being prepared.", "\"I am SO hungry! Where is my food?\" Mother looks embarrassed.", "", "VO_U6_ANU_7", fidgetHungry);
-            AddWaitingEvent(eventsProp, "Kneeling on Chair", "Anu kneels up on the chair with feet underneath!", "FEET ON FLOOR", "Both feet on the floor! Sitting straight.", "The chair wobbled and nearly tipped over!", "SFX_ChairWobble", "", fidgetKneel);
+            AddWaitingEvent(eventsProp, "Fish Tank", "Anu spots a fish tank and starts sliding off her chair!", "STAY SEATED", "Good job! Anu stays safely in her seat.", "Anu ran across! The waiter had to swerve around her.", "", "", fidgetFish, new Vector2(0f, 220f), new Vector2(300f, 260f), "TAP ANU TO SIT STRAIGHT");
+            AddWaitingEvent(eventsProp, "Glass Tapping", "Anu picks up a spoon and starts tapping the glass!", "PUT SPOON DOWN", "Nice! The table remains quiet and polite.", "Ting ting ting! The other tables turn and stare.", "SFX_GlassTing", "", fidgetGlass, new Vector2(175f, 310f), new Vector2(200f, 200f), "TAP GLASS TO PUT SPOON DOWN");
+            AddWaitingEvent(eventsProp, "Hungry Shout", "Anu is about to shout how hungry she is!", "WAIT QUIETLY", "Great patience! Food is being prepared.", "\"I am SO hungry! Where is my food?\" Mother looks embarrassed.", "", "VO_U6_ANU_7", fidgetHungry, new Vector2(20f, 290f), new Vector2(320f, 240f), "TAP ANU TO WAIT QUIETLY");
+            AddWaitingEvent(eventsProp, "Kneeling on Chair", "Anu kneels up on the chair with feet underneath!", "FEET ON FLOOR", "Both feet on the floor! Sitting straight.", "The chair wobbled and nearly tipped over!", "SFX_ChairWobble", "", fidgetKneel, new Vector2(0f, 180f), new Vector2(260f, 220f), "TAP CHAIR TO STEADY IT");
 
             so.ApplyModifiedProperties();
         }
@@ -472,17 +556,50 @@ namespace Googolplex.Unit6
             cpRT.anchorMin = new Vector2(0.5f, 0f);
             cpRT.anchorMax = new Vector2(0.5f, 0f);
             cpRT.pivot = new Vector2(0.5f, 0f);
-            cpRT.anchoredPosition = new Vector2(0, 15);
-            cpRT.sizeDelta = new Vector2(1480, 110);
+            cpRT.anchoredPosition = new Vector2(0, 20);
+            cpRT.sizeDelta = new Vector2(1500, 134);
 
             // Relative split for buttons inside choice container
-            GameObject btnPolite = CreateUIButton(choicePanel.transform, "PoliteButton", "\"Could I have the dosa, please?\"", 32,
-                Vector2.zero, Vector2.zero, new Color(0.25f, 0.68f, 0.38f),
-                anchorMin: new Vector2(0.02f, 0.05f), anchorMax: new Vector2(0.48f, 0.95f), pivot: new Vector2(0.5f, 0.5f));
+            GameObject btnPolite = CreateUIButton(choicePanel.transform, "PoliteButton", "<color=#D4EFDF><size=78%><b>[POLITE: PLEASE]</b></size></color>\n<b>\"Could I have the dosa, please?\"</b>", 30,
+                Vector2.zero, Vector2.zero, new Color(0.18f, 0.62f, 0.35f, 0.98f),
+                anchorMin: new Vector2(0.01f, 0.05f), anchorMax: new Vector2(0.485f, 0.95f), pivot: new Vector2(0.5f, 0.5f));
 
-            GameObject btnImpolite = CreateUIButton(choicePanel.transform, "ImpoliteButton", "\"I want dosa.\"", 32,
-                Vector2.zero, Vector2.zero, new Color(0.85f, 0.55f, 0.25f),
-                anchorMin: new Vector2(0.52f, 0.05f), anchorMax: new Vector2(0.98f, 0.95f), pivot: new Vector2(0.5f, 0.5f));
+            GameObject btnImpolite = CreateUIButton(choicePanel.transform, "ImpoliteButton", "<color=#FADBD8><size=78%><b>[BLUNT: DEMAND]</b></size></color>\n<b>\"I want dosa!\"</b>", 30,
+                Vector2.zero, Vector2.zero, new Color(0.82f, 0.42f, 0.20f, 0.98f),
+                anchorMin: new Vector2(0.515f, 0.05f), anchorMax: new Vector2(0.99f, 0.95f), pivot: new Vector2(0.5f, 0.5f));
+
+            // Adjust dialogue text label RectTransforms to guarantee margins around Avatar and Listen button
+            var lblPolite = btnPolite.transform.Find("Label")?.GetComponent<RectTransform>();
+            if (lblPolite != null)
+            {
+                lblPolite.offsetMin = new Vector2(110f, 6f);
+                lblPolite.offsetMax = new Vector2(-125f, -6f);
+            }
+            var lblImpolite = btnImpolite.transform.Find("Label")?.GetComponent<RectTransform>();
+            if (lblImpolite != null)
+            {
+                lblImpolite.offsetMin = new Vector2(110f, 6f);
+                lblImpolite.offsetMax = new Vector2(-125f, -6f);
+            }
+
+            // Solo Character Avatars
+            Sprite politeSpr = GetSprite(sprites, "SPR_Anu_HandRaise") ?? GetSprite(sprites, "SPR_Anu_SittingStraight");
+            Sprite impoliteSpr = GetSprite(sprites, "SPR_Anu_ShoutingHungry");
+
+            CreateUISpriteBox(btnPolite.transform, "AvatarPortrait", "", new Vector2(14, 0), new Vector2(84, 84), politeSpr,
+                anchorMin: new Vector2(0f, 0.5f), anchorMax: new Vector2(0f, 0.5f), pivot: new Vector2(0f, 0.5f));
+            CreateUISpriteBox(btnImpolite.transform, "AvatarPortrait", "", new Vector2(14, 0), new Vector2(84, 84), impoliteSpr,
+                anchorMin: new Vector2(0f, 0.5f), anchorMax: new Vector2(0f, 0.5f), pivot: new Vector2(0f, 0.5f));
+
+            // Pre-reader audio listen preview buttons on each choice
+            GameObject btnPoliteAudio = CreateUIButton(btnPolite.transform, "HearPoliteButton", "LISTEN", 19,
+                new Vector2(-14, 0), new Vector2(98, 50), new Color(0.12f, 0.42f, 0.20f),
+                anchorMin: new Vector2(1f, 0.5f), anchorMax: new Vector2(1f, 0.5f), pivot: new Vector2(1f, 0.5f));
+
+            GameObject btnImpoliteAudio = CreateUIButton(btnImpolite.transform, "HearImpoliteButton", "LISTEN", 19,
+                new Vector2(-14, 0), new Vector2(98, 50), new Color(0.65f, 0.25f, 0.10f),
+                anchorMin: new Vector2(1f, 0.5f), anchorMax: new Vector2(1f, 0.5f), pivot: new Vector2(1f, 0.5f));
+
             choicePanel.SetActive(false);
 
             // 8. Waiter Feedback: Pinned to Bottom-Center, Pivot (0.5, 0)
@@ -494,29 +611,38 @@ namespace Googolplex.Unit6
 
             // Wire Serialized Properties
             SerializedObject so = new SerializedObject(comp);
-            so.FindProperty("cardsContainer").objectReferenceValue = gridObj.transform;
-            so.FindProperty("dishCardPrefab").objectReferenceValue = cardTemplate;
-            so.FindProperty("callWaiterButton").objectReferenceValue = callWaiterBtn.GetComponent<Button>();
-            so.FindProperty("readFirstPrompt").objectReferenceValue = readFirstPrompt;
-            so.FindProperty("readFirstText").objectReferenceValue = readFirstText;
-            so.FindProperty("awkwardOverlay").objectReferenceValue = awkwardOverlay;
-            so.FindProperty("awkwardStammerText").objectReferenceValue = stammerText;
-            so.FindProperty("orderChoicePanel").objectReferenceValue = choicePanel;
-            so.FindProperty("politeOptionButton").objectReferenceValue = btnPolite.GetComponent<Button>();
-            so.FindProperty("impoliteOptionButton").objectReferenceValue = btnImpolite.GetComponent<Button>();
-            so.FindProperty("waiterFeedbackBox").objectReferenceValue = waiterFeedback;
-            so.FindProperty("waiterDialogText").objectReferenceValue = waiterDialogText;
-            so.FindProperty("waiterStandingVisual").objectReferenceValue = waiterStandingObj.GetComponent<Image>();
+            SetPropertyRef(so, "cardsContainer", gridObj.transform);
+            SetPropertyRef(so, "dishCardPrefab", cardTemplate);
+            SetPropertyRef(so, "callWaiterButton", callWaiterBtn.GetComponent<Button>());
+            SetPropertyRef(so, "readFirstPrompt", readFirstPrompt);
+            SetPropertyRef(so, "readFirstText", readFirstText);
+            SetPropertyRef(so, "awkwardWaiterOverlay", awkwardOverlay);
+            SetPropertyRef(so, "anuStammerText", stammerText);
+            SetPropertyRef(so, "orderChoicePanel", choicePanel);
+            SetPropertyRef(so, "politeOptionButton", btnPolite.GetComponent<Button>());
+            SetPropertyRef(so, "impoliteOptionButton", btnImpolite.GetComponent<Button>());
+            SetPropertyRef(so, "politeOptionText", btnPolite.transform.Find("Label")?.GetComponent<TextMeshProUGUI>());
+            SetPropertyRef(so, "impoliteOptionText", btnImpolite.transform.Find("Label")?.GetComponent<TextMeshProUGUI>());
+            SetPropertyRef(so, "politeAudioPreviewButton", btnPoliteAudio.GetComponent<Button>());
+            SetPropertyRef(so, "impoliteAudioPreviewButton", btnImpoliteAudio.GetComponent<Button>());
+            SetPropertyRef(so, "politeAvatarSprite", politeSpr);
+            SetPropertyRef(so, "impoliteAvatarSprite", impoliteSpr);
+            SetPropertyRef(so, "waiterFeedbackPopup", waiterFeedback);
+            SetPropertyRef(so, "waiterDialogText", waiterDialogText);
+            SetPropertyRef(so, "waiterStandingVisual", waiterStandingObj.GetComponent<Image>());
 
             // Populate Default Dishes
-            SerializedProperty dishesProp = so.FindProperty("dishes");
-            dishesProp.ClearArray();
-            AddDishItem(dishesProp, "Dosa", 60, GetSprite(sprites, "SPR_Dish_Dosa"));
-            AddDishItem(dishesProp, "Idli", 40, GetSprite(sprites, "SPR_Dish_Idli"));
-            AddDishItem(dishesProp, "Noodles", 80, GetSprite(sprites, "SPR_Dish_Noodles"));
-            AddDishItem(dishesProp, "Sandwich", 70, GetSprite(sprites, "SPR_Dish_Sandwich"));
-            AddDishItem(dishesProp, "Juice", 50, GetSprite(sprites, "SPR_Dish_Juice"));
-            AddDishItem(dishesProp, "Ice Cream", 45, GetSprite(sprites, "SPR_Dish_IceCream"));
+            SerializedProperty dishesProp = so.FindProperty("defaultDishes") ?? so.FindProperty("dishes");
+            if (dishesProp != null)
+            {
+                dishesProp.ClearArray();
+                AddDishItem(dishesProp, "Dosa", 60, GetSprite(sprites, "SPR_Dish_Dosa"));
+                AddDishItem(dishesProp, "Idli", 40, GetSprite(sprites, "SPR_Dish_Idli"));
+                AddDishItem(dishesProp, "Noodles", 80, GetSprite(sprites, "SPR_Dish_Noodles"));
+                AddDishItem(dishesProp, "Sandwich", 70, GetSprite(sprites, "SPR_Dish_Sandwich"));
+                AddDishItem(dishesProp, "Juice", 50, GetSprite(sprites, "SPR_Dish_Juice"));
+                AddDishItem(dishesProp, "Ice Cream", 45, GetSprite(sprites, "SPR_Dish_IceCream"));
+            }
 
             so.ApplyModifiedProperties();
         }
@@ -529,7 +655,7 @@ namespace Googolplex.Unit6
             GameObject safeArea = CreateSafeAreaContainer(screenObj.transform);
 
             // 1. Top Header: Pinned to Top-Center, Pivot (0.5, 1)
-            CreateUIBox(safeArea.transform, "TitleBanner", "PART 3: THE WAITER (RAVI)", 44,
+            GameObject titleBannerObj = CreateUIBox(safeArea.transform, "TitleBanner", "PART 3: THE WAITER (RAVI)", 44,
                 new Vector2(0, -10), new Vector2(920, 75),
                 new Color(0.15f, 0.2f, 0.3f, 0.92f), Color.white,
                 anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f), pivot: new Vector2(0.5f, 1f));
@@ -549,9 +675,10 @@ namespace Googolplex.Unit6
             Sprite raviPlate = GetSprite(sprites, "SPR_Ravi_ServingPlate");
             Sprite raviPad = GetSprite(sprites, "SPR_Ravi_StandingPad");
 
-            Sprite familyStraight = GetSprite(sprites, "U6_MAct_Family_SittingStraight");
+            Sprite familyStraight = GetSprite(sprites, "U6_MAct_Family_SittingStraight") ?? GetSprite(sprites, "SPR_FamilyTable_SittingStraight");
+            Sprite familyHandRaise = GetSprite(sprites, "U6_MAct_Family_HandRaise") ?? GetSprite(sprites, "SPR_FamilyTable_HandRaise");
             Sprite anuStraight = familyStraight ?? GetSprite(sprites, "SPR_Anu_SittingStraight");
-            Sprite anuHandRaise = GetSprite(sprites, "U6_MAct_Family_HandRaise") ?? GetSprite(sprites, "SPR_Anu_HandRaise");
+            Sprite anuHandRaise = familyHandRaise ?? GetSprite(sprites, "SPR_Anu_HandRaise");
             Sprite emptyGlass = GetSprite(sprites, "SPR_EmptyGlass");
             Sprite spoonFork = GetSprite(sprites, "SPR_Spoon_and_Fork");
             Sprite dishDosa = GetSprite(sprites, "SPR_Dish_Dosa");
@@ -570,6 +697,13 @@ namespace Googolplex.Unit6
             GameObject propObj = CreateUISpriteBox(safeArea.transform, "PropItem", "",
                 Vector2.zero, new Vector2(220, 180), emptyGlass,
                 anchorMin: new Vector2(0.48f, 0.28f), anchorMax: new Vector2(0.48f, 0.28f), pivot: new Vector2(0.5f, 0f));
+
+            // Table Ordered Dish: User's dish object placed on table surface
+            GameObject dishObj = CreateUISpriteBox(safeArea.transform, "Dish", "",
+                new Vector2(62, 145.39f), new Vector2(200, 100), dishDosa,
+                anchorMin: new Vector2(0.48f, 0.28f), anchorMax: new Vector2(0.48f, 0.28f), pivot: new Vector2(0.5f, 0f));
+            dishObj.transform.localEulerAngles = new Vector3(45.019f, 0f, 0f);
+            dishObj.SetActive(false); // Disabled until food is delivered!
 
             // Waiter Ravi: Standing on floor baseline, Pivot (0.5, 0)
             GameObject waiterFullBodyObj = CreateUISpriteBox(safeArea.transform, "WaiterFullBody", "",
@@ -604,22 +738,31 @@ namespace Googolplex.Unit6
 
             // Wire Serialized Properties
             SerializedObject so = new SerializedObject(comp);
-            so.FindProperty("promptText").objectReferenceValue = promptText;
-            so.FindProperty("waiterFullBodyAvatar").objectReferenceValue = waiterFullBodyObj.GetComponent<Image>();
-            so.FindProperty("anuCharacterAvatar").objectReferenceValue = anuObj.GetComponent<Image>();
-            so.FindProperty("propItemImage").objectReferenceValue = propObj.GetComponent<Image>();
-            so.FindProperty("waiterExpressionBadge").objectReferenceValue = null;
-            so.FindProperty("waiterSmileSprite").objectReferenceValue = warmSmile;
-            so.FindProperty("waiterNeutralSprite").objectReferenceValue = neutralBlank;
-            so.FindProperty("waiterStiffSprite").objectReferenceValue = stiffPolite;
-            so.FindProperty("waiterNameBadge").objectReferenceValue = null;
-            so.FindProperty("choiceContainer").objectReferenceValue = choiceContainer;
-            so.FindProperty("optionA_Button").objectReferenceValue = btnA.GetComponent<Button>();
-            so.FindProperty("optionA_Label").objectReferenceValue = btnA.GetComponentInChildren<TextMeshProUGUI>();
-            so.FindProperty("optionB_Button").objectReferenceValue = btnB.GetComponent<Button>();
-            so.FindProperty("optionB_Label").objectReferenceValue = btnB.GetComponentInChildren<TextMeshProUGUI>();
-            so.FindProperty("outcomePanel").objectReferenceValue = outcomePanel;
-            so.FindProperty("outcomeText").objectReferenceValue = outcomeText;
+            SetPropertyRef(so, "titleBanner", titleBannerObj);
+            SetPropertyRef(so, "tableDishObject", dishObj);
+            SetPropertyRef(so, "tableDishImage", dishObj.GetComponent<Image>());
+            SetPropertyRef(so, "spriteDishDosa", GetSprite(sprites, "SPR_Dish_Dosa"));
+            SetPropertyRef(so, "spriteDishIdli", GetSprite(sprites, "SPR_Dish_Idli"));
+            SetPropertyRef(so, "spriteDishNoodles", GetSprite(sprites, "SPR_Dish_Noodles"));
+            SetPropertyRef(so, "spriteDishRice", GetSprite(sprites, "SPR_Dish_Rice"));
+            SetPropertyRef(so, "spriteDishRoti", GetSprite(sprites, "SPR_Dish_Roti"));
+            SetPropertyRef(so, "spriteDishIceCream", GetSprite(sprites, "SPR_Dish_IceCream"));
+            SetPropertyRef(so, "promptText", promptText);
+            SetPropertyRef(so, "waiterFullBodyAvatar", waiterFullBodyObj.GetComponent<Image>());
+            SetPropertyRef(so, "anuCharacterAvatar", anuObj.GetComponent<Image>());
+            SetPropertyRef(so, "propItemImage", propObj.GetComponent<Image>());
+            SetPropertyRef(so, "waiterExpressionBadge", null);
+            SetPropertyRef(so, "waiterSmileSprite", warmSmile);
+            SetPropertyRef(so, "waiterNeutralSprite", neutralBlank);
+            SetPropertyRef(so, "waiterStiffSprite", stiffPolite);
+            SetPropertyRef(so, "waiterNameBadge", null);
+            SetPropertyRef(so, "choiceContainer", choiceContainer);
+            SetPropertyRef(so, "optionA_Button", btnA.GetComponent<Button>());
+            SetPropertyRef(so, "optionA_Label", btnA.GetComponentInChildren<TextMeshProUGUI>());
+            SetPropertyRef(so, "optionB_Button", btnB.GetComponent<Button>());
+            SetPropertyRef(so, "optionB_Label", btnB.GetComponentInChildren<TextMeshProUGUI>());
+            SetPropertyRef(so, "outcomePanel", outcomePanel);
+            SetPropertyRef(so, "outcomeText", outcomeText);
 
             // Populate all 5 Moments
             SerializedProperty momentsProp = so.FindProperty("moments");
@@ -659,7 +802,7 @@ namespace Googolplex.Unit6
             GameObject safeArea = CreateSafeAreaContainer(screenObj.transform);
 
             // 1. Top Header: Pinned to Top-Center, Pivot (0.5, 1)
-            CreateUIBox(safeArea.transform, "TitleBanner", "PART 4: VOICES & GOODBYES", 44,
+            GameObject titleBannerObj = CreateUIBox(safeArea.transform, "TitleBanner", "PART 4: VOICES & GOODBYES", 44,
                 new Vector2(0, -10), new Vector2(920, 75),
                 new Color(0.15f, 0.2f, 0.3f, 0.92f), Color.white,
                 anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f), pivot: new Vector2(0.5f, 1f));
@@ -810,13 +953,16 @@ namespace Googolplex.Unit6
             slider.targetGraphic = handleImg;
 
             // Zone Badge Box: Anchored to lower-middle (Y = 0.30f), Pivot (0.5, 0.5)
-            GameObject badgeBox = CreateUIBox(volPhase.transform, "ZoneBadgeBox", "", 34,
+            GameObject badgeBox = CreateUIBox(volPhase.transform, "ZoneBadgeBox", "JUST RIGHT  (Polite & Clear)", 34,
                 Vector2.zero, new Vector2(640, 68),
-                new Color(1f, 1f, 1f, 0.95f), Color.white,
+                new Color(1f, 1f, 1f, 0.95f), new Color(0.15f, 0.72f, 0.32f),
                 anchorMin: new Vector2(0.5f, 0.30f), anchorMax: new Vector2(0.5f, 0.30f), pivot: new Vector2(0.5f, 0.5f));
             var zoneLabel = badgeBox.GetComponentInChildren<TextMeshProUGUI>();
-            zoneLabel.text = "JUST RIGHT  (Polite & Clear)";
-            zoneLabel.color = new Color(0.15f, 0.72f, 0.32f);
+            if (zoneLabel != null)
+            {
+                zoneLabel.text = "JUST RIGHT  (Polite & Clear)";
+                zoneLabel.color = new Color(0.15f, 0.72f, 0.32f);
+            }
 
             // Say It Button: Pinned to Bottom-Center, Pivot (0.5, 0)
             GameObject sayBtn = CreateUIButton(volPhase.transform, "SayItButton", "SAY IT", 38,
@@ -865,21 +1011,22 @@ namespace Googolplex.Unit6
 
             // Wire Serialized Properties
             SerializedObject so = new SerializedObject(comp);
-            so.FindProperty("volumePhaseContainer").objectReferenceValue = volPhase;
-            so.FindProperty("volumeSlider").objectReferenceValue = slider;
-            so.FindProperty("sliderFillImage").objectReferenceValue = fillImg;
-            so.FindProperty("handleKnobImage").objectReferenceValue = kdImg;
-            so.FindProperty("currentZoneLabel").objectReferenceValue = zoneLabel;
-            so.FindProperty("whisperHighlight").objectReferenceValue = whisperHl;
-            so.FindProperty("justRightHighlight").objectReferenceValue = justRightHl;
-            so.FindProperty("bigVoiceHighlight").objectReferenceValue = bigVoiceHl;
-            so.FindProperty("sayItButton").objectReferenceValue = sayBtn.GetComponent<Button>();
-            so.FindProperty("leavingPhaseContainer").objectReferenceValue = leavingPhase;
-            so.FindProperty("waitingFamilyVisual").objectReferenceValue = waitFamily;
-            so.FindProperty("leavePolitelyButton").objectReferenceValue = btnLeave.GetComponent<Button>();
-            so.FindProperty("stayAndPlayButton").objectReferenceValue = btnStay.GetComponent<Button>();
-            so.FindProperty("feedbackPanel").objectReferenceValue = feedback;
-            so.FindProperty("feedbackText").objectReferenceValue = feedbackText;
+            SetPropertyRef(so, "titleBanner", titleBannerObj);
+            SetPropertyRef(so, "volumePhaseContainer", volPhase);
+            SetPropertyRef(so, "volumeSlider", slider);
+            SetPropertyRef(so, "sliderFillImage", fillImg);
+            SetPropertyRef(so, "handleKnobImage", kdImg);
+            SetPropertyRef(so, "currentZoneLabel", zoneLabel);
+            SetPropertyRef(so, "whisperHighlight", whisperHl);
+            SetPropertyRef(so, "justRightHighlight", justRightHl);
+            SetPropertyRef(so, "bigVoiceHighlight", bigVoiceHl);
+            SetPropertyRef(so, "sayItButton", sayBtn.GetComponent<Button>());
+            SetPropertyRef(so, "leavingPhaseContainer", leavingPhase);
+            SetPropertyRef(so, "waitingFamilyVisual", waitFamily);
+            SetPropertyRef(so, "leavePolitelyButton", btnLeave.GetComponent<Button>());
+            SetPropertyRef(so, "stayAndPlayButton", btnStay.GetComponent<Button>());
+            SetPropertyRef(so, "feedbackPanel", feedback);
+            SetPropertyRef(so, "feedbackText", feedbackText);
             so.ApplyModifiedProperties();
         }
 
@@ -946,15 +1093,18 @@ namespace Googolplex.Unit6
 
             SerializedObject so = new SerializedObject(comp);
             SerializedProperty starsProp = so.FindProperty("starIcons");
-            starsProp.arraySize = 3;
-            starsProp.GetArrayElementAtIndex(0).objectReferenceValue = s1;
-            starsProp.GetArrayElementAtIndex(1).objectReferenceValue = s2;
-            starsProp.GetArrayElementAtIndex(2).objectReferenceValue = s3;
+            if (starsProp != null)
+            {
+                starsProp.arraySize = 3;
+                starsProp.GetArrayElementAtIndex(0).objectReferenceValue = s1;
+                starsProp.GetArrayElementAtIndex(1).objectReferenceValue = s2;
+                starsProp.GetArrayElementAtIndex(2).objectReferenceValue = s3;
+            }
 
-            so.FindProperty("bannerText").objectReferenceValue = bannerText;
-            so.FindProperty("reflectionPanel").objectReferenceValue = refPanel;
-            so.FindProperty("reflectionQuestionText").objectReferenceValue = refText;
-            so.FindProperty("restartButton").objectReferenceValue = restartBtn.GetComponent<Button>();
+            SetPropertyRef(so, "bannerText", bannerText);
+            SetPropertyRef(so, "reflectionPanel", refPanel);
+            SetPropertyRef(so, "reflectionQuestionText", refText);
+            SetPropertyRef(so, "restartButton", restartBtn.GetComponent<Button>());
             so.ApplyModifiedProperties();
         }
 
@@ -991,7 +1141,7 @@ namespace Googolplex.Unit6
             img.color = bgColor;
             img.raycastTarget = false;
 
-            if (!string.IsNullOrEmpty(textContent))
+            if (textContent != null)
             {
                 CreateTMPText(box.transform, "Label", textContent, fontSize, Vector2.zero, Vector2.zero, TextAlignmentOptions.Center, textColor,
                     anchorMin: Vector2.zero, anchorMax: Vector2.one, padding: new Vector4(16, 8, 16, 8));
@@ -1279,7 +1429,10 @@ namespace Googolplex.Unit6
             string fail, 
             string sfx, 
             string vo, 
-            Sprite sprite)
+            Sprite sprite,
+            Vector2 touchOffset = default,
+            Vector2 touchSize = default,
+            string tapHint = "")
         {
             listProp.InsertArrayElementAtIndex(listProp.arraySize);
             SerializedProperty elem = listProp.GetArrayElementAtIndex(listProp.arraySize - 1);
@@ -1291,6 +1444,9 @@ namespace Googolplex.Unit6
             elem.FindPropertyRelative("sfxOnFail").stringValue = sfx;
             elem.FindPropertyRelative("voOnFail").stringValue = vo;
             elem.FindPropertyRelative("fidgetSprite").objectReferenceValue = sprite;
+            elem.FindPropertyRelative("touchZoneOffset").vector2Value = touchOffset;
+            elem.FindPropertyRelative("touchZoneSize").vector2Value = touchSize;
+            elem.FindPropertyRelative("childTapHint").stringValue = tapHint;
         }
 
         private static void AddDishItem(SerializedProperty listProp, string name, int price, Sprite sprite)
@@ -1572,7 +1728,7 @@ namespace Googolplex.Unit6
             string lower = fileName.ToLower();
             if (lower.Contains("today anus family")) return "VO_U6_01";
             if (lower.Contains("food is not here yet")) return "VO_U6_02";
-            if (lower.Contains("quick tap the button")) return "VO_U6_03";
+            if (lower.Contains("quick tap") || lower.Contains("tap to help")) return "VO_U6_03";
             if (lower.Contains("everybody is happy")) return "VO_U6_04";
             if (lower.Contains("now choose what will anu eat")) return "VO_U6_05";
             if (lower.Contains("read first")) return "VO_U6_06";
@@ -1611,6 +1767,19 @@ namespace Googolplex.Unit6
             T comp = go.GetComponent<T>();
             if (comp == null) comp = go.AddComponent<T>();
             return comp;
+        }
+
+        private static void SetPropertyRef(SerializedObject so, string propName, Object value)
+        {
+            SerializedProperty prop = so.FindProperty(propName);
+            if (prop != null)
+            {
+                prop.objectReferenceValue = value;
+            }
+            else
+            {
+                Debug.LogWarning($"[U6_SceneSetupTool] Property '{propName}' not found on {so.targetObject.GetType().Name}");
+            }
         }
 
         private static void ClearChildren(Transform t)

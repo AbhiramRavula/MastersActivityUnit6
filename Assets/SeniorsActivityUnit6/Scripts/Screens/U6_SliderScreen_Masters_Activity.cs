@@ -7,6 +7,11 @@ namespace Googolplex.Unit6
 {
     public class U6_SliderScreen_Masters_Activity : MonoBehaviour
     {
+        [Header("Title Banner (Shown Only at Beginning)")]
+        [SerializeField] private GameObject titleBanner;
+        [SerializeField] private float titleBannerDuration = 2.8f;
+        private Coroutine hideTitleBannerCoroutine;
+
         [Header("Phase 1: Volume Slider")]
         [SerializeField] private GameObject volumePhaseContainer;
         [SerializeField] private Slider volumeSlider;
@@ -31,7 +36,8 @@ namespace Googolplex.Unit6
         [SerializeField] private string voVolumeIntro = "VO_U6_10 (How loud should Anu talk here?)";
         [SerializeField] private string sfxSliderZone = "SFX_SliderZone (Zone tick bubble sound)";
         [SerializeField] private string voDadCantHear = "VO_U6_DAD_1 (Sorry, I cannot hear you at all)";
-        [SerializeField] private string sfxBabyCry = "SFX_BabyCry (Baby crying if too loud)";
+        [SerializeField] private string voMumTooLoud = "VO_U6_MUM_2 (Anu, indoor voice, please)";
+        [SerializeField] private string ambRestaurantHush = "AMB_RestaurantHush (Restaurant hush if too loud)";
         [SerializeField] private string sfxSparkle = "SFX_Sparkle (Just right volume success)";
         [SerializeField] private string voLeavingIntro = "VO_U6_11 (The restaurant is full now...)";
         [SerializeField] private string voWaiterGoodbye = "VO_U6_WAIT_4 (Thank you, do come again!)";
@@ -70,6 +76,35 @@ namespace Googolplex.Unit6
             if (leavingPhaseContainer) leavingPhaseContainer.SetActive(false);
             if (feedbackPanel) feedbackPanel.SetActive(false);
 
+            if (titleBanner == null)
+            {
+                Transform tb = transform.Find("TitleBanner") 
+                            ?? transform.Find("SafeArea/TitleBanner");
+                if (tb == null)
+                {
+                    foreach (var t in GetComponentsInChildren<Transform>(true))
+                    {
+                        if (t.name.Equals("TitleBanner", System.StringComparison.OrdinalIgnoreCase))
+                        {
+                            tb = t;
+                            break;
+                        }
+                    }
+                }
+                if (tb != null) titleBanner = tb.gameObject;
+            }
+
+            if (titleBanner != null)
+            {
+                titleBanner.SetActive(true);
+                CanvasGroup cg = titleBanner.GetComponent<CanvasGroup>();
+                if (cg == null) cg = titleBanner.AddComponent<CanvasGroup>();
+                cg.alpha = 1f;
+
+                if (hideTitleBannerCoroutine != null) StopCoroutine(hideTitleBannerCoroutine);
+                hideTitleBannerCoroutine = StartCoroutine(HideTitleBannerRoutine());
+            }
+
             if (volumeSlider != null)
             {
                 volumeSlider.minValue = 0f;
@@ -82,6 +117,31 @@ namespace Googolplex.Unit6
             if (U6_AudioManager_Masters_Activity.Instance != null)
             {
                 U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_10");
+            }
+        }
+
+        private IEnumerator HideTitleBannerRoutine()
+        {
+            if (titleBanner == null) yield break;
+
+            yield return new WaitForSeconds(titleBannerDuration);
+
+            CanvasGroup cg = titleBanner.GetComponent<CanvasGroup>();
+            if (cg == null) cg = titleBanner.AddComponent<CanvasGroup>();
+
+            float elapsed = 0f;
+            float fadeDuration = 0.45f;
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                if (cg != null) cg.alpha = Mathf.Lerp(1f, 0f, elapsed / fadeDuration);
+                yield return null;
+            }
+
+            if (titleBanner != null)
+            {
+                titleBanner.SetActive(false);
+                if (cg != null) cg.alpha = 1f;
             }
         }
 
@@ -146,6 +206,16 @@ namespace Googolplex.Unit6
 
         private void OnSayItClicked()
         {
+            if (hideTitleBannerCoroutine != null)
+            {
+                StopCoroutine(hideTitleBannerCoroutine);
+                hideTitleBannerCoroutine = null;
+            }
+            if (titleBanner != null && titleBanner.activeSelf)
+            {
+                titleBanner.SetActive(false);
+            }
+
             StartCoroutine(ResolveVolumeSequence());
         }
 
@@ -166,10 +236,11 @@ namespace Googolplex.Unit6
                     break;
 
                 case U6_VolumeZone.BigVoice:
-                    if (feedbackText) feedbackText.text = "Too loud! Heads turn and a nearby baby starts crying.";
+                    if (feedbackText) feedbackText.text = "Too loud! Heads turn. Mum whispers: \"Anu, indoor voice, please.\"";
                     if (U6_AudioManager_Masters_Activity.Instance != null)
                     {
-                        U6_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_BabyCry");
+                        U6_AudioManager_Masters_Activity.Instance.PlaySFX("AMB_RestaurantHush");
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_MUM_2");
                     }
                     yield return new WaitForSeconds(3.0f);
                     if (feedbackPanel) feedbackPanel.SetActive(false);
@@ -190,6 +261,16 @@ namespace Googolplex.Unit6
 
         private void ShowLeavingPhase()
         {
+            if (hideTitleBannerCoroutine != null)
+            {
+                StopCoroutine(hideTitleBannerCoroutine);
+                hideTitleBannerCoroutine = null;
+            }
+            if (titleBanner != null && titleBanner.activeSelf)
+            {
+                titleBanner.SetActive(false);
+            }
+
             if (volumePhaseContainer) volumePhaseContainer.SetActive(false);
             if (feedbackPanel) feedbackPanel.SetActive(false);
             if (leavingPhaseContainer) leavingPhaseContainer.SetActive(true);

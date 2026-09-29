@@ -40,21 +40,54 @@ namespace Googolplex.Unit6
             SetSelected(false);
         }
 
+        private Coroutine bounceCoroutine;
+        private Vector3 baseScale = Vector3.one;
+
         public void SetSelected(bool isSelected)
         {
             if (selectionHighlight != null)
             {
                 selectionHighlight.SetActive(isSelected);
             }
+
+            // Slight elevation and scale pop for the chosen dish
+            transform.localScale = isSelected ? baseScale * 1.05f : baseScale;
         }
 
         private void HandleClick()
         {
             OnCardSelected?.Invoke(this);
+
+            // 1. Play delightful juicy pop chime
             if (U6_AudioManager_Masters_Activity.Instance != null)
             {
-                U6_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_Chirp");
+                U6_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_PopJuice");
             }
+
+            // 2. Play squishy elastic bounce
+            if (bounceCoroutine != null) StopCoroutine(bounceCoroutine);
+            bounceCoroutine = StartCoroutine(SquishyBounceRoutine());
+        }
+
+        private System.Collections.IEnumerator SquishyBounceRoutine()
+        {
+            float elapsed = 0f;
+            float duration = 0.22f;
+            Vector3 startScale = baseScale * 1.15f;
+            Vector3 endScale = (selectionHighlight != null && selectionHighlight.activeSelf) ? baseScale * 1.05f : baseScale;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                // Elastic bounce curve
+                float curve = Mathf.Sin(t * Mathf.PI * 1.5f);
+                transform.localScale = Vector3.Lerp(startScale, endScale, curve);
+                yield return null;
+            }
+
+            transform.localScale = endScale;
+            bounceCoroutine = null;
         }
     }
 }

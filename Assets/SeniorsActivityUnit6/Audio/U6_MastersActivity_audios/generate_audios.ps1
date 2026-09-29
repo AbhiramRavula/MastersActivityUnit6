@@ -9,7 +9,7 @@ if (-not (Get-Command "edge-tts" -ErrorAction SilentlyContinue)) {
 Write-Host "Generating Teacher / Narrator audios..." -ForegroundColor Green
 edge-tts --voice en-IN-NeerjaNeural --text "Today, Anu's family is eating out." --write-media "Today Anus family is eating out.mp3"
 edge-tts --voice en-IN-NeerjaNeural --text "The food is not here yet... Watch Anu." --write-media "The food is not here yet Watch Anu.mp3"
-edge-tts --voice en-IN-NeerjaNeural --text "Quick! Tap the button." --write-media "Quick Tap the button.mp3"
+edge-tts --voice en-IN-NeerjaNeural --text "Quick! Tap to help Anu!" --write-media "Quick Tap the button.mp3"
 edge-tts --voice en-IN-NeerjaNeural --text "Everybody is happy! One star." --write-media "Everybody is happy One star.mp3"
 edge-tts --voice en-IN-NeerjaNeural --text "Now choose. What will Anu eat?" --write-media "Now choose What will Anu eat.mp3"
 edge-tts --voice en-IN-NeerjaNeural --text "Read first." --write-media "Read first.mp3"

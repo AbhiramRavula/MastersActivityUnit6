@@ -21,10 +21,18 @@ namespace Googolplex.Unit6
         public string sfxOnFail;
         public string voOnFail;
         public Sprite fidgetSprite;
+        public Vector2 touchZoneOffset;
+        public Vector2 touchZoneSize;
+        public string childTapHint;
     }
 
     public class U6_LiveTableScreen_Masters_Activity : MonoBehaviour
     {
+        [Header("Title Banner (Shown Only at Beginning)")]
+        [SerializeField] private GameObject titleBanner;
+        [SerializeField] private float titleBannerDuration = 2.8f;
+        private Coroutine hideTitleBannerCoroutine;
+
         [Header("UI & Prompts")]
         [SerializeField] private TextMeshProUGUI promptText;
         [SerializeField] private Button actionButton;
@@ -37,6 +45,9 @@ namespace Googolplex.Unit6
         [SerializeField] private Image anuCharacterImage;
         [SerializeField] private Sprite anuSittingStraightSprite;
 
+        [Header("Direct Physical Touch Target")]
+        [SerializeField] private U6_DirectTouchZone_Masters_Activity directTouchZone;
+
         [Header("Other Tables Reactions")]
         [SerializeField] private GameObject[] otherTablesNormal;
         [SerializeField] private GameObject[] otherTablesLooking;
@@ -46,7 +57,7 @@ namespace Googolplex.Unit6
         [SerializeField] private string ambRestaurant = "AMB_Restaurant (Background Diner Ambience)";
         [SerializeField] private string voIntro1 = "VO_U6_01 (Today Anu's family is eating out)";
         [SerializeField] private string voIntro2 = "VO_U6_02 (The food is not here yet. Watch Anu)";
-        [SerializeField] private string voQuickTap = "VO_U6_03 (Quick! Tap the button!)";
+        [SerializeField] private string voQuickTap = "VO_U6_03 (Quick! Tap to help Anu!)";
         [SerializeField] private string sfxGlassTing = "SFX_GlassTing (Glass tapping fidget)";
         [SerializeField] private string sfxChairWobble = "SFX_ChairWobble (Chair kneeling fidget)";
         [SerializeField] private string voHungryShout = "VO_U6_ANU_7 (I am SO hungry!)";
@@ -79,11 +90,64 @@ namespace Googolplex.Unit6
 #else
             InitializeDefaultEvents();
 #endif
+            if (titleBanner != null)
+            {
+                titleBanner.SetActive(true);
+                CanvasGroup cg = titleBanner.GetComponent<CanvasGroup>();
+                if (cg == null) cg = titleBanner.AddComponent<CanvasGroup>();
+                cg.alpha = 1f;
+
+                if (hideTitleBannerCoroutine != null) StopCoroutine(hideTitleBannerCoroutine);
+                hideTitleBannerCoroutine = StartCoroutine(HideTitleBannerRoutine());
+            }
+
             StartCoroutine(InitAndStartSequence());
+        }
+
+        private IEnumerator HideTitleBannerRoutine()
+        {
+            if (titleBanner == null) yield break;
+
+            yield return new WaitForSeconds(titleBannerDuration);
+
+            CanvasGroup cg = titleBanner.GetComponent<CanvasGroup>();
+            if (cg == null) cg = titleBanner.AddComponent<CanvasGroup>();
+
+            float elapsed = 0f;
+            float fadeDuration = 0.45f;
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                if (cg != null) cg.alpha = Mathf.Lerp(1f, 0f, elapsed / fadeDuration);
+                yield return null;
+            }
+
+            if (titleBanner != null)
+            {
+                titleBanner.SetActive(false);
+                if (cg != null) cg.alpha = 1f;
+            }
         }
 
         private void AutoFindUIReferences()
         {
+            if (titleBanner == null)
+            {
+                Transform tb = transform.Find("TitleBanner") 
+                            ?? transform.Find("SafeArea/TitleBanner");
+                if (tb == null)
+                {
+                    foreach (var t in GetComponentsInChildren<Transform>(true))
+                    {
+                        if (t.name.Equals("TitleBanner", System.StringComparison.OrdinalIgnoreCase))
+                        {
+                            tb = t;
+                            break;
+                        }
+                    }
+                }
+                if (tb != null) titleBanner = tb.gameObject;
+            }
             if (promptText == null) promptText = GetComponentInChildren<TextMeshProUGUI>(true);
             if (actionButton == null) actionButton = GetComponentInChildren<Button>(true);
             if (actionButtonText == null && actionButton != null) actionButtonText = actionButton.GetComponentInChildren<TextMeshProUGUI>(true);
@@ -118,6 +182,24 @@ namespace Googolplex.Unit6
                         }
                     }
                 }
+            }
+
+            // Ensure Direct Physical Touch Target Zone exists on the dining table visual
+            if (directTouchZone == null && anuCharacterImage != null)
+            {
+                directTouchZone = anuCharacterImage.GetComponentInChildren<U6_DirectTouchZone_Masters_Activity>(true);
+                if (directTouchZone == null)
+                {
+                    GameObject zoneObj = new GameObject("DirectTouchZone", typeof(RectTransform));
+                    zoneObj.transform.SetParent(anuCharacterImage.transform, false);
+                    directTouchZone = zoneObj.AddComponent<U6_DirectTouchZone_Masters_Activity>();
+                }
+            }
+            if (directTouchZone != null)
+            {
+                directTouchZone.Setup(anuCharacterImage != null ? anuCharacterImage.transform : transform);
+                directTouchZone.OnInteracted -= HandleEventSuccess;
+                directTouchZone.OnInteracted += HandleEventSuccess;
             }
 
             // Auto-discover Normal Diners vs Looking Diners (supports Dinner_look1, Dinner_look2, Diners_Looking, etc.)
@@ -155,6 +237,11 @@ namespace Googolplex.Unit6
         private void OnDisable()
         {
             if (activeEventCoroutine != null) StopCoroutine(activeEventCoroutine);
+            if (directTouchZone != null)
+            {
+                directTouchZone.OnInteracted -= HandleEventSuccess;
+                directTouchZone.Dismiss();
+            }
         }
 
 #if UNITY_EDITOR
@@ -203,7 +290,10 @@ namespace Googolplex.Unit6
                 failFeedback = "Anu ran across! The waiter had to swerve around her.",
                 sfxOnFail = "",
                 voOnFail = "",
-                fidgetSprite = fidgetFish
+                fidgetSprite = fidgetFish,
+                touchZoneOffset = new Vector2(0f, 220f),
+                touchZoneSize = new Vector2(300f, 260f),
+                childTapHint = "TAP ANU TO SIT STRAIGHT"
             });
 
             waitingEvents.Add(new U6_WaitingEventData_Masters_Activity
@@ -215,7 +305,10 @@ namespace Googolplex.Unit6
                 failFeedback = "Ting ting ting! The other tables turn and stare.",
                 sfxOnFail = "SFX_GlassTing",
                 voOnFail = "",
-                fidgetSprite = fidgetGlass
+                fidgetSprite = fidgetGlass,
+                touchZoneOffset = new Vector2(175f, 310f),
+                touchZoneSize = new Vector2(200f, 200f),
+                childTapHint = "TAP GLASS TO PUT SPOON DOWN"
             });
 
             waitingEvents.Add(new U6_WaitingEventData_Masters_Activity
@@ -227,7 +320,10 @@ namespace Googolplex.Unit6
                 failFeedback = "\"I am SO hungry! Where is my food?\" Mother looks embarrassed.",
                 sfxOnFail = "",
                 voOnFail = "VO_U6_ANU_7",
-                fidgetSprite = fidgetHungry
+                fidgetSprite = fidgetHungry,
+                touchZoneOffset = new Vector2(20f, 290f),
+                touchZoneSize = new Vector2(320f, 240f),
+                childTapHint = "TAP ANU TO WAIT QUIETLY"
             });
 
             waitingEvents.Add(new U6_WaitingEventData_Masters_Activity
@@ -239,7 +335,10 @@ namespace Googolplex.Unit6
                 failFeedback = "The chair wobbled and nearly tipped over!",
                 sfxOnFail = "SFX_ChairWobble",
                 voOnFail = "",
-                fidgetSprite = fidgetKneel
+                fidgetSprite = fidgetKneel,
+                touchZoneOffset = new Vector2(0f, 180f),
+                touchZoneSize = new Vector2(260f, 220f),
+                childTapHint = "TAP CHAIR TO STEADY IT"
             });
 
             Debug.Log($"[U6_LiveTableScreen] Auto-Loaded fidget sprites: Fish={fidgetFish?.name}, Glass={fidgetGlass?.name}, Hungry={fidgetHungry?.name}, Kneel={fidgetKneel?.name}");
@@ -295,6 +394,16 @@ namespace Googolplex.Unit6
 
         private void StartNextEvent()
         {
+            if (titleBanner != null && titleBanner.activeSelf)
+            {
+                if (hideTitleBannerCoroutine != null)
+                {
+                    StopCoroutine(hideTitleBannerCoroutine);
+                    hideTitleBannerCoroutine = null;
+                }
+                titleBanner.SetActive(false);
+            }
+
             if (currentEventIndex >= waitingEvents.Count)
             {
                 StartCoroutine(CompletePart1Sequence());
@@ -303,7 +412,12 @@ namespace Googolplex.Unit6
 
             U6_WaitingEventData_Masters_Activity currentEvt = waitingEvents[currentEventIndex];
             if (promptText) promptText.text = currentEvt.situationPrompt;
-            if (actionButtonText) actionButtonText.text = currentEvt.actionButtonLabel;
+            if (actionButtonText)
+            {
+                actionButtonText.text = !string.IsNullOrEmpty(currentEvt.childTapHint)
+                    ? currentEvt.childTapHint
+                    : currentEvt.actionButtonLabel;
+            }
             if (actionButton) actionButton.gameObject.SetActive(true);
             if (feedbackPanel) feedbackPanel.SetActive(false);
 
@@ -317,6 +431,14 @@ namespace Googolplex.Unit6
                 SetAnuSprite(anuSittingStraightSprite);
             }
 
+            // Configure Direct Physical Touch Target Zone without altering its user-defined position & size
+            if (directTouchZone != null)
+            {
+                bool isKneel = currentEvt.eventName.Contains("Kneel");
+                bool isGlass = currentEvt.eventName.Contains("Glass");
+                directTouchZone.ConfigureState(isKneel, isGlass);
+            }
+
             // When Anu makes noise / fidgets, other diners turn around to look!
             SetOtherTablesLooking(true);
 
@@ -325,7 +447,7 @@ namespace Googolplex.Unit6
             {
                 if (currentEventIndex == 0)
                 {
-                    U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_03"); // "Quick! Tap the button!"
+                    U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_03"); // "Quick! Tap to help Anu!"
                 }
                 else if (currentEvt.eventName.Contains("Glass"))
                 {
@@ -360,16 +482,35 @@ namespace Googolplex.Unit6
 
         private void OnActionButtonClicked()
         {
+            HandleEventSuccess();
+        }
+
+        private void HandleEventSuccess()
+        {
             if (!isEventActive) return;
             isEventActive = false;
 
             if (activeEventCoroutine != null) StopCoroutine(activeEventCoroutine);
-            StartCoroutine(ShowEventFeedback(true));
+
+            // Dismiss direct touch target and play celebratory squash & stretch bounce!
+            if (directTouchZone != null)
+            {
+                directTouchZone.Dismiss();
+                StartCoroutine(directTouchZone.PlayBoingBounceRoutine(anuCharacterImage != null ? anuCharacterImage.transform : transform, () =>
+                {
+                    StartCoroutine(ShowEventFeedback(true));
+                }));
+            }
+            else
+            {
+                StartCoroutine(ShowEventFeedback(true));
+            }
         }
 
         private void OnEventFailed()
         {
             isEventActive = false;
+            if (directTouchZone != null) directTouchZone.Dismiss();
             StartCoroutine(ShowEventFeedback(false));
         }
 

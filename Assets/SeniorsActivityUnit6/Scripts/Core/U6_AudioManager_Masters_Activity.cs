@@ -237,6 +237,7 @@ namespace Googolplex.Unit6
             if (string.Equals(fileName, "SFX_DoorChime", System.StringComparison.OrdinalIgnoreCase)) return "SFX_DoorChime";
             if (string.Equals(fileName, "SFX_SliderZone", System.StringComparison.OrdinalIgnoreCase)) return "SFX_Bubble";
             if (string.Equals(fileName, "SFX_Bubble", System.StringComparison.OrdinalIgnoreCase)) return "SFX_Bubble";
+            if (string.Equals(fileName, "SFX_PopJuice", System.StringComparison.OrdinalIgnoreCase)) return "SFX_PopJuice";
 
             if (fileName.StartsWith("SFX_") || fileName.StartsWith("AMB_") || fileName.StartsWith("MUS_") || fileName.StartsWith("VO_") || fileName.StartsWith("BGM_"))
                 return fileName;
@@ -246,7 +247,7 @@ namespace Googolplex.Unit6
             // Teacher / Narrator VO
             if (lower.Contains("today anus family")) return "VO_U6_01";
             if (lower.Contains("food is not here yet")) return "VO_U6_02";
-            if (lower.Contains("quick tap the button")) return "VO_U6_03";
+            if (lower.Contains("quick tap") || lower.Contains("tap to help")) return "VO_U6_03";
             if (lower.Contains("everybody is happy")) return "VO_U6_04";
             if (lower.Contains("now choose what will anu eat")) return "VO_U6_05";
             if (lower.Contains("read first")) return "VO_U6_06";
@@ -301,20 +302,33 @@ namespace Googolplex.Unit6
         }
 #endif
 
+        public void PlaySFX(AudioClip clip, float volume = 1f)
+        {
+            if (clip == null) return;
+            sfxSource = ValidateOrAttachSource(sfxSource, GetAudioHostGameObject(), 1.0f, false);
+            sfxSource.PlayOneShot(clip, volume);
+            Debug.Log($"[U6_AudioManager] >>> PLAYING SFX CLIP: '{clip.name}' <<<");
+        }
+
         public void PlaySFX(string soundId)
         {
             if (string.IsNullOrEmpty(soundId)) return;
 
+            string cleanId = soundId;
+            int pIdx = cleanId.IndexOf('(');
+            if (pIdx > 0) cleanId = cleanId.Substring(0, pIdx).Trim();
+
             sfxSource = ValidateOrAttachSource(sfxSource, GetAudioHostGameObject(), 1.0f, false);
 
-            if (!soundDict.TryGetValue(soundId, out U6_SoundEntry_Masters_Activity entry))
+            if (!soundDict.TryGetValue(cleanId, out U6_SoundEntry_Masters_Activity entry) &&
+                !soundDict.TryGetValue(soundId, out entry))
             {
 #if UNITY_EDITOR
-                AudioClip onDemand = LoadClipOnDemand(soundId);
+                AudioClip onDemand = LoadClipOnDemand(cleanId) ?? LoadClipOnDemand(soundId);
                 if (onDemand != null)
                 {
-                    entry = new U6_SoundEntry_Masters_Activity { id = soundId, clip = onDemand, volume = 1f };
-                    soundDict[soundId] = entry;
+                    entry = new U6_SoundEntry_Masters_Activity { id = cleanId, clip = onDemand, volume = 1f };
+                    soundDict[cleanId] = entry;
                 }
 #endif
             }
@@ -323,28 +337,45 @@ namespace Googolplex.Unit6
             {
                 float vol = entry.volume > 0 ? entry.volume * 1.0f : 1.0f;
                 sfxSource.PlayOneShot(entry.clip, vol);
-                Debug.Log($"[U6_AudioManager] >>> PLAYING SFX: {soundId} (Clip: '{entry.clip.name}') <<<");
+                Debug.Log($"[U6_AudioManager] >>> PLAYING SFX: {cleanId} (Clip: '{entry.clip.name}') <<<");
             }
             else
             {
-                Debug.LogWarning($"[U6_AudioManager] SFX '{soundId}' clip could not be located.");
+                Debug.LogWarning($"[U6_AudioManager] SFX '{cleanId}' clip could not be located.");
             }
+        }
+
+        public void PlayVO(AudioClip clip, float volume = 1f)
+        {
+            if (clip == null) return;
+            voSource = ValidateOrAttachSource(voSource, GetAudioHostGameObject(), 1.0f, false);
+            voSource.Stop();
+            voSource.clip = clip;
+            voSource.volume = volume;
+            voSource.loop = false;
+            voSource.Play();
+            Debug.Log($"[U6_AudioManager] >>> PLAYING VO CLIP: '{clip.name}' <<<");
         }
 
         public void PlayVO(string voId)
         {
             if (string.IsNullOrEmpty(voId)) return;
 
+            string cleanId = voId;
+            int pIdx = cleanId.IndexOf('(');
+            if (pIdx > 0) cleanId = cleanId.Substring(0, pIdx).Trim();
+
             voSource = ValidateOrAttachSource(voSource, GetAudioHostGameObject(), 1.0f, false);
 
-            if (!soundDict.TryGetValue(voId, out U6_SoundEntry_Masters_Activity entry))
+            if (!soundDict.TryGetValue(cleanId, out U6_SoundEntry_Masters_Activity entry) &&
+                !soundDict.TryGetValue(voId, out entry))
             {
 #if UNITY_EDITOR
-                AudioClip onDemand = LoadClipOnDemand(voId);
+                AudioClip onDemand = LoadClipOnDemand(cleanId) ?? LoadClipOnDemand(voId);
                 if (onDemand != null)
                 {
-                    entry = new U6_SoundEntry_Masters_Activity { id = voId, clip = onDemand, volume = 1f };
-                    soundDict[voId] = entry;
+                    entry = new U6_SoundEntry_Masters_Activity { id = cleanId, clip = onDemand, volume = 1f };
+                    soundDict[cleanId] = entry;
                 }
 #endif
             }
@@ -356,11 +387,11 @@ namespace Googolplex.Unit6
                 voSource.volume = entry.volume > 0 ? entry.volume : 1f;
                 voSource.loop = false;
                 voSource.Play();
-                Debug.Log($"[U6_AudioManager] >>> PLAYING VO: {voId} (Clip: '{entry.clip.name}') <<<");
+                Debug.Log($"[U6_AudioManager] >>> PLAYING VO: {cleanId} (Clip: '{entry.clip.name}') <<<");
             }
             else
             {
-                Debug.LogWarning($"[U6_AudioManager] VO '{voId}' clip could not be located.");
+                Debug.LogWarning($"[U6_AudioManager] VO '{cleanId}' clip could not be located.");
             }
         }
 
