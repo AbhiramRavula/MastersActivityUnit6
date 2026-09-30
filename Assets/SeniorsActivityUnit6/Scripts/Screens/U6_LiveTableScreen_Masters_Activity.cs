@@ -14,16 +14,14 @@ namespace Googolplex.Unit6
     public class U6_WaitingEventData_Masters_Activity
     {
         public string eventName;
-        public string situationPrompt;
-        public string actionButtonLabel;
+        [TextArea] public string situationPrompt;
+        public Sprite correctPoseSprite;
+        public Sprite incorrectPoseSprite;
+        public Sprite tableVisualOnFail;
         public string successFeedback;
         public string failFeedback;
         public string sfxOnFail;
-        public string voOnFail;
-        public Sprite fidgetSprite;
-        public Vector2 touchZoneOffset;
-        public Vector2 touchZoneSize;
-        public string childTapHint;
+        public string sfxOnSuccess;
     }
 
     public class U6_LiveTableScreen_Masters_Activity : MonoBehaviour
@@ -35,56 +33,79 @@ namespace Googolplex.Unit6
 
         [Header("UI & Prompts")]
         [SerializeField] private TextMeshProUGUI promptText;
+        [SerializeField] private Button leftPoseButton;
+        [SerializeField] private Button rightPoseButton;
         [SerializeField] private Button actionButton;
         [SerializeField] private TextMeshProUGUI actionButtonText;
-        [SerializeField] private Slider timeRemainingSlider;
         [SerializeField] private GameObject feedbackPanel;
         [SerializeField] private TextMeshProUGUI feedbackText;
 
-        [Header("Anu Character Visual")]
+        [Header("Card Borders")]
+        [SerializeField] private GameObject borderImageLeft;
+        [SerializeField] private GameObject borderImageRight;
+
+        [Header("Anu Character Visual (Family Table)")]
         [SerializeField] private Image anuCharacterImage;
         [SerializeField] private Sprite anuSittingStraightSprite;
-
-        [Header("Direct Physical Touch Target")]
-        [SerializeField] private U6_DirectTouchZone_Masters_Activity directTouchZone;
 
         [Header("Other Tables Reactions")]
         [SerializeField] private GameObject[] otherTablesNormal;
         [SerializeField] private GameObject[] otherTablesLooking;
 
-#pragma warning disable 0414
-        [Header("Audios & SFX Used On This Screen")]
-        [SerializeField] private string ambRestaurant = "AMB_Restaurant (Background Diner Ambience)";
-        [SerializeField] private string voIntro1 = "VO_U6_01 (Today Anu's family is eating out)";
-        [SerializeField] private string voIntro2 = "VO_U6_02 (The food is not here yet. Watch Anu)";
-        [SerializeField] private string voQuickTap = "VO_U6_03 (Quick! Tap to help Anu!)";
-        [SerializeField] private string sfxGlassTing = "SFX_GlassTing (Glass tapping fidget)";
-        [SerializeField] private string sfxChairWobble = "SFX_ChairWobble (Chair kneeling fidget)";
-        [SerializeField] private string voHungryShout = "VO_U6_ANU_7 (I am SO hungry!)";
-        [SerializeField] private string voMomQuiet = "VO_U6_MUM_1 (Anu, quiet...)";
-        [SerializeField] private string sfxSuccess = "SFX_Sparkle (Polite action success)";
-        [SerializeField] private string voStar1Earned = "VO_U6_04 (Everybody is happy. One star!)";
-#pragma warning restore 0414
-
         [Header("Waiting Events Configuration")]
         [SerializeField] private List<U6_WaitingEventData_Masters_Activity> waitingEvents = new List<U6_WaitingEventData_Masters_Activity>();
-        [SerializeField] private float eventDuration = 10.0f;
 
         private int currentEventIndex = 0;
+        private bool leftIsCorrect = false;
         private bool isEventActive = false;
-        private Coroutine activeEventCoroutine;
+        private Coroutine pulseCardsCoroutine;
+        private Vector3 initialAnuScale = Vector3.one;
 
         private void Awake()
         {
-            if (actionButton != null)
-                actionButton.onClick.AddListener(OnActionButtonClicked);
-
             AutoFindUIReferences();
+
+            if (anuCharacterImage != null)
+            {
+                initialAnuScale = anuCharacterImage.transform.localScale;
+                if (initialAnuScale == Vector3.zero) initialAnuScale = Vector3.one;
+            }
+
+            if (leftPoseButton != null)
+            {
+                leftPoseButton.onClick.RemoveAllListeners();
+                leftPoseButton.onClick.AddListener(() => OnPoseSelected(true));
+            }
+            if (rightPoseButton != null)
+            {
+                rightPoseButton.onClick.RemoveAllListeners();
+                rightPoseButton.onClick.AddListener(() => OnPoseSelected(false));
+            }
+            if (actionButton != null)
+            {
+                actionButton.onClick.RemoveAllListeners();
+                actionButton.onClick.AddListener(() =>
+                {
+                    if (U6_AudioManager_Masters_Activity.Instance != null)
+                    {
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_03");
+                    }
+                });
+            }
+
+            SetPoseCardsActive(false);
         }
 
         private void OnEnable()
         {
             AutoFindUIReferences();
+            if (anuCharacterImage != null)
+            {
+                if (initialAnuScale == Vector3.one && anuCharacterImage.transform.localScale != Vector3.zero)
+                    initialAnuScale = anuCharacterImage.transform.localScale;
+                anuCharacterImage.transform.localScale = initialAnuScale;
+            }
+            SetPoseCardsActive(false);
 #if UNITY_EDITOR
             AutoLoadSpritesAndEvents();
 #else
@@ -104,10 +125,15 @@ namespace Googolplex.Unit6
             StartCoroutine(InitAndStartSequence());
         }
 
+        private void OnDisable()
+        {
+            StopCardIdlePulse();
+            StopAllCoroutines();
+        }
+
         private IEnumerator HideTitleBannerRoutine()
         {
             if (titleBanner == null) yield break;
-
             yield return new WaitForSeconds(titleBannerDuration);
 
             CanvasGroup cg = titleBanner.GetComponent<CanvasGroup>();
@@ -129,30 +155,121 @@ namespace Googolplex.Unit6
             }
         }
 
-        private void AutoFindUIReferences()
+        public void AutoFindUIReferences()
         {
             if (titleBanner == null)
             {
-                Transform tb = transform.Find("TitleBanner") 
-                            ?? transform.Find("SafeArea/TitleBanner");
-                if (tb == null)
+                Transform tb = transform.Find("TitleBanner") ?? transform.Find("SafeArea/TitleBanner");
+                if (tb != null) titleBanner = tb.gameObject;
+            }
+            if (promptText == null) promptText = GetComponentInChildren<TextMeshProUGUI>(true);
+
+            // Locate card borders if present
+            if (borderImageLeft == null)
+            {
+                Transform t = transform.Find("SafeArea/Border_Image_Left") ?? transform.Find("Border_Image_Left");
+                if (t != null) borderImageLeft = t.gameObject;
+            }
+            if (borderImageRight == null)
+            {
+                Transform t = transform.Find("SafeArea/Border_Image_Right") ?? transform.Find("Border_Image_Right");
+                if (t != null) borderImageRight = t.gameObject;
+            }
+
+            // Locate or wire LeftPoseButton and RightPoseButton
+            if (leftPoseButton == null || rightPoseButton == null)
+            {
+                Button[] btns = GetComponentsInChildren<Button>(true);
+                foreach (var btn in btns)
                 {
-                    foreach (var t in GetComponentsInChildren<Transform>(true))
+                    string bName = btn.name.ToLower();
+                    if (leftPoseButton == null && (bName.Contains("left") || bName.Contains("pose1")))
+                        leftPoseButton = btn;
+                    else if (rightPoseButton == null && (bName.Contains("right") || bName.Contains("pose2")))
+                        rightPoseButton = btn;
+                }
+            }
+
+            // Fallback: search by path
+            if (leftPoseButton == null)
+            {
+                Transform t = transform.Find("SafeArea/Border_Image_Left/LeftPoseButton") ??
+                              transform.Find("Border_Image_Left/LeftPoseButton") ??
+                              transform.Find("SafeArea/LeftPoseButton") ??
+                              transform.Find("LeftPoseButton");
+                if (t != null) leftPoseButton = t.GetComponent<Button>();
+            }
+            if (rightPoseButton == null)
+            {
+                Transform t = transform.Find("SafeArea/Border_Image_Right/RightPoseButton") ??
+                              transform.Find("Border_Image_Right/RightPoseButton") ??
+                              transform.Find("SafeArea/RightPoseButton") ??
+                              transform.Find("RightPoseButton");
+                if (t != null) rightPoseButton = t.GetComponent<Button>();
+            }
+
+            if (borderImageLeft == null && leftPoseButton != null && leftPoseButton.transform.parent != null && leftPoseButton.transform.parent.name.Contains("Border"))
+            {
+                borderImageLeft = leftPoseButton.transform.parent.gameObject;
+            }
+            if (borderImageRight == null && rightPoseButton != null && rightPoseButton.transform.parent != null && rightPoseButton.transform.parent.name.Contains("Border"))
+            {
+                borderImageRight = rightPoseButton.transform.parent.gameObject;
+            }
+
+            // Create buttons dynamically if they don't exist yet
+            Transform parent = transform.Find("SafeArea") ?? transform;
+            if (leftPoseButton == null)
+            {
+                Transform btnParent = borderImageLeft != null ? borderImageLeft.transform : parent;
+                GameObject leftObj = new GameObject("LeftPoseButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+                leftObj.transform.SetParent(btnParent, false);
+                RectTransform rt = leftObj.GetComponent<RectTransform>();
+                rt.anchorMin = new Vector2(0.5f, 0.5f);
+                rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.anchoredPosition = borderImageLeft != null ? Vector2.zero : new Vector2(-460f, -320f);
+                rt.sizeDelta = new Vector2(300f, 300f);
+                leftPoseButton = leftObj.GetComponent<Button>();
+            }
+
+            if (rightPoseButton == null)
+            {
+                Transform btnParent = borderImageRight != null ? borderImageRight.transform : parent;
+                GameObject rightObj = new GameObject("RightPoseButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+                rightObj.transform.SetParent(btnParent, false);
+                RectTransform rt = rightObj.GetComponent<RectTransform>();
+                rt.anchorMin = new Vector2(0.5f, 0.5f);
+                rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.anchoredPosition = borderImageRight != null ? Vector2.zero : new Vector2(446f, -320f);
+                rt.sizeDelta = new Vector2(300f, 300f);
+                rightPoseButton = rightObj.GetComponent<Button>();
+            }
+
+            // Locate ActionButton and its label
+            if (actionButton == null)
+            {
+                Transform ab = transform.Find("SafeArea/ActionButton") ?? transform.Find("ActionButton");
+                if (ab != null) actionButton = ab.GetComponent<Button>();
+                if (actionButton == null)
+                {
+                    Button[] btns = GetComponentsInChildren<Button>(true);
+                    foreach (var b in btns)
                     {
-                        if (t.name.Equals("TitleBanner", System.StringComparison.OrdinalIgnoreCase))
+                        if (b != leftPoseButton && b != rightPoseButton && b.gameObject.name.IndexOf("action", System.StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            tb = t;
+                            actionButton = b;
                             break;
                         }
                     }
                 }
-                if (tb != null) titleBanner = tb.gameObject;
             }
-            if (promptText == null) promptText = GetComponentInChildren<TextMeshProUGUI>(true);
-            if (actionButton == null) actionButton = GetComponentInChildren<Button>(true);
-            if (actionButtonText == null && actionButton != null) actionButtonText = actionButton.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (timeRemainingSlider == null) timeRemainingSlider = GetComponentInChildren<Slider>(true);
-            
+            if (actionButton != null && actionButtonText == null)
+            {
+                actionButtonText = actionButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            }
+
             if (feedbackPanel == null)
             {
                 Transform fb = transform.Find("FeedbackPanel") ?? transform.Find("SafeArea/FeedbackPanel");
@@ -162,54 +279,20 @@ namespace Googolplex.Unit6
 
             if (anuCharacterImage == null)
             {
-                Transform t = transform.Find("AnuAvatar") 
-                           ?? transform.Find("SafeArea/AnuAvatar")
-                           ?? transform.Find("AnuCharacterVisual")
-                           ?? transform.Find("SafeArea/AnuCharacterVisual")
-                           ?? transform.Find("AnuCharacterImage") 
-                           ?? transform.Find("AnuVisual")
-                           ?? transform.Find("Anu");
+                Transform t = transform.Find("AnuAvatar") ?? transform.Find("SafeArea/AnuAvatar") ?? transform.Find("AnuCharacterVisual") ?? transform.Find("SafeArea/AnuCharacterVisual");
                 if (t != null) anuCharacterImage = t.GetComponent<Image>();
-                if (anuCharacterImage == null)
-                {
-                    Image[] imgs = GetComponentsInChildren<Image>(true);
-                    foreach (var img in imgs)
-                    {
-                        if (img.gameObject.name.IndexOf("Anu", System.StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            anuCharacterImage = img;
-                            break;
-                        }
-                    }
-                }
             }
 
-            // Ensure Direct Physical Touch Target Zone exists on the dining table visual
-            if (directTouchZone == null && anuCharacterImage != null)
-            {
-                directTouchZone = anuCharacterImage.GetComponentInChildren<U6_DirectTouchZone_Masters_Activity>(true);
-                if (directTouchZone == null)
-                {
-                    GameObject zoneObj = new GameObject("DirectTouchZone", typeof(RectTransform));
-                    zoneObj.transform.SetParent(anuCharacterImage.transform, false);
-                    directTouchZone = zoneObj.AddComponent<U6_DirectTouchZone_Masters_Activity>();
-                }
-            }
-            if (directTouchZone != null)
-            {
-                directTouchZone.Setup(anuCharacterImage != null ? anuCharacterImage.transform : transform);
-                directTouchZone.OnInteracted -= HandleEventSuccess;
-                directTouchZone.OnInteracted += HandleEventSuccess;
-            }
-
-            // Auto-discover Normal Diners vs Looking Diners (supports Dinner_look1, Dinner_look2, Diners_Looking, etc.)
+            // Auto-discover Normal Diners vs Looking Diners
             if (otherTablesLooking == null || otherTablesLooking.Length == 0)
             {
                 List<GameObject> lookings = new List<GameObject>();
                 Transform[] allChildren = GetComponentsInChildren<Transform>(true);
                 foreach (Transform child in allChildren)
                 {
+                    if (child == transform) continue;
                     string name = child.name.ToLower();
+                    if (name.Contains("screen")) continue;
                     if (name.Contains("look") || name.Contains("lokk") || name.Contains("turn") || name.Contains("stare") || name.Contains("react"))
                     {
                         lookings.Add(child.gameObject);
@@ -224,7 +307,9 @@ namespace Googolplex.Unit6
                 Transform[] allChildren = GetComponentsInChildren<Transform>(true);
                 foreach (Transform child in allChildren)
                 {
+                    if (child == transform) continue;
                     string name = child.name.ToLower();
+                    if (name.Contains("screen")) continue;
                     if ((name.Contains("diner") || name.Contains("dinner") || name.Contains("table")) && !name.Contains("look") && !name.Contains("lokk") && !name.Contains("turn") && !name.Contains("stare") && !name.Contains("react"))
                     {
                         normals.Add(child.gameObject);
@@ -234,19 +319,12 @@ namespace Googolplex.Unit6
             }
         }
 
-        private void OnDisable()
-        {
-            if (activeEventCoroutine != null) StopCoroutine(activeEventCoroutine);
-            if (directTouchZone != null)
-            {
-                directTouchZone.OnInteracted -= HandleEventSuccess;
-                directTouchZone.Dismiss();
-            }
-        }
-
 #if UNITY_EDITOR
-        private void AutoLoadSpritesAndEvents()
+        [ContextMenu("Auto-Assign Everything (Fix for APK)")]
+        public void AutoLoadSpritesAndEvents()
         {
+            AutoFindUIReferences();
+
             Dictionary<string, Sprite> spriteDict = new Dictionary<string, Sprite>(System.StringComparer.OrdinalIgnoreCase);
             string[] guids = AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets/SeniorsActivityUnit6/Art" });
             foreach (string guid in guids)
@@ -274,74 +352,89 @@ namespace Googolplex.Unit6
             }
 
             anuSittingStraightSprite = GetSprite("U6_MAct_Family_SittingStraight") ?? GetSprite("SPR_Anu_SittingStraight");
-            Sprite fidgetFish = GetSprite("U6_MAct_Family_SlidingChair") ?? GetSprite("SPR_Anu_SlidingChair");
-            Sprite fidgetGlass = GetSprite("U6_MAct_Family_TappingGlass") ?? GetSprite("SPR_Anu_TappingGlass");
-            Sprite fidgetHungry = GetSprite("U6_MAct_Family_ShoutingHungry") ?? GetSprite("SPR_Anu_ShoutingHungry");
-            Sprite fidgetKneel = GetSprite("U6_MAct_Family_KneelingChair") ?? GetSprite("SPR_Anu_KneelingChair");
+
+            Sprite sittingStraight = GetSprite("SPR_Anu_SittingStraight") ?? anuSittingStraightSprite;
+            Sprite slidingChair = GetSprite("SPR_Anu_SlidingChair") ?? GetSprite("SlidingChair");
+            Sprite callPolite = GetSprite("SPR_Anu_CallPolite") ?? sittingStraight;
+            Sprite callHitGlass = GetSprite("SPR_Anu_CallHitGlass") ?? GetSprite("SPR_Anu_TappingGlass");
+            Sprite waitPolite = GetSprite("SPR_Anu_WaitPolite") ?? sittingStraight;
+            Sprite shoutHungry = GetSprite("SPR_Anu_WaitBangCutlery") ?? GetSprite("SPR_Anu_ShoutingHungry");
+            Sprite kneelChair = GetSprite("SPR_Anu_KneelingChair") ?? slidingChair;
+
+            // In-Scene Family Table Visuals from U6_seniorsActivityBook.png
+            Sprite tableSliding = GetSprite("U6_MAct_Family_SlidingChair") ?? slidingChair;
+            Sprite tableGlass = GetSprite("U6_MAct_Family_TappingGlass") ?? callHitGlass;
+            Sprite tableHungry = GetSprite("U6_MAct_Family_ShoutingHungry") ?? shoutHungry;
+            Sprite tableKneel = GetSprite("U6_MAct_Family_KneelingChair") ?? kneelChair;
 
             waitingEvents.Clear();
 
+            // 1. Sliding off chair vs Sitting straight
             waitingEvents.Add(new U6_WaitingEventData_Masters_Activity
             {
-                eventName = "Fish Tank",
-                situationPrompt = "Anu spots a fish tank and starts sliding off her chair!",
-                actionButtonLabel = "STAY SEATED",
-                successFeedback = "Good job! Anu stays safely in her seat.",
-                failFeedback = "Anu ran across! The waiter had to swerve around her.",
-                sfxOnFail = "",
-                voOnFail = "",
-                fidgetSprite = fidgetFish,
-                touchZoneOffset = new Vector2(0f, 220f),
-                touchZoneSize = new Vector2(300f, 260f),
-                childTapHint = "TAP ANU TO SIT STRAIGHT"
+                eventName = "Sliding on Chair",
+                situationPrompt = "Anu spots the fish tank and starts sliding off her chair! Which behavior is polite and safe?",
+                correctPoseSprite = sittingStraight,
+                incorrectPoseSprite = slidingChair,
+                tableVisualOnFail = tableSliding,
+                successFeedback = "Good job! Sitting straight keeps you safe in your chair.",
+                failFeedback = "Sliding off can cause a fall! Try again.",
+                sfxOnFail = "SFX_ChairWobble",
+                sfxOnSuccess = "SFX_Sparkle"
             });
 
+            // 2. Hitting glass with spoon vs Spoon resting politely
             waitingEvents.Add(new U6_WaitingEventData_Masters_Activity
             {
-                eventName = "Glass Tapping",
-                situationPrompt = "Anu picks up a spoon and starts tapping the glass!",
-                actionButtonLabel = "PUT SPOON DOWN",
-                successFeedback = "Nice! The table remains quiet and polite.",
-                failFeedback = "Ting ting ting! The other tables turn and stare.",
+                eventName = "Hitting Glass with Spoon",
+                situationPrompt = "Anu wants to make noise with her spoon while waiting. What should she do?",
+                correctPoseSprite = callPolite,
+                incorrectPoseSprite = callHitGlass,
+                tableVisualOnFail = tableGlass,
+                successFeedback = "Nice! Keeping cutlery quiet is polite to other diners.",
+                failFeedback = "Ting ting ting! Tapping glass is loud and disturbing. Try again.",
                 sfxOnFail = "SFX_GlassTing",
-                voOnFail = "",
-                fidgetSprite = fidgetGlass,
-                touchZoneOffset = new Vector2(175f, 310f),
-                touchZoneSize = new Vector2(200f, 200f),
-                childTapHint = "TAP GLASS TO PUT SPOON DOWN"
+                sfxOnSuccess = "SFX_Sparkle"
             });
 
+            // 3. Shouting vs Waiting Patiently
             waitingEvents.Add(new U6_WaitingEventData_Masters_Activity
             {
-                eventName = "Hungry Shout",
-                situationPrompt = "Anu is getting impatient and wants to shout how hungry she is!",
-                actionButtonLabel = "WAIT QUIETLY",
-                successFeedback = "Great patience! Food is being prepared.",
-                failFeedback = "\"I am SO hungry! Where is my food?\" Mother looks embarrassed.",
-                sfxOnFail = "",
-                voOnFail = "VO_U6_ANU_7",
-                fidgetSprite = fidgetHungry,
-                touchZoneOffset = new Vector2(20f, 290f),
-                touchZoneSize = new Vector2(320f, 240f),
-                childTapHint = "TAP ANU TO WAIT QUIETLY"
+                eventName = "Waiting for Food",
+                situationPrompt = "The food is taking a while to arrive and Anu is hungry. How should she wait?",
+                correctPoseSprite = waitPolite,
+                incorrectPoseSprite = shoutHungry,
+                tableVisualOnFail = tableHungry,
+                successFeedback = "Great patience! Food is being prepared fresh.",
+                failFeedback = "Shouting or banging cutlery disturbs the restaurant! Try again.",
+                sfxOnFail = "VO_U6_ANU_7",
+                sfxOnSuccess = "SFX_Sparkle"
             });
 
+            // 4. Kneeling on chair vs Sitting properly
             waitingEvents.Add(new U6_WaitingEventData_Masters_Activity
             {
                 eventName = "Kneeling on Chair",
-                situationPrompt = "Anu kneels up on the chair with feet underneath! The chair is wobbling.",
-                actionButtonLabel = "FEET ON FLOOR",
-                successFeedback = "Both feet on the floor! Sitting straight and safe.",
-                failFeedback = "The chair wobbled and nearly tipped over!",
+                situationPrompt = "Anu wants to kneel up on her chair with feet underneath. What should she do?",
+                correctPoseSprite = sittingStraight,
+                incorrectPoseSprite = kneelChair,
+                tableVisualOnFail = tableKneel,
+                successFeedback = "Both feet down! Sitting properly keeps the chair steady.",
+                failFeedback = "The chair will wobble and tip over! Try again.",
                 sfxOnFail = "SFX_ChairWobble",
-                voOnFail = "",
-                fidgetSprite = fidgetKneel,
-                touchZoneOffset = new Vector2(0f, 180f),
-                touchZoneSize = new Vector2(260f, 220f),
-                childTapHint = "TAP CHAIR TO STEADY IT"
+                sfxOnSuccess = "SFX_Sparkle"
             });
 
-            Debug.Log($"[U6_LiveTableScreen] Auto-Loaded fidget sprites: Fish={fidgetFish?.name}, Glass={fidgetGlass?.name}, Hungry={fidgetHungry?.name}, Kneel={fidgetKneel?.name}");
+            Debug.Log($"[U6_LiveTableScreen] Auto-Loaded Choice Sprites successfully! Events: {waitingEvents.Count}");
+
+            if (!Application.isPlaying)
+            {
+                UnityEditor.EditorUtility.SetDirty(this);
+                if (gameObject.scene.IsValid())
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+                }
+            }
         }
 #endif
 
@@ -353,9 +446,17 @@ namespace Googolplex.Unit6
             }
         }
 
+        private void SetPoseCardsActive(bool active)
+        {
+            if (leftPoseButton != null) leftPoseButton.gameObject.SetActive(active);
+            if (borderImageLeft != null) borderImageLeft.SetActive(active);
+
+            if (rightPoseButton != null) rightPoseButton.gameObject.SetActive(active);
+            if (borderImageRight != null) borderImageRight.SetActive(active);
+        }
+
         private IEnumerator InitAndStartSequence()
         {
-            // Wait until AudioManager instance is ready
             int retries = 0;
             while (U6_AudioManager_Masters_Activity.Instance == null && retries < 15)
             {
@@ -363,16 +464,20 @@ namespace Googolplex.Unit6
                 retries++;
             }
 
+            if (!gameObject.activeInHierarchy) yield break;
+
             var audioMgr = U6_AudioManager_Masters_Activity.Instance ?? FindFirstObjectByType<U6_AudioManager_Masters_Activity>();
 
             currentEventIndex = 0;
             SetOtherTablesLooking(false);
             SetAnuSprite(anuSittingStraightSprite);
 
-            if (promptText) promptText.text = "Today Anu's family is eating out at a restaurant...";
+            // Hide both pose buttons, borders, and action button during the intro narration
+            SetPoseCardsActive(false);
             if (actionButton) actionButton.gameObject.SetActive(false);
             if (feedbackPanel) feedbackPanel.SetActive(false);
 
+            if (promptText) promptText.text = "Today Anu's family is eating out at a restaurant...";
             if (audioMgr != null)
             {
                 audioMgr.PlayAmbience("AMB_Restaurant");
@@ -380,20 +485,24 @@ namespace Googolplex.Unit6
             }
 
             yield return new WaitForSeconds(3.0f);
+            if (!gameObject.activeInHierarchy) yield break;
 
-            if (promptText) promptText.text = "The food is not here yet. Watch Anu...";
+            if (promptText) promptText.text = "The food is not here yet. Help Anu choose polite manners...";
             if (audioMgr != null)
             {
                 audioMgr.PlayVO("VO_U6_02"); // "The food is not here yet. Watch Anu."
             }
 
             yield return new WaitForSeconds(2.8f);
+            if (!gameObject.activeInHierarchy) yield break;
 
             StartNextEvent();
         }
 
         private void StartNextEvent()
         {
+            if (!gameObject.activeInHierarchy) return;
+
             if (titleBanner != null && titleBanner.activeSelf)
             {
                 if (hideTitleBannerCoroutine != null)
@@ -412,149 +521,212 @@ namespace Googolplex.Unit6
 
             U6_WaitingEventData_Masters_Activity currentEvt = waitingEvents[currentEventIndex];
             if (promptText) promptText.text = currentEvt.situationPrompt;
-            if (actionButtonText)
-            {
-                actionButtonText.text = !string.IsNullOrEmpty(currentEvt.childTapHint)
-                    ? currentEvt.childTapHint
-                    : currentEvt.actionButtonLabel;
-            }
-            if (actionButton) actionButton.gameObject.SetActive(true);
             if (feedbackPanel) feedbackPanel.SetActive(false);
+            if (actionButton) actionButton.gameObject.SetActive(false);
 
-            // Show Anu doing the fidget
-            if (currentEvt.fidgetSprite != null)
+            // Randomize which side gets the polite vs impolite choice
+            leftIsCorrect = Random.value > 0.5f;
+
+            Sprite leftSprite = leftIsCorrect ? currentEvt.correctPoseSprite : currentEvt.incorrectPoseSprite;
+            Sprite rightSprite = !leftIsCorrect ? currentEvt.correctPoseSprite : currentEvt.incorrectPoseSprite;
+
+            if (leftPoseButton)
             {
-                SetAnuSprite(currentEvt.fidgetSprite);
+                Image leftImg = leftPoseButton.GetComponent<Image>();
+                if (leftImg != null)
+                {
+                    leftImg.sprite = leftSprite;
+                    leftImg.color = Color.white;
+                    leftImg.preserveAspect = true;
+                }
+                leftPoseButton.gameObject.SetActive(true);
+            }
+
+            if (borderImageLeft != null)
+            {
+                borderImageLeft.SetActive(true);
+                StartCoroutine(PopAvatarAnimation(borderImageLeft.transform));
+            }
+            else if (leftPoseButton != null)
+            {
+                StartCoroutine(PopAvatarAnimation(leftPoseButton.transform));
+            }
+
+            if (rightPoseButton)
+            {
+                Image rightImg = rightPoseButton.GetComponent<Image>();
+                if (rightImg != null)
+                {
+                    rightImg.sprite = rightSprite;
+                    rightImg.color = Color.white;
+                    rightImg.preserveAspect = true;
+                }
+                rightPoseButton.gameObject.SetActive(true);
+            }
+
+            if (borderImageRight != null)
+            {
+                borderImageRight.SetActive(true);
+                StartCoroutine(PopAvatarAnimation(borderImageRight.transform));
+            }
+            else if (rightPoseButton != null)
+            {
+                StartCoroutine(PopAvatarAnimation(rightPoseButton.transform));
+            }
+
+            isEventActive = true;
+            SetOtherTablesLooking(false);
+
+            // Play voiceover prompt to guide the child
+            if (U6_AudioManager_Masters_Activity.Instance != null)
+            {
+                U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_03"); // "Quick! Tap to help Anu!"
+            }
+
+            // Start gentle rhythmic breathing animation on the cards
+            StartCardIdlePulse();
+        }
+
+        private void OnPoseSelected(bool isLeftSelected)
+        {
+            if (!isEventActive) return;
+
+            bool isCorrect = (isLeftSelected == leftIsCorrect);
+            U6_WaitingEventData_Masters_Activity currentEvt = waitingEvents[currentEventIndex];
+
+            if (isCorrect)
+            {
+                isEventActive = false;
+                StopCardIdlePulse();
+                SetPoseCardsActive(false);
+                if (actionButton) actionButton.gameObject.SetActive(false);
+
+                // Set Anu character visual back to polite sitting straight!
+                SetAnuSprite(anuSittingStraightSprite);
+
+                if (U6_AudioManager_Masters_Activity.Instance != null && !string.IsNullOrEmpty(currentEvt.sfxOnSuccess))
+                {
+                    U6_AudioManager_Masters_Activity.Instance.PlaySFX(currentEvt.sfxOnSuccess);
+                }
+
+                StartCoroutine(ShowEventFeedback(true));
             }
             else
             {
-                SetAnuSprite(anuSittingStraightSprite);
-            }
+                // Wrong choice! Stop pulse during shake
+                StopCardIdlePulse();
 
-            // Configure Direct Physical Touch Target Zone without altering its user-defined position & size
-            if (directTouchZone != null)
-            {
-                bool isKneel = currentEvt.eventName.Contains("Kneel");
-                bool isGlass = currentEvt.eventName.Contains("Glass");
-                directTouchZone.ConfigureState(isKneel, isGlass);
-            }
-
-            // When Anu makes noise / fidgets, other diners turn around to look!
-            SetOtherTablesLooking(true);
-
-            // Play situation sound cues
-            if (U6_AudioManager_Masters_Activity.Instance != null)
-            {
-                if (currentEventIndex == 0)
+                // Wrong choice! Change Anu's family table visual to show the misbehavior from U6_seniorsActivityBook.png
+                if (currentEvt.tableVisualOnFail != null)
                 {
-                    U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_03"); // "Quick! Tap to help Anu!"
+                    SetAnuSprite(currentEvt.tableVisualOnFail);
                 }
-                else if (currentEvt.eventName.Contains("Glass"))
+                else if (currentEvt.incorrectPoseSprite != null)
                 {
-                    U6_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_GlassTing");
+                    SetAnuSprite(currentEvt.incorrectPoseSprite);
                 }
-                else if (currentEvt.eventName.Contains("Kneel"))
-                {
-                    U6_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_ChairWobble");
-                }
-            }
 
-            if (activeEventCoroutine != null) StopCoroutine(activeEventCoroutine);
-            activeEventCoroutine = StartCoroutine(EventTimerRoutine());
+                // Show "TRY AGAIN!" in the action button label
+                if (actionButton != null)
+                {
+                    if (actionButtonText != null)
+                    {
+                        actionButtonText.text = "TRY AGAIN!";
+                    }
+                    actionButton.gameObject.SetActive(true);
+                    StartCoroutine(PopAvatarAnimation(actionButton.transform));
+                }
+
+                // Wrong choice! Shake the wrong button and show reaction
+                if (U6_AudioManager_Masters_Activity.Instance != null && !string.IsNullOrEmpty(currentEvt.sfxOnFail))
+                {
+                    U6_AudioManager_Masters_Activity.Instance.PlaySFX(currentEvt.sfxOnFail);
+                }
+
+                SetOtherTablesLooking(true);
+                Transform wrongTarget = isLeftSelected
+                    ? (borderImageLeft != null ? borderImageLeft.transform : leftPoseButton?.transform)
+                    : (borderImageRight != null ? borderImageRight.transform : rightPoseButton?.transform);
+                if (wrongTarget != null) StartCoroutine(ShakeAnimation(wrongTarget));
+
+                // Resume breathing pulse after shake
+                StartCoroutine(ResumePulseAfterDelay(0.45f));
+            }
         }
 
-        private IEnumerator EventTimerRoutine()
+        private void StartCardIdlePulse()
         {
-            isEventActive = true;
-            float duration = eventDuration > 0 ? eventDuration : 10.0f;
-            float elapsed = 0f;
-
-            while (elapsed < duration)
+            StopCardIdlePulse();
+            if (gameObject.activeInHierarchy)
             {
-                elapsed += Time.deltaTime;
-                if (timeRemainingSlider != null)
-                    timeRemainingSlider.value = 1f - (elapsed / duration);
+                pulseCardsCoroutine = StartCoroutine(IdlePulseCardsRoutine());
+            }
+        }
+
+        private void StopCardIdlePulse()
+        {
+            if (pulseCardsCoroutine != null)
+            {
+                StopCoroutine(pulseCardsCoroutine);
+                pulseCardsCoroutine = null;
+            }
+
+            Transform leftT = borderImageLeft != null ? borderImageLeft.transform : leftPoseButton?.transform;
+            Transform rightT = borderImageRight != null ? borderImageRight.transform : rightPoseButton?.transform;
+            if (leftT != null) leftT.localScale = Vector3.one;
+            if (rightT != null) rightT.localScale = Vector3.one;
+        }
+
+        private IEnumerator IdlePulseCardsRoutine()
+        {
+            // Give pop animation 0.25s to finish first
+            yield return new WaitForSeconds(0.25f);
+
+            Transform leftT = borderImageLeft != null ? borderImageLeft.transform : leftPoseButton?.transform;
+            Transform rightT = borderImageRight != null ? borderImageRight.transform : rightPoseButton?.transform;
+
+            float timer = 0f;
+            while (isEventActive)
+            {
+                timer += Time.deltaTime * 3.2f;
+                // Subtle sine wave pulse: 1.0f to 1.045f
+                float scale = 1f + 0.045f * Mathf.Sin(timer);
+
+                if (leftT != null) leftT.localScale = new Vector3(scale, scale, 1f);
+                if (rightT != null) rightT.localScale = new Vector3(scale, scale, 1f);
+
                 yield return null;
             }
 
-            OnEventFailed();
+            if (leftT != null) leftT.localScale = Vector3.one;
+            if (rightT != null) rightT.localScale = Vector3.one;
         }
 
-        private void OnActionButtonClicked()
+        private IEnumerator ResumePulseAfterDelay(float delay)
         {
-            HandleEventSuccess();
-        }
-
-        private void HandleEventSuccess()
-        {
-            if (!isEventActive) return;
-            isEventActive = false;
-
-            if (activeEventCoroutine != null) StopCoroutine(activeEventCoroutine);
-
-            // Dismiss direct touch target and play celebratory squash & stretch bounce!
-            if (directTouchZone != null)
+            yield return new WaitForSeconds(delay);
+            if (isEventActive)
             {
-                directTouchZone.Dismiss();
-                StartCoroutine(directTouchZone.PlayBoingBounceRoutine(anuCharacterImage != null ? anuCharacterImage.transform : transform, () =>
-                {
-                    StartCoroutine(ShowEventFeedback(true));
-                }));
+                StartCardIdlePulse();
             }
-            else
-            {
-                StartCoroutine(ShowEventFeedback(true));
-            }
-        }
-
-        private void OnEventFailed()
-        {
-            isEventActive = false;
-            if (directTouchZone != null) directTouchZone.Dismiss();
-            StartCoroutine(ShowEventFeedback(false));
         }
 
         private IEnumerator ShowEventFeedback(bool success)
         {
             U6_WaitingEventData_Masters_Activity currentEvt = waitingEvents[currentEventIndex];
-            if (actionButton) actionButton.gameObject.SetActive(false);
 
             if (feedbackPanel) feedbackPanel.SetActive(true);
-            if (feedbackText) feedbackText.text = success ? currentEvt.successFeedback : currentEvt.failFeedback;
+            if (feedbackText) feedbackText.text = currentEvt.successFeedback;
 
-            if (success)
-            {
-                // Anu sits straight politely
-                SetAnuSprite(anuSittingStraightSprite);
-                SetOtherTablesLooking(false);
-                if (U6_AudioManager_Masters_Activity.Instance != null)
-                    U6_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_Sparkle");
+            SetOtherTablesLooking(false);
+            SetAnuSprite(anuSittingStraightSprite);
 
-                yield return new WaitForSeconds(2.5f);
-                currentEventIndex++;
-                StartNextEvent();
-            }
-            else
-            {
-                // Failed - other tables look over
-                SetOtherTablesLooking(true);
-                if (U6_AudioManager_Masters_Activity.Instance != null)
-                {
-                    if (!string.IsNullOrEmpty(currentEvt.sfxOnFail))
-                        U6_AudioManager_Masters_Activity.Instance.PlaySFX(currentEvt.sfxOnFail);
-                    if (!string.IsNullOrEmpty(currentEvt.voOnFail))
-                        U6_AudioManager_Masters_Activity.Instance.PlayVO(currentEvt.voOnFail);
-                    else
-                        U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_MUM_1"); // "Anu, quiet..."
-                }
+            yield return new WaitForSeconds(2.8f);
+            if (!gameObject.activeInHierarchy) yield break;
 
-                // Give student time to see what happened, then retry this event
-                yield return new WaitForSeconds(3.5f);
-                SetOtherTablesLooking(false);
-                SetAnuSprite(anuSittingStraightSprite);
-                if (feedbackPanel) feedbackPanel.SetActive(false);
-                StartNextEvent();
-            }
+            if (feedbackPanel) feedbackPanel.SetActive(false);
+            currentEventIndex++;
+            StartNextEvent();
         }
 
         private void SetAnuSprite(Sprite sp)
@@ -566,28 +738,46 @@ namespace Googolplex.Unit6
                 anuCharacterImage.sprite = sp;
                 anuCharacterImage.preserveAspect = true;
                 anuCharacterImage.enabled = true;
-                StartCoroutine(PopAvatarAnimation(anuCharacterImage.transform));
-                Debug.Log($"[U6_LiveTableScreen] Anu Sprite set to: '{sp.name}'");
+                anuCharacterImage.transform.localScale = (initialAnuScale != Vector3.zero) ? initialAnuScale : Vector3.one;
             }
         }
 
-        private IEnumerator PopAvatarAnimation(Transform target)
+        private IEnumerator PopAvatarAnimation(Transform target, Vector3 baseScale = default)
         {
             if (target == null) yield break;
-            Vector3 originalScale = Vector3.one;
+            Vector3 originalScale = (baseScale != default && baseScale != Vector3.zero) ? baseScale : Vector3.one;
             target.localScale = originalScale * 0.88f;
 
             float elapsed = 0f;
             float duration = 0.22f;
             while (elapsed < duration)
             {
+                if (target == null) yield break;
                 elapsed += Time.deltaTime;
                 float t = Mathf.Sin((elapsed / duration) * Mathf.PI * 0.5f);
                 target.localScale = Vector3.Lerp(originalScale * 0.88f, originalScale * 1.05f, t);
                 yield return null;
             }
 
-            target.localScale = originalScale;
+            if (target != null) target.localScale = originalScale;
+        }
+
+        private IEnumerator ShakeAnimation(Transform target)
+        {
+            if (target == null) yield break;
+            Vector3 startPos = target.localPosition;
+            float elapsed = 0f;
+            float duration = 0.4f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float offset = Mathf.Sin(elapsed * 40f) * 15f * (1f - (elapsed / duration));
+                target.localPosition = startPos + new Vector3(offset, 0f, 0f);
+                yield return null;
+            }
+
+            target.localPosition = startPos;
         }
 
         private void SetOtherTablesLooking(bool looking)
@@ -601,14 +791,14 @@ namespace Googolplex.Unit6
             {
                 foreach (var go in otherTablesNormal)
                 {
-                    if (go) go.SetActive(!looking);
+                    if (go && go != gameObject) go.SetActive(!looking);
                 }
             }
             if (otherTablesLooking != null)
             {
                 foreach (var go in otherTablesLooking)
                 {
-                    if (go)
+                    if (go && go != gameObject)
                     {
                         go.SetActive(looking);
                         if (looking && gameObject.activeInHierarchy)
@@ -622,6 +812,9 @@ namespace Googolplex.Unit6
 
         private IEnumerator CompletePart1Sequence()
         {
+            StopCardIdlePulse();
+            SetPoseCardsActive(false);
+            if (actionButton) actionButton.gameObject.SetActive(false);
             SetAnuSprite(anuSittingStraightSprite);
             if (promptText) promptText.text = "Well done! The family waited nicely.";
             if (feedbackPanel) feedbackPanel.SetActive(true);
@@ -631,12 +824,19 @@ namespace Googolplex.Unit6
 
             if (U6_AudioManager_Masters_Activity.Instance != null)
             {
-                U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_04"); // "Everybody is happy. One star!"
+                audioMgrPlayVO("VO_U6_04"); // "Everybody is happy. One star!"
             }
 
             yield return new WaitForSeconds(3.5f);
+            if (!gameObject.activeInHierarchy) yield break;
 
             U6_GameManager_Masters_Activity.Instance.StartPart2();
+        }
+
+        private void audioMgrPlayVO(string id)
+        {
+            if (U6_AudioManager_Masters_Activity.Instance != null)
+                U6_AudioManager_Masters_Activity.Instance.PlayVO(id);
         }
     }
 }

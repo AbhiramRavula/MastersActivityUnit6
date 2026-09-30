@@ -281,6 +281,11 @@ namespace Googolplex.Unit6
             if (lower.Contains("sorry i cannot hear you")) return "VO_U6_DAD_1";
             if (lower.Contains("anu quiet")) return "VO_U6_MUM_1";
 
+            // Slider Voice Previews
+            if (lower.Contains("slider_whisper") || lower.Contains("slider whisper")) return "VO_U6_SLIDER_WHISPER";
+            if (lower.Contains("slider_justright") || lower.Contains("slider just right")) return "VO_U6_SLIDER_JUSTRIGHT";
+            if (lower.Contains("slider_bigvoice") || lower.Contains("slider big voice")) return "VO_U6_SLIDER_BIGVOICE";
+
             // SFX / Music mappings for descriptive audio files
             if (lower.Contains("laminated menu")) return "SFX_MenuOpen";
             if (lower.Contains("hot plate")) return "SFX_PlateDown";

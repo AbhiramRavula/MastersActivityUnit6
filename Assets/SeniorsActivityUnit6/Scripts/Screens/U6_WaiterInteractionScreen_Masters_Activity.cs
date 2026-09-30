@@ -44,7 +44,7 @@ namespace Googolplex.Unit6
     {
         [Header("Title Banner (Shown Only At Beginning)")]
         [SerializeField] private GameObject titleBanner;
-        [SerializeField] private float titleBannerDuration = 2.8f;
+        [SerializeField] private float titleBannerDuration = 3.5f;
         private Coroutine hideTitleBannerCoroutine;
 
         [Header("Situation Prompt")]
@@ -108,6 +108,14 @@ namespace Googolplex.Unit6
         [SerializeField] private Button optionB_Button;
         [SerializeField] private TextMeshProUGUI optionB_Label;
         [SerializeField] private Sprite button9SliceSprite;
+
+        [Header("Choice Container & Card Sizing (Big & Clear for Kids)")]
+        [SerializeField] private Vector2 choiceContainerSize = new Vector2(1750f, 210f);
+        [SerializeField] private Vector2 choiceContainerPos = new Vector2(0f, 35f);
+        [SerializeField] private Vector2 avatarIconSize = new Vector2(140f, 140f);
+        [SerializeField] private Vector2 listenButtonSize = new Vector2(140f, 75f);
+        [SerializeField] private float labelFontSizeMin = 26f;
+        [SerializeField] private float labelFontSizeMax = 44f;
 
         [Header("Outcome Feedback")]
         [SerializeField] private GameObject outcomePanel;
@@ -258,8 +266,8 @@ namespace Googolplex.Unit6
                     ccRT.anchorMin = new Vector2(0.5f, 0f);
                     ccRT.anchorMax = new Vector2(0.5f, 0f);
                     ccRT.pivot = new Vector2(0.5f, 0f);
-                    ccRT.sizeDelta = new Vector2(1500f, 134f);
-                    ccRT.anchoredPosition = new Vector2(0f, 20f);
+                    ccRT.sizeDelta = choiceContainerSize;
+                    ccRT.anchoredPosition = choiceContainerPos;
                 }
             }
             if (optionA_Button == null && choiceContainer != null)
@@ -599,17 +607,7 @@ namespace Googolplex.Unit6
         {
             if (btn == null) return;
 
-            // 0. Match OrderChoicePanel Button RectTransform, 9-slice image & colors
-            RectTransform bRT = btn.GetComponent<RectTransform>();
-            if (bRT != null)
-            {
-                bRT.anchorMin = isPolite ? new Vector2(0.01f, 0.05f) : new Vector2(0.515f, 0.05f);
-                bRT.anchorMax = isPolite ? new Vector2(0.485f, 0.95f) : new Vector2(0.99f, 0.95f);
-                bRT.anchoredPosition = Vector2.zero;
-                bRT.sizeDelta = Vector2.zero;
-                bRT.pivot = new Vector2(0.5f, 0.5f);
-            }
-
+            // 0. Visual styling
             Image btnImg = btn.GetComponent<Image>();
             if (btnImg != null)
             {
@@ -626,144 +624,126 @@ namespace Googolplex.Unit6
             cb.disabledColor = new Color(0.784f, 0.784f, 0.784f, 0.502f);
             btn.colors = cb;
 
-            // 1. Text label styling & margins matching OrderChoicePanel Label
+            // 1. Label — center text with proper margins for avatar on left and listen button on right
             Transform lblT = btn.transform.Find("Label");
             if (lblT != null)
             {
-                var rt = lblT.GetComponent<RectTransform>();
-                if (rt != null)
-                {
-                    rt.anchorMin = Vector2.zero;
-                    rt.anchorMax = Vector2.one;
-                    rt.pivot = new Vector2(0.5f, 0.5f);
-                    rt.anchoredPosition = new Vector2(-7.5f, 0f);
-                    rt.sizeDelta = new Vector2(-235f, -12f);
-                }
                 var tmp = lblT.GetComponent<TextMeshProUGUI>();
                 if (tmp != null)
                 {
                     tmp.alignment = TextAlignmentOptions.Center;
                     tmp.enableAutoSizing = true;
-                    tmp.fontSizeMin = 22f;
-                    tmp.fontSizeMax = 38f;
+                    tmp.fontSizeMin = labelFontSizeMin;
+                    tmp.fontSizeMax = labelFontSizeMax;
                     tmp.color = Color.white;
+                }
+
+                RectTransform lRT = lblT.GetComponent<RectTransform>();
+                if (lRT != null)
+                {
+                    lRT.anchorMin = Vector2.zero;
+                    lRT.anchorMax = Vector2.one;
+                    lRT.pivot = new Vector2(0.5f, 0.5f);
+                    float leftMargin = avatarIconSize.x + 36f;
+                    float rightMargin = listenButtonSize.x + 36f;
+                    lRT.offsetMin = new Vector2(leftMargin, 8f);
+                    lRT.offsetMax = new Vector2(-rightMargin, -8f);
                 }
             }
 
-            // 2. Avatar Portrait on Left: Inspector specific avatar has 1st priority
+            // 2. Avatar Portrait — sized to avatarIconSize (big and clear for kids)
             Transform avT = btn.transform.Find("AvatarPortrait");
             Sprite targetSprite = specificAvatar != null ? specificAvatar : (isPolite ? politeAvatarSprite : impoliteAvatarSprite);
             if (avT == null)
             {
                 GameObject avObj = new GameObject("AvatarPortrait", typeof(RectTransform), typeof(Image));
                 avObj.transform.SetParent(btn.transform, false);
-                var avRT = avObj.GetComponent<RectTransform>();
+                avT = avObj.transform;
+            }
+
+            var avRT = avT.GetComponent<RectTransform>();
+            if (avRT != null)
+            {
                 avRT.anchorMin = new Vector2(0f, 0.5f);
                 avRT.anchorMax = new Vector2(0f, 0.5f);
                 avRT.pivot = new Vector2(0f, 0.5f);
-                avRT.anchoredPosition = new Vector2(14f, 0f);
-                avRT.sizeDelta = new Vector2(84f, 84f);
-
-                var img = avObj.GetComponent<Image>();
-                img.sprite = targetSprite;
-                img.preserveAspect = true;
-                img.raycastTarget = false;
+                avRT.anchoredPosition = new Vector2(24f, 0f);
+                avRT.sizeDelta = avatarIconSize;
             }
-            else
+
+            var avImg = avT.GetComponent<Image>();
+            if (avImg != null)
             {
-                var avRT = avT.GetComponent<RectTransform>();
-                if (avRT != null)
-                {
-                    avRT.anchorMin = new Vector2(0f, 0.5f);
-                    avRT.anchorMax = new Vector2(0f, 0.5f);
-                    avRT.pivot = new Vector2(0f, 0.5f);
-                    avRT.anchoredPosition = new Vector2(14f, 0f);
-                    avRT.sizeDelta = new Vector2(84f, 84f);
-                }
-                var img = avT.GetComponent<Image>();
-                if (img != null)
-                {
-                    if (targetSprite != null) img.sprite = targetSprite;
-                    img.preserveAspect = true;
-                }
+                if (targetSprite != null) avImg.sprite = targetSprite;
+                avImg.preserveAspect = true;
+                avImg.raycastTarget = false;
             }
 
-            // 3. Audio Preview Button on Right - exact name, position (-14, 0), size (98, 50), colors & text "LISTEN"
+            // 3. Listen button — sized to listenButtonSize
             string listenName = isPolite ? "HearPoliteButton" : "HearImpoliteButton";
-            Transform hT = btn.transform.Find(listenName) 
+            Transform hT = btn.transform.Find(listenName)
                         ?? btn.transform.Find(isPolite ? "HearOptionA_Button" : "HearOptionB_Button");
             Button hBtn = null;
             if (hT == null)
             {
                 GameObject hObj = new GameObject(listenName, typeof(RectTransform), typeof(Image), typeof(Button));
                 hObj.transform.SetParent(btn.transform, false);
-                var hRT = hObj.GetComponent<RectTransform>();
+                hT = hObj.transform;
+            }
+
+            var hRT = hT.GetComponent<RectTransform>();
+            if (hRT != null)
+            {
                 hRT.anchorMin = new Vector2(1f, 0.5f);
                 hRT.anchorMax = new Vector2(1f, 0.5f);
                 hRT.pivot = new Vector2(1f, 0.5f);
-                hRT.anchoredPosition = new Vector2(-14f, 0f);
-                hRT.sizeDelta = new Vector2(98f, 50f);
+                hRT.anchoredPosition = new Vector2(-24f, 0f);
+                hRT.sizeDelta = listenButtonSize;
+            }
 
-                var img = hObj.GetComponent<Image>();
+            var hImg = hT.GetComponent<Image>();
+            if (hImg != null)
+            {
                 if (button9SliceSprite != null)
                 {
-                    img.sprite = button9SliceSprite;
-                    img.type = Image.Type.Sliced;
+                    hImg.sprite = button9SliceSprite;
+                    hImg.type = Image.Type.Sliced;
                 }
                 else if (btnImg != null && btnImg.sprite != null)
                 {
-                    img.sprite = btnImg.sprite;
-                    img.type = Image.Type.Sliced;
+                    hImg.sprite = btnImg.sprite;
+                    hImg.type = Image.Type.Sliced;
                 }
-                img.color = isPolite ? new Color(0.12f, 0.42f, 0.20f) : new Color(0.65f, 0.25f, 0.10f);
+                hImg.color = isPolite ? new Color(0.12f, 0.42f, 0.20f) : new Color(0.65f, 0.25f, 0.10f);
+            }
 
+            Transform hLblT = hT.Find("Text");
+            TextMeshProUGUI tmpListen = null;
+            if (hLblT == null)
+            {
                 GameObject hLbl = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
-                hLbl.transform.SetParent(hObj.transform, false);
+                hLbl.transform.SetParent(hT, false);
                 var lRT = hLbl.GetComponent<RectTransform>();
                 lRT.anchorMin = Vector2.zero;
                 lRT.anchorMax = Vector2.one;
                 lRT.sizeDelta = Vector2.zero;
-                var tmp = hLbl.GetComponent<TextMeshProUGUI>();
-                tmp.text = "LISTEN";
-                tmp.fontSize = 19;
-                tmp.fontStyle = FontStyles.Bold;
-                tmp.alignment = TextAlignmentOptions.Center;
-                tmp.color = Color.white;
-
-                hBtn = hObj.GetComponent<Button>();
+                tmpListen = hLbl.GetComponent<TextMeshProUGUI>();
             }
             else
             {
-                var hRT = hT.GetComponent<RectTransform>();
-                if (hRT != null)
-                {
-                    hRT.anchorMin = new Vector2(1f, 0.5f);
-                    hRT.anchorMax = new Vector2(1f, 0.5f);
-                    hRT.pivot = new Vector2(1f, 0.5f);
-                    hRT.sizeDelta = new Vector2(98f, 50f);
-                    hRT.anchoredPosition = new Vector2(-14f, 0f);
-                }
-                var img = hT.GetComponent<Image>();
-                if (img != null)
-                {
-                    if (button9SliceSprite != null)
-                    {
-                        img.sprite = button9SliceSprite;
-                        img.type = Image.Type.Sliced;
-                    }
-                    img.color = isPolite ? new Color(0.12f, 0.42f, 0.20f) : new Color(0.65f, 0.25f, 0.10f);
-                }
-                var tmp = hT.GetComponentInChildren<TextMeshProUGUI>();
-                if (tmp != null)
-                {
-                    tmp.text = "LISTEN";
-                    tmp.fontSize = 19;
-                    tmp.fontStyle = FontStyles.Bold;
-                    tmp.alignment = TextAlignmentOptions.Center;
-                    tmp.color = Color.white;
-                }
-                hBtn = hT.GetComponent<Button>();
+                tmpListen = hLblT.GetComponent<TextMeshProUGUI>();
             }
+
+            if (tmpListen != null)
+            {
+                tmpListen.text = "LISTEN";
+                tmpListen.fontSize = 24;
+                tmpListen.fontStyle = FontStyles.Bold;
+                tmpListen.alignment = TextAlignmentOptions.Center;
+                tmpListen.color = Color.white;
+            }
+
+            hBtn = hT.GetComponent<Button>();
 
             if (hBtn != null)
             {
@@ -778,9 +758,29 @@ namespace Googolplex.Unit6
             }
         }
 
+
 #if UNITY_EDITOR
-        private void AutoLoadSpritesAndMoments()
+        [ContextMenu("Apply Big Choice Card Sizing")]
+        public void ApplyBigChoiceCardSizing()
         {
+            AutoFindUIReferences();
+            if (optionA_Button != null) SetupChoiceCard(optionA_Button, true, "", null, null);
+            if (optionB_Button != null) SetupChoiceCard(optionB_Button, false, "", null, null);
+
+            if (!Application.isPlaying)
+            {
+                EditorUtility.SetDirty(this);
+                if (choiceContainer != null) EditorUtility.SetDirty(choiceContainer);
+                if (gameObject.scene.IsValid())
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+            }
+        }
+
+        [ContextMenu("Auto-Assign Everything (Fix for APK)")]
+        public void AutoLoadSpritesAndMoments()
+        {
+            ApplyBigChoiceCardSizing();
+
             Dictionary<string, Sprite> spriteDict = new Dictionary<string, Sprite>(System.StringComparer.OrdinalIgnoreCase);
             string[] guids = AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets/SeniorsActivityUnit6/Art" });
             foreach (string guid in guids)
@@ -815,7 +815,7 @@ namespace Googolplex.Unit6
             if (waiterStiffSprite == null) waiterStiffSprite = GetSprite("SPR_Ravi_StiffPolite");
             if (button9SliceSprite == null) button9SliceSprite = GetSprite("UI_RoundedBox_9Slice");
 
-            Sprite raviWater = GetSprite("SPR_Ravi_WaterJug");
+            Sprite raviWater = GetSprite("SPR_WaiterWater") ?? GetSprite("raving walking right to left") ?? GetSprite("SPR_Ravi_WaterJug");
             Sprite raviPad = GetSprite("SPR_Ravi_StandingPad");
             Sprite raviPlate = GetSprite("SPR_Ravi_ServingPlate");
 
@@ -852,7 +852,7 @@ namespace Googolplex.Unit6
             // Full-Body Waiter Ravi Sprites from 'u6 MA more waiter ravi sprites.png':
             if (raviGreeting == null) raviGreeting = GetSprite("Greeting & Welcome") ?? GetSprite("Greeting");
             if (raviTakingOrder == null) raviTakingOrder = GetSprite("Taking Order");
-            if (raviPouring == null) raviPouring = GetSprite("Pouring Water") ?? GetSprite("Pouring");
+            if (raviPouring == null) raviPouring = GetSprite("SPR_WaiterWater") ?? GetSprite("raving walking right to left") ?? GetSprite("Pouring Water") ?? GetSprite("Pouring");
             if (raviServing == null) raviServing = GetSprite("Serving Hot Dish") ?? GetSprite("Serving");
             if (raviCutlery == null) raviCutlery = GetSprite("Replacing Cutlery") ?? GetSprite("Cutlery");
             if (raviApology == null) raviApology = GetSprite("Polite Apology") ?? GetSprite("Apology");
@@ -881,6 +881,10 @@ namespace Googolplex.Unit6
                 {
                     var m = moments[i];
                     if (m == null) continue;
+
+                    // Force clear Inspector audio clips to use our auto-generated VO strings flawlessly
+                    m.optionA_Clip = null;
+                    m.optionB_Clip = null;
 
                     // Only provide fallback if inspector field is empty
                     if (m.fullBodyPoseSprite == null)
@@ -925,6 +929,24 @@ namespace Googolplex.Unit6
                         if (i == 0) m.propSprite = emptyGlass;
                         else if (i == 3) m.propSprite = dishDosa;
                         else if (i == 4) m.propSprite = spoonFork;
+                    }
+
+                    if (string.IsNullOrEmpty(m.optionA_VO))
+                    {
+                        if (i == 0) m.optionA_VO = "VO_U6_ANU_4";
+                        else if (i == 1) m.optionA_VO = "VO_U6_ANU_CALL_POLITE";
+                        else if (i == 2) m.optionA_VO = "VO_U6_ANU_5";
+                        else if (i == 3) m.optionA_VO = "VO_U6_ANU_4";
+                        else if (i == 4) m.optionA_VO = "VO_U6_ANU_8";
+                    }
+                    
+                    if (string.IsNullOrEmpty(m.optionB_VO))
+                    {
+                        if (i == 0) m.optionB_VO = "VO_U6_ANU_3";
+                        else if (i == 1) m.optionB_VO = "VO_U6_ANU_CALL_SHOUT";
+                        else if (i == 2) m.optionB_VO = "VO_U6_ANU_6";
+                        else if (i == 3) m.optionB_VO = "VO_U6_ANU_EAT_FAST";
+                        else if (i == 4) m.optionB_VO = "VO_U6_ANU_9";
                     }
                 }
                 Debug.Log($"[U6_WaiterInteractionScreen] Preserved all {moments.Count} Inspector-configured moments with priority!");
@@ -1159,17 +1181,24 @@ namespace Googolplex.Unit6
                 return;
             }
 
-            if (currentMomentIndex > 0 && titleBanner != null && titleBanner.activeSelf)
-            {
-                if (hideTitleBannerCoroutine != null)
-                {
-                    StopCoroutine(hideTitleBannerCoroutine);
-                    hideTitleBannerCoroutine = null;
-                }
-                titleBanner.SetActive(false);
-            }
-
             U6_WaiterMomentData_Masters_Activity m = moments[currentMomentIndex];
+
+            if (titleBanner != null)
+            {
+                titleBanner.SetActive(true);
+                CanvasGroup cg = titleBanner.GetComponent<CanvasGroup>();
+                if (cg == null) cg = titleBanner.AddComponent<CanvasGroup>();
+                cg.alpha = 1f;
+
+                TextMeshProUGUI titleText = titleBanner.GetComponentInChildren<TextMeshProUGUI>(true);
+                if (titleText != null && !string.IsNullOrEmpty(m.situationTitle))
+                {
+                    titleText.text = m.situationTitle;
+                }
+
+                if (hideTitleBannerCoroutine != null) StopCoroutine(hideTitleBannerCoroutine);
+                hideTitleBannerCoroutine = StartCoroutine(HideTitleBannerRoutine());
+            }
             
             // Dynamic check for ordered dish from Part 2 Menu
             string orderedName = (U6_GameManager_Masters_Activity.Instance != null) ? U6_GameManager_Masters_Activity.Instance.OrderedDishName : "dosa";
@@ -1198,7 +1227,7 @@ namespace Googolplex.Unit6
                 {
                     m.optionA_Text = $"\"Sorry, I think I ordered {orderedName.ToLower()}.\"";
                 }
-                PlayScreenAudio(voWrongDishClip, voWrongDish);
+                // Removed PlayScreenAudio(voWrongDishClip, voWrongDish); to prevent audio playing before user makes a choice.
             }
             else if (currentMomentIndex == 3) // Food Served
             {
@@ -1224,21 +1253,21 @@ namespace Googolplex.Unit6
             if (optionA_Label)
             {
                 string textA = !string.IsNullOrEmpty(m.optionA_Text) ? m.optionA_Text.Trim('\"') : "Thank you!";
-                optionA_Label.text = $"<color=#D4EFDF><size=78%><b>{badgeA}</b></size></color>\n<b>\"{textA}\"</b>";
+                optionA_Label.text = $"<color=#D4EFDF><size=82%><b>{badgeA}</b></size></color>\n<b>\"{textA}\"</b>";
                 optionA_Label.alignment = TextAlignmentOptions.Center;
                 optionA_Label.enableAutoSizing = true;
-                optionA_Label.fontSizeMin = 22f;
-                optionA_Label.fontSizeMax = 38f;
+                optionA_Label.fontSizeMin = labelFontSizeMin;
+                optionA_Label.fontSizeMax = labelFontSizeMax;
                 optionA_Label.color = Color.white;
             }
             if (optionB_Label)
             {
                 string textB = !string.IsNullOrEmpty(m.optionB_Text) ? m.optionB_Text.Trim('\"') : "(Say nothing)";
-                optionB_Label.text = $"<color=#FADBD8><size=78%><b>{badgeB}</b></size></color>\n<b>\"{textB}\"</b>";
+                optionB_Label.text = $"<color=#FADBD8><size=82%><b>{badgeB}</b></size></color>\n<b>\"{textB}\"</b>";
                 optionB_Label.alignment = TextAlignmentOptions.Center;
                 optionB_Label.enableAutoSizing = true;
-                optionB_Label.fontSizeMin = 22f;
-                optionB_Label.fontSizeMax = 38f;
+                optionB_Label.fontSizeMin = labelFontSizeMin;
+                optionB_Label.fontSizeMax = labelFontSizeMax;
                 optionB_Label.color = Color.white;
             }
 
@@ -1394,6 +1423,17 @@ namespace Googolplex.Unit6
 
                 PlayScreenSFX(sfxSparkleClip, sfxSparkle);
                 PlayScreenAudio(m.optionA_Clip, m.optionA_VO);
+
+                if (currentMomentIndex == 1) 
+                {
+                    yield return new WaitForSeconds(1.8f);
+                    PlayScreenAudio(null, "VO_U6_WAIT_2");
+                }
+                else if (currentMomentIndex == 2) 
+                {
+                    yield return new WaitForSeconds(2.0f);
+                    PlayScreenAudio(voWaiterApologizeClip, voWaiterApologize);
+                }
             }
             else
             {
@@ -1412,7 +1452,7 @@ namespace Googolplex.Unit6
                 PlayScreenAudio(m.optionB_Clip, m.optionB_VO);
             }
 
-            yield return new WaitForSeconds(3.5f);
+            yield return new WaitForSeconds(4.0f);
 
             currentMomentIndex++;
             DisplayCurrentMoment();

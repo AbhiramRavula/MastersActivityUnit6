@@ -219,8 +219,156 @@ namespace Googolplex.Unit6
             Debug.Log("<color=green>[U6_SceneSetupTool] Successfully updated Part 3 (ChoiceScreen & Waiter Panel) with deliberate pivots, anchors, and safe area!</color>");
         }
 
-        [MenuItem("Googolplex/Unit 6/Non-Destructive/Update Only EndingScreen (Ending Panel & Stars)", false, 21)]
-        [MenuItem("Unit 6/Update Only EndingScreen (Ending Panel & Stars)", false, 21)]
+        [MenuItem("Googolplex/Unit 6/Non-Destructive/Add Avatar and Listen Buttons to ChoiceScreen Buttons", false, 20)]
+        [MenuItem("Unit 6/Add Avatar and Listen Buttons to ChoiceScreen Buttons", false, 20)]
+        public static void AddSubObjectsToChoiceButtons()
+        {
+            // GameObject.Find only finds active objects. Search all root objects in all
+            // loaded scenes so we can locate ChoiceScreen even when it is disabled.
+            GameObject choiceScreen = null;
+            for (int si = 0; si < UnityEngine.SceneManagement.SceneManager.sceneCount; si++)
+            {
+                var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(si);
+                if (!scene.isLoaded) continue;
+                foreach (var root in scene.GetRootGameObjects())
+                {
+                    // Check root itself
+                    if (root.name == "ChoiceScreen") { choiceScreen = root; break; }
+                    // Check children (including inactive)
+                    var found = FindInChildren(root.transform, "ChoiceScreen");
+                    if (found != null) { choiceScreen = found.gameObject; break; }
+                }
+                if (choiceScreen != null) break;
+            }
+
+            if (choiceScreen == null)
+            {
+                Debug.LogError("[U6_SceneSetupTool] ChoiceScreen not found in the open scene! Make sure the scene containing ChoiceScreen is loaded.");
+                return;
+            }
+
+            Transform container = choiceScreen.transform.Find("SafeArea/ChoiceContainer") 
+                               ?? choiceScreen.transform.Find("ChoiceContainer");
+            if (container == null)
+            {
+                Debug.LogError("[U6_SceneSetupTool] ChoiceContainer not found under ChoiceScreen!");
+                return;
+            }
+
+            Transform btnAT = container.Find("OptionA_Button");
+            Transform btnBT = container.Find("OptionB_Button");
+
+            if (btnAT == null || btnBT == null)
+            {
+                Debug.LogError("[U6_SceneSetupTool] OptionA_Button or OptionB_Button not found under ChoiceContainer!");
+                return;
+            }
+
+            Dictionary<string, Sprite> sprites = LoadAllSprites();
+            Sprite politeSpr = GetSprite(sprites, "SPR_Anu_HandRaise") ?? GetSprite(sprites, "SPR_Anu_SittingStraight");
+            Sprite impoliteSpr = GetSprite(sprites, "SPR_Anu_ShoutingHungry");
+
+            AddSubObjectsToButton(btnAT, "AvatarPortrait", politeSpr, "HearPoliteButton", new Color(0.12f, 0.42f, 0.20f));
+            AddSubObjectsToButton(btnBT, "AvatarPortrait", impoliteSpr, "HearImpoliteButton", new Color(0.65f, 0.25f, 0.10f));
+
+            EditorUtility.SetDirty(choiceScreen);
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(choiceScreen.scene);
+
+            Selection.activeGameObject = container.gameObject;
+            Debug.Log("<color=green>[U6_SceneSetupTool] Successfully added AvatarPortrait and Hear Buttons inside OptionA_Button and OptionB_Button! You can now select and edit them manually in the Hierarchy.</color>");
+        }
+
+        /// <summary>
+        /// Recursively searches all children of <paramref name="parent"/> (including inactive ones)
+        /// for a Transform whose name matches <paramref name="name"/>.
+        /// </summary>
+        private static Transform FindInChildren(Transform parent, string name)
+        {
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                Transform child = parent.GetChild(i);
+                if (child.name == name) return child;
+                Transform result = FindInChildren(child, name);
+                if (result != null) return result;
+            }
+            return null;
+        }
+
+        private static void AddSubObjectsToButton(Transform btnT, string avatarName, Sprite avatarSprite, string listenName, Color listenBg)
+        {
+            // 1. Label margin adjustment
+            var lblT = btnT.Find("Label");
+            if (lblT != null)
+            {
+                var rt = lblT.GetComponent<RectTransform>();
+                if (rt != null)
+                {
+                    rt.anchorMin = Vector2.zero;
+                    rt.anchorMax = Vector2.one;
+                    rt.pivot = new Vector2(0.5f, 0.5f);
+                    rt.offsetMin = new Vector2(110f, 6f);
+                    rt.offsetMax = new Vector2(-125f, -6f);
+                }
+            }
+
+            // 2. AvatarPortrait
+            Transform avT = btnT.Find(avatarName);
+            if (avT == null)
+            {
+                GameObject avObj = CreateUISpriteBox(btnT, avatarName, "", new Vector2(14, 0), new Vector2(84, 84), avatarSprite,
+                    anchorMin: new Vector2(0f, 0.5f), anchorMax: new Vector2(0f, 0.5f), pivot: new Vector2(0f, 0.5f));
+                Undo.RegisterCreatedObjectUndo(avObj, "Create " + avatarName);
+            }
+
+            // 3. Listen Button
+            Transform lT = btnT.Find(listenName);
+            if (lT == null)
+            {
+                GameObject lObj = CreateUIButton(btnT, listenName, "LISTEN", 19,
+                    new Vector2(-14, 0), new Vector2(98, 50), listenBg,
+                    anchorMin: new Vector2(1f, 0.5f), anchorMax: new Vector2(1f, 0.5f), pivot: new Vector2(1f, 0.5f));
+                Undo.RegisterCreatedObjectUndo(lObj, "Create " + listenName);
+            }
+        }
+
+        [MenuItem("Googolplex/Unit 6/Non-Destructive/Update Only Part 4 (SliderScreen & Leaving Phase)", false, 21)]
+        [MenuItem("Unit 6/Update Only Part 4 (SliderScreen & Leaving Phase)", false, 21)]
+        public static void UpdateOnlySliderScreen()
+        {
+            Canvas canvas = Object.FindAnyObjectByType<Canvas>();
+            if (canvas == null)
+            {
+                Debug.LogError("[U6_SceneSetupTool] No Canvas found in scene! Please ensure your Canvas is active.");
+                return;
+            }
+
+            Dictionary<string, Sprite> spriteDict = LoadAllSprites();
+            GameObject sliderPanel = CreateOrGetPanel(canvas.transform, "SliderScreen", new Color(0.08f, 0.12f, 0.16f, 0.45f));
+            SetupSliderScreen(sliderPanel, spriteDict);
+
+            GameObject gmObj = GameObject.Find("[GameManager]");
+            if (gmObj != null)
+            {
+                var gameMgr = gmObj.GetComponent<U6_GameManager_Masters_Activity>();
+                if (gameMgr != null)
+                {
+                    SerializedObject gmSO = new SerializedObject(gameMgr);
+                    var sliderProp = gmSO.FindProperty("sliderScreen");
+                    if (sliderProp != null)
+                    {
+                        sliderProp.objectReferenceValue = sliderPanel;
+                        gmSO.ApplyModifiedProperties();
+                    }
+                }
+            }
+
+            Selection.activeGameObject = sliderPanel;
+            sliderPanel.SetActive(true);
+            Debug.Log("<color=green>[U6_SceneSetupTool] Successfully updated Part 4 (SliderScreen & Leaving Phase) with deliberate pivots, anchors, and safe area!</color>");
+        }
+
+        [MenuItem("Googolplex/Unit 6/Non-Destructive/Update Only EndingScreen (Ending Panel & Stars)", false, 22)]
+        [MenuItem("Unit 6/Update Only EndingScreen (Ending Panel & Stars)", false, 22)]
         public static void UpdateOnlyEndingScreen()
         {
             Canvas canvas = Object.FindAnyObjectByType<Canvas>();
@@ -711,23 +859,39 @@ namespace Googolplex.Unit6
                 anchorMin: new Vector2(0.74f, 0.18f), anchorMax: new Vector2(0.74f, 0.18f), pivot: new Vector2(0.5f, 0f));
 
             // 4. Interactive Choice Container: Pinned to Bottom-Center, Pivot (0.5, 0)
-            GameObject choiceContainer = new GameObject("ChoiceContainer", typeof(RectTransform));
-            choiceContainer.transform.SetParent(safeArea.transform, false);
-            RectTransform ccRT = choiceContainer.GetComponent<RectTransform>();
-            ccRT.anchorMin = new Vector2(0.5f, 0f);
-            ccRT.anchorMax = new Vector2(0.5f, 0f);
-            ccRT.pivot = new Vector2(0.5f, 0f);
-            ccRT.anchoredPosition = new Vector2(0, 115);
-            ccRT.sizeDelta = new Vector2(1460, 100);
+            // Use CreateOrGet so we don't destroy manually-edited children.
+            Transform existingCC = safeArea.transform.Find("ChoiceContainer");
+            GameObject choiceContainer;
+            if (existingCC != null)
+            {
+                choiceContainer = existingCC.gameObject;
+            }
+            else
+            {
+                choiceContainer = new GameObject("ChoiceContainer", typeof(RectTransform));
+                choiceContainer.transform.SetParent(safeArea.transform, false);
+                RectTransform ccRT = choiceContainer.GetComponent<RectTransform>();
+                ccRT.anchorMin = new Vector2(0.5f, 0f);
+                ccRT.anchorMax = new Vector2(0.5f, 0f);
+                ccRT.pivot = new Vector2(0.5f, 0f);
+                ccRT.anchoredPosition = new Vector2(0, 115);
+                ccRT.sizeDelta = new Vector2(1460, 100);
+            }
 
-            // Option A and B: Deliberate relative horizontal distribution
-            GameObject btnA = CreateUIButton(choiceContainer.transform, "OptionA_Button", "\"Thank you!\"", 32,
-                Vector2.zero, Vector2.zero, new Color(0.25f, 0.68f, 0.38f),
-                anchorMin: new Vector2(0.02f, 0.05f), anchorMax: new Vector2(0.48f, 0.95f), pivot: new Vector2(0.5f, 0.5f));
+            // Option A and B: Only create if they don't exist yet — never resize existing buttons.
+            GameObject btnA = CreateOrGetUIButton(choiceContainer.transform, "OptionA_Button", "\"Thank you!\"", 30,
+                Vector2.zero, Vector2.zero, new Color(0.18f, 0.62f, 0.35f, 0.98f),
+                anchorMin: new Vector2(0.01f, 0.05f), anchorMax: new Vector2(0.485f, 0.95f), pivot: new Vector2(0.5f, 0.5f));
 
-            GameObject btnB = CreateUIButton(choiceContainer.transform, "OptionB_Button", "(Say nothing)", 32,
-                Vector2.zero, Vector2.zero, new Color(0.85f, 0.55f, 0.25f),
-                anchorMin: new Vector2(0.52f, 0.05f), anchorMax: new Vector2(0.98f, 0.95f), pivot: new Vector2(0.5f, 0.5f));
+            GameObject btnB = CreateOrGetUIButton(choiceContainer.transform, "OptionB_Button", "(Say nothing)", 30,
+                Vector2.zero, Vector2.zero, new Color(0.82f, 0.42f, 0.20f, 0.98f),
+                anchorMin: new Vector2(0.515f, 0.05f), anchorMax: new Vector2(0.99f, 0.95f), pivot: new Vector2(0.5f, 0.5f));
+
+            // Populate child AvatarPortrait and Hear buttons so they can be inspected and edited manually
+            Sprite chPoliteSpr = GetSprite(sprites, "SPR_Anu_HandRaise") ?? GetSprite(sprites, "SPR_Anu_SittingStraight");
+            Sprite chImpoliteSpr = GetSprite(sprites, "SPR_Anu_ShoutingHungry");
+            AddSubObjectsToButton(btnA.transform, "AvatarPortrait", chPoliteSpr, "HearPoliteButton", new Color(0.12f, 0.42f, 0.20f));
+            AddSubObjectsToButton(btnB.transform, "AvatarPortrait", chImpoliteSpr, "HearImpoliteButton", new Color(0.65f, 0.25f, 0.10f));
 
             // 5. Outcome Feedback Panel: Pinned to Bottom-Center, Pivot (0.5, 0)
             GameObject outcomePanel = CreateUIBox(safeArea.transform, "OutcomePanel", "Ravi smiles warmly and nods.", 36,
@@ -986,11 +1150,23 @@ namespace Googolplex.Unit6
                 new Color(1f, 1f, 1f, 0.95f), new Color(0.1f, 0.1f, 0.1f),
                 anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f), pivot: new Vector2(0.5f, 1f));
 
-            // Waiting Family Character Visual: Anchored to doorway baseline, Pivot (0.5, 0)
+            // Soft Doorway Focus Scrim: Subtly dims background restaurant so waiting family at door stands out
+            GameObject scrimObj = new GameObject("DoorwayFocusScrim", typeof(RectTransform), typeof(Image));
+            scrimObj.transform.SetParent(leavingPhase.transform, false);
+            RectTransform scrimRT = scrimObj.GetComponent<RectTransform>();
+            scrimRT.anchorMin = Vector2.zero;
+            scrimRT.anchorMax = Vector2.one;
+            scrimRT.offsetMin = new Vector2(-120, -100);
+            scrimRT.offsetMax = new Vector2(120, 100);
+            Image scrimImg = scrimObj.GetComponent<Image>();
+            scrimImg.color = new Color(0.04f, 0.06f, 0.1f, 0.38f);
+            scrimImg.raycastTarget = false;
+
+            // Waiting Family Character Visual: Anchored to left doorway/partition foyer, Pivot (0.5, 0)
             Sprite waitingFamilySp = GetSprite(sprites, "Waiting Family");
             GameObject waitFamily = CreateUISpriteBox(leavingPhase.transform, "WaitingFamilyVisual", "Waiting Family",
-                Vector2.zero, new Vector2(480, 340), waitingFamilySp,
-                anchorMin: new Vector2(0.5f, 0.32f), anchorMax: new Vector2(0.5f, 0.32f), pivot: new Vector2(0.5f, 0f));
+                Vector2.zero, new Vector2(400, 580), waitingFamilySp,
+                anchorMin: new Vector2(0.18f, 0.20f), anchorMax: new Vector2(0.18f, 0.20f), pivot: new Vector2(0.5f, 0f));
 
             // Decision Buttons: Pinned to Bottom-Center, Pivot (0.5, 0)
             GameObject btnLeave = CreateUIButton(leavingPhase.transform, "LeavePolitelyButton", "Say thank you and leave", 34,
@@ -1009,6 +1185,11 @@ namespace Googolplex.Unit6
             var feedbackText = feedback.GetComponentInChildren<TextMeshProUGUI>();
             feedback.SetActive(false);
 
+            // Audio Previews per zone
+            AudioClip whisperClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_SLIDER_WHISPER.mp3");
+            AudioClip justRightClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_SLIDER_JUSTRIGHT.mp3");
+            AudioClip bigVoiceClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_SLIDER_BIGVOICE.mp3");
+
             // Wire Serialized Properties
             SerializedObject so = new SerializedObject(comp);
             SetPropertyRef(so, "titleBanner", titleBannerObj);
@@ -1021,6 +1202,9 @@ namespace Googolplex.Unit6
             SetPropertyRef(so, "justRightHighlight", justRightHl);
             SetPropertyRef(so, "bigVoiceHighlight", bigVoiceHl);
             SetPropertyRef(so, "sayItButton", sayBtn.GetComponent<Button>());
+            SetPropertyRef(so, "whisperPreviewAudio", whisperClip);
+            SetPropertyRef(so, "justRightPreviewAudio", justRightClip);
+            SetPropertyRef(so, "bigVoicePreviewAudio", bigVoiceClip);
             SetPropertyRef(so, "leavingPhaseContainer", leavingPhase);
             SetPropertyRef(so, "waitingFamilyVisual", waitFamily);
             SetPropertyRef(so, "leavePolitelyButton", btnLeave.GetComponent<Button>());
@@ -1147,6 +1331,32 @@ namespace Googolplex.Unit6
                     anchorMin: Vector2.zero, anchorMax: Vector2.one, padding: new Vector4(16, 8, 16, 8));
             }
             return box;
+        }
+
+        /// <summary>
+        /// Returns an existing child button named <paramref name="name"/> if one exists,
+        /// skipping all RectTransform changes so the user's manual edits are preserved.
+        /// Only creates a brand-new button (with full layout) when no child with that name exists.
+        /// </summary>
+        private static GameObject CreateOrGetUIButton(
+            Transform parent,
+            string name,
+            string labelText,
+            float fontSize,
+            Vector2 anchoredPos,
+            Vector2 sizeDelta,
+            Color btnColor,
+            Vector2? anchorMin = null,
+            Vector2? anchorMax = null,
+            Vector2? pivot = null)
+        {
+            // If it already exists, leave its RectTransform completely alone.
+            Transform existing = parent.Find(name);
+            if (existing != null)
+                return existing.gameObject;
+
+            // Doesn't exist yet — create from scratch.
+            return CreateUIButton(parent, name, labelText, fontSize, anchoredPos, sizeDelta, btnColor, anchorMin, anchorMax, pivot);
         }
 
         private static GameObject CreateUIButton(

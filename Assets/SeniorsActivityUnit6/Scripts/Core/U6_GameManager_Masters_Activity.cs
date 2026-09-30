@@ -115,31 +115,17 @@ namespace Googolplex.Unit6
 
         private void UpdateScreenVisibility()
         {
-            if (liveTableScreen) liveTableScreen.SetActive(false);
-            if (menuScreen) menuScreen.SetActive(false);
-            if (choiceScreen) choiceScreen.SetActive(false);
-            if (sliderScreen) sliderScreen.SetActive(false);
-            if (endingScreen) endingScreen.SetActive(false);
+            bool isLiveTable = (currentPart == U6_GamePart.Intro || currentPart == U6_GamePart.Part1_Waiting);
+            bool isMenu = (currentPart == U6_GamePart.Part2_Menu);
+            bool isChoice = (currentPart == U6_GamePart.Part3_Waiter);
+            bool isSlider = (currentPart == U6_GamePart.Part4_VoicesAndLeaving);
+            bool isEnding = (currentPart == U6_GamePart.Ending);
 
-            switch (currentPart)
-            {
-                case U6_GamePart.Intro:
-                case U6_GamePart.Part1_Waiting:
-                    if (liveTableScreen) liveTableScreen.SetActive(true);
-                    break;
-                case U6_GamePart.Part2_Menu:
-                    if (menuScreen) menuScreen.SetActive(true);
-                    break;
-                case U6_GamePart.Part3_Waiter:
-                    if (choiceScreen) choiceScreen.SetActive(true);
-                    break;
-                case U6_GamePart.Part4_VoicesAndLeaving:
-                    if (sliderScreen) sliderScreen.SetActive(true);
-                    break;
-                case U6_GamePart.Ending:
-                    if (endingScreen) endingScreen.SetActive(true);
-                    break;
-            }
+            if (liveTableScreen && liveTableScreen.activeSelf != isLiveTable) liveTableScreen.SetActive(isLiveTable);
+            if (menuScreen && menuScreen.activeSelf != isMenu) menuScreen.SetActive(isMenu);
+            if (choiceScreen && choiceScreen.activeSelf != isChoice) choiceScreen.SetActive(isChoice);
+            if (sliderScreen && sliderScreen.activeSelf != isSlider) sliderScreen.SetActive(isSlider);
+            if (endingScreen && endingScreen.activeSelf != isEnding) endingScreen.SetActive(isEnding);
         }
 
         public void StartPart1() => ChangeState(U6_GamePart.Part1_Waiting);

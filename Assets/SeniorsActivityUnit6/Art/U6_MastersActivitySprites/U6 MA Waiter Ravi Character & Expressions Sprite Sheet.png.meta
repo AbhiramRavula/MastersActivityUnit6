@@ -144,7 +144,7 @@ TextureImporter:
         width: 267
         height: 652
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -152,27 +152,6 @@ TextureImporter:
       bones: []
       spriteID: acaa91a5f789e224995c7e63e1b52f18
       internalID: 1767693086
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: SPR_Ravi_WaterJug
-      rect:
-        serializedVersion: 2
-        x: 576
-        y: 379
-        width: 368
-        height: 638
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 3d48a9b01b8b98a4a93d6b3760f32b89
-      internalID: -457237438
       vertices: []
       indices: 
       edges: []
@@ -186,7 +165,7 @@ TextureImporter:
         width: 404
         height: 646
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -207,7 +186,7 @@ TextureImporter:
         width: 350
         height: 355
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -228,7 +207,7 @@ TextureImporter:
         width: 389
         height: 350
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -249,7 +228,7 @@ TextureImporter:
         width: 340
         height: 351
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -277,7 +256,7 @@ TextureImporter:
       SPR_Ravi_StandingPad: 1767693086
       SPR_Ravi_StiffPolite: -154765144
       SPR_Ravi_WarmSmile: -1375636265
-      SPR_Ravi_WaterJug: -457237438
+      SPR_Ravi_WaterJug___: -457237438
       U6 MA Waiter Ravi Character & Expressions Sprite Sheet_1: -1457824175
       U6 MA Waiter Ravi Character & Expressions Sprite Sheet_10: 2059945222
       U6 MA Waiter Ravi Character & Expressions Sprite Sheet_11: -1681147236

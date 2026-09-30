@@ -40,9 +40,16 @@ public class EngSnap_VoiceGeneratorWindow : EditorWindow
         pitchHz = EditorGUILayout.IntSlider("Pitch (Hz)", pitchHz, -100, 100);
 
         GUILayout.Space(10);
+        bool openFolder = false;
         GUILayout.BeginHorizontal();
         outputDirectory = EditorGUILayout.TextField("Output Directory", outputDirectory);
         if (GUILayout.Button("Select Folder", GUILayout.Width(100)))
+        {
+            openFolder = true;
+        }
+        GUILayout.EndHorizontal();
+
+        if (openFolder)
         {
             string path = EditorUtility.OpenFolderPanel("Select Output Directory", outputDirectory, "");
             if (!string.IsNullOrEmpty(path))
@@ -51,8 +58,8 @@ public class EngSnap_VoiceGeneratorWindow : EditorWindow
                     ? "Assets" + path.Substring(Application.dataPath.Length)
                     : path;
             }
+            GUIUtility.ExitGUI();
         }
-        GUILayout.EndHorizontal();
 
         if (GUILayout.Button("Set to Selected Folder in Project Window"))
         {
@@ -80,16 +87,24 @@ public class EngSnap_VoiceGeneratorWindow : EditorWindow
             if (GUILayout.Button("Cancel Generation", GUILayout.Height(30)))
             {
                 CancelGeneration();
+                GUIUtility.ExitGUI();
             }
         }
         else
         {
+            bool doGenerate = false;
             EditorGUI.BeginDisabledGroup(string.IsNullOrWhiteSpace(inputText));
             if (GUILayout.Button("Generate Audio", GUILayout.Height(40)))
             {
-                GenerateAudio();
+                doGenerate = true;
             }
             EditorGUI.EndDisabledGroup();
+
+            if (doGenerate)
+            {
+                GenerateAudio();
+                GUIUtility.ExitGUI();
+            }
         }
     }
 

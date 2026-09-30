@@ -156,7 +156,8 @@ namespace Googolplex.Unit6
         }
 
 #if UNITY_EDITOR
-        private void AutoLoadMenuSprites()
+        [ContextMenu("Auto-Assign Everything (Fix for APK)")]
+        public void AutoLoadMenuSprites()
         {
             Dictionary<string, Sprite> spriteDict = new Dictionary<string, Sprite>(System.StringComparer.OrdinalIgnoreCase);
             string[] guids = AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets/SeniorsActivityUnit6/Art" });
@@ -207,6 +208,15 @@ namespace Googolplex.Unit6
             defaultDishes.Add(new U6_DishItemData_Masters_Activity { dishId = "icecream", dishName = "Ice Cream", price = 50, dishSprite = GetSprite("SPR_Dish_IceCream") });
 
             InitializeDefaultDishes();
+            
+            if (!Application.isPlaying)
+            {
+                UnityEditor.EditorUtility.SetDirty(this);
+                if (gameObject.scene.IsValid())
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+                }
+            }
         }
 #endif
 

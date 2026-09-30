@@ -27,9 +27,15 @@ namespace Googolplex.Unit6
 
         [Header("Phase 2: Leaving The Restaurant")]
         [SerializeField] private GameObject leavingPhaseContainer;
-        [SerializeField] private GameObject waitingFamilyVisual;
+        [SerializeField] private GameObject waitingFamilyVisual;   // New family at the door
+        [SerializeField] private GameObject anuFamilyLeaving;      // Anu's family leaving
         [SerializeField] private Button leavePolitelyButton;
         [SerializeField] private Button stayAndPlayButton;
+
+        [Header("Real-Time Voice Preview Per Zone")]
+        [SerializeField] private AudioClip whisperPreviewAudio;
+        [SerializeField] private AudioClip justRightPreviewAudio;
+        [SerializeField] private AudioClip bigVoicePreviewAudio;
 
 #pragma warning disable 0414
         [Header("Audios & SFX Used On This Screen")]
@@ -65,9 +71,21 @@ namespace Googolplex.Unit6
                 stayAndPlayButton.onClick.AddListener(() => OnLeavingDecision(false));
         }
 
+        private bool isScreenReady = false;
+        private Coroutine readyCoroutine;
+
         private void OnEnable()
         {
+            isScreenReady = false;
             ResetScreen();
+            if (readyCoroutine != null) StopCoroutine(readyCoroutine);
+            readyCoroutine = StartCoroutine(MarkScreenReadyRoutine());
+        }
+
+        private IEnumerator MarkScreenReadyRoutine()
+        {
+            yield return new WaitForSeconds(0.45f);
+            isScreenReady = true;
         }
 
         private void ResetScreen()
@@ -92,6 +110,18 @@ namespace Googolplex.Unit6
                     }
                 }
                 if (tb != null) titleBanner = tb.gameObject;
+            }
+
+            // Auto-find family GameObjects by name (works even if not assigned in Inspector)
+            if (waitingFamilyVisual == null)
+            {
+                var t = FindInActiveChildren(transform, "WaitingFamilyVisual");
+                if (t != null) waitingFamilyVisual = t.gameObject;
+            }
+            if (anuFamilyLeaving == null)
+            {
+                var t = FindInActiveChildren(transform, "AnuFamilyLeaving");
+                if (t != null) anuFamilyLeaving = t.gameObject;
             }
 
             if (titleBanner != null)
@@ -197,10 +227,44 @@ namespace Googolplex.Unit6
             if (justRightHighlight) justRightHighlight.SetActive(currentZone == U6_VolumeZone.JustRight);
             if (bigVoiceHighlight) bigVoiceHighlight.SetActive(currentZone == U6_VolumeZone.BigVoice);
 
-            // Only trigger tick sound when entering a new step
+            // Trigger tick sound & real-time voice preview when entering a new step
             if (currentZone != previousZone && U6_AudioManager_Masters_Activity.Instance != null)
             {
                 U6_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_SliderZone");
+
+                if (isScreenReady)
+                {
+                    PlayZoneVoicePreview(currentZone);
+                }
+            }
+        }
+
+        private void PlayZoneVoicePreview(U6_VolumeZone zone)
+        {
+            if (U6_AudioManager_Masters_Activity.Instance == null) return;
+
+            switch (zone)
+            {
+                case U6_VolumeZone.Whisper:
+                    if (whisperPreviewAudio != null)
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO(whisperPreviewAudio);
+                    else
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_SLIDER_WHISPER");
+                    break;
+
+                case U6_VolumeZone.JustRight:
+                    if (justRightPreviewAudio != null)
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO(justRightPreviewAudio);
+                    else
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_SLIDER_JUSTRIGHT");
+                    break;
+
+                case U6_VolumeZone.BigVoice:
+                    if (bigVoicePreviewAudio != null)
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO(bigVoicePreviewAudio);
+                    else
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_SLIDER_BIGVOICE");
+                    break;
             }
         }
 
@@ -267,18 +331,18 @@ namespace Googolplex.Unit6
                 hideTitleBannerCoroutine = null;
             }
             if (titleBanner != null && titleBanner.activeSelf)
-            {
                 titleBanner.SetActive(false);
-            }
 
             if (volumePhaseContainer) volumePhaseContainer.SetActive(false);
             if (feedbackPanel) feedbackPanel.SetActive(false);
             if (leavingPhaseContainer) leavingPhaseContainer.SetActive(true);
 
+            // Only WaitingFamilyVisual shown at the start — Anu's family appears only on Leave.
+            if (waitingFamilyVisual) waitingFamilyVisual.SetActive(true);
+            if (anuFamilyLeaving)    anuFamilyLeaving.SetActive(false);
+
             if (U6_AudioManager_Masters_Activity.Instance != null)
-            {
                 U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_11");
-            }
         }
 
         private void OnLeavingDecision(bool leaveNow)
@@ -295,6 +359,10 @@ namespace Googolplex.Unit6
                 if (feedbackText)
                     feedbackText.text = "Anu thanks Ravi and leaves. The waiting family gets a table! Star 3 Earned!";
 
+                // Show Anu's family walking out, then hide after a moment.
+                if (anuFamilyLeaving) anuFamilyLeaving.SetActive(true);
+                // waitingFamilyVisual stays ON (they're getting the table now)
+
                 U6_GameManager_Masters_Activity.Instance.AwardStar();
 
                 if (U6_AudioManager_Masters_Activity.Instance != null)
@@ -304,7 +372,6 @@ namespace Googolplex.Unit6
                 }
 
                 yield return new WaitForSeconds(3.5f);
-
                 U6_GameManager_Masters_Activity.Instance.StartEnding();
             }
             else
@@ -312,9 +379,25 @@ namespace Googolplex.Unit6
                 if (feedbackText)
                     feedbackText.text = "The family with the tired child is still standing and waiting at the door...";
 
+                // Anu's family stays — both remain visible.
+                // anuFamilyLeaving stays ON, waitingFamilyVisual stays ON.
+
                 yield return new WaitForSeconds(3.5f);
                 if (feedbackPanel) feedbackPanel.SetActive(false);
             }
+        }
+
+        /// <summary>Searches all children including inactive ones by name.</summary>
+        private static Transform FindInActiveChildren(Transform parent, string name)
+        {
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                Transform child = parent.GetChild(i);
+                if (child.name == name) return child;
+                Transform result = FindInActiveChildren(child, name);
+                if (result != null) return result;
+            }
+            return null;
         }
     }
 }

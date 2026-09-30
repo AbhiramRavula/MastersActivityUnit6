@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: ac77abff6ceca544fac6af7927297037
+guid: 22b036d3a556b094d82b85c36db4d989
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -43,7 +43,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -134,133 +134,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites:
-    - serializedVersion: 2
-      name: U6_MAct_Family_SittingStraight
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 502
-        width: 512
-        height: 502
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: de758698b3dae134ab8c29d5991bbc4c
-      internalID: -1129723287
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: U6_MAct_Family_SlidingChair
-      rect:
-        serializedVersion: 2
-        x: 512
-        y: 502
-        width: 512
-        height: 502
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: fd94e7da7fd065e479dd9b66dc400290
-      internalID: -1308390870
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: U6_MAct_Family_TappingGlass
-      rect:
-        serializedVersion: 2
-        x: 1024
-        y: 502
-        width: 512
-        height: 502
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 0246cd39068162a46b85b69ffc862941
-      internalID: 1585037361
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: U6_MAct_Family_ShoutingHungry
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 17
-        width: 512
-        height: 485
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: a20ec8e7b6e59464c9fdca2b3c60f102
-      internalID: 105546710
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: U6_MAct_Family_KneelingChair
-      rect:
-        serializedVersion: 2
-        x: 509
-        y: 0
-        width: 522
-        height: 502
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 1d22fb1413c878f48a66a9df16d3706c
-      internalID: -1105260315
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: U6_MAct_Family_HandRaise
-      rect:
-        serializedVersion: 2
-        x: 1033
-        y: 16
-        width: 503
-        height: 486
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: f4588e0322e2ecf4ba031fd4ad6e8fcd
-      internalID: -624026220
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
+    sprites: []
     outline: []
     physicsShape: []
     bones: []
@@ -271,13 +145,7 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable:
-      U6_MAct_Family_HandRaise: -624026220
-      U6_MAct_Family_KneelingChair: -1105260315
-      U6_MAct_Family_ShoutingHungry: 105546710
-      U6_MAct_Family_SittingStraight: -1129723287
-      U6_MAct_Family_SlidingChair: -1308390870
-      U6_MAct_Family_TappingGlass: 1585037361
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

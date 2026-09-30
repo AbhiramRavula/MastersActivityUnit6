@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: ac77abff6ceca544fac6af7927297037
+guid: 2a89bae96a055de428a5532ae0d924ea
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -136,127 +136,127 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: U6_MAct_Family_SittingStraight
+      name: SPR_Anu_CallPolite
       rect:
         serializedVersion: 2
         x: 0
-        y: 502
+        y: 512
         width: 512
-        height: 502
+        height: 512
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: de758698b3dae134ab8c29d5991bbc4c
-      internalID: -1129723287
+      spriteID: 43ed5c41c2cd8e644aed7e0d5647bf73
+      internalID: 291849145
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: U6_MAct_Family_SlidingChair
+      name: SPR_Anu_CallHitGlass
       rect:
         serializedVersion: 2
         x: 512
-        y: 502
+        y: 512
         width: 512
-        height: 502
+        height: 512
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: fd94e7da7fd065e479dd9b66dc400290
-      internalID: -1308390870
+      spriteID: 5fba0b12fdc5abb4dbdcfdd099c0a0c9
+      internalID: 202234102
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: U6_MAct_Family_TappingGlass
+      name: SPR_Anu_WaitPolite
       rect:
         serializedVersion: 2
         x: 1024
-        y: 502
+        y: 512
         width: 512
-        height: 502
+        height: 512
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 0246cd39068162a46b85b69ffc862941
-      internalID: 1585037361
+      spriteID: 4ab7c9427a4b39c4da35c655e682b035
+      internalID: 1407503196
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: U6_MAct_Family_ShoutingHungry
+      name: SPR_Anu_WaitBangCutlery
       rect:
         serializedVersion: 2
         x: 0
-        y: 17
-        width: 512
-        height: 485
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: a20ec8e7b6e59464c9fdca2b3c60f102
-      internalID: 105546710
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: U6_MAct_Family_KneelingChair
-      rect:
-        serializedVersion: 2
-        x: 509
         y: 0
-        width: 522
-        height: 502
+        width: 512
+        height: 512
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 1d22fb1413c878f48a66a9df16d3706c
-      internalID: -1105260315
+      spriteID: ae6132442d649d74b84248ba9a179d0d
+      internalID: -195794794
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: U6_MAct_Family_HandRaise
+      name: SPR_Anu_DishPolite
       rect:
         serializedVersion: 2
-        x: 1033
-        y: 16
-        width: 503
-        height: 486
+        x: 512
+        y: 0
+        width: 512
+        height: 512
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f4588e0322e2ecf4ba031fd4ad6e8fcd
-      internalID: -624026220
+      spriteID: cedfd8615b48e864184569a5e5109dd2
+      internalID: -1596806278
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SPR_Anu_DishPush
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 0
+        width: 512
+        height: 512
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 037fba96789617d4e94a77e962bff302
+      internalID: -555208393
       vertices: []
       indices: 
       edges: []
@@ -272,12 +272,12 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      U6_MAct_Family_HandRaise: -624026220
-      U6_MAct_Family_KneelingChair: -1105260315
-      U6_MAct_Family_ShoutingHungry: 105546710
-      U6_MAct_Family_SittingStraight: -1129723287
-      U6_MAct_Family_SlidingChair: -1308390870
-      U6_MAct_Family_TappingGlass: 1585037361
+      SPR_Anu_CallHitGlass: 202234102
+      SPR_Anu_CallPolite: 291849145
+      SPR_Anu_DishPolite: -1596806278
+      SPR_Anu_DishPush: -555208393
+      SPR_Anu_WaitBangCutlery: -195794794
+      SPR_Anu_WaitPolite: 1407503196
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
