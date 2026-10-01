@@ -28,20 +28,16 @@ MastersActivity-Unit-6/
 │   │   ├── Art/                               # UI panels, character sprites, plates, food items
 │   │   ├── Audio/                             # Full suite of standardized VO and ambient audio
 │   │   │   └── U6_MastersActivity_audios/     # 51 standardized clips (VO_U6_*, SFX_*, AMB_*, MUS_*)
+│   │   ├── Audio_Manifest_Unit_6.md           # Dedicated Unit 6 audio manifest & dialogue transcript
+│   │   ├── CONTEXT.md                         # Unit 6 architecture, component roles & design decisions
+│   │   ├── STATUS.md                          # Production readiness, verified features & changelog
+│   │   ├── README.md                          # Dedicated Unit 6 documentation
 │   │   ├── Scenes/
 │   │   │   └── SeniorsActivity_unit6.unity    # Primary Unit 6 playable scene
 │   │   ├── Scripts/
-│   │   │   ├── Core/                          # Core Managers & Enums
-│   │   │   │   ├── U6_GameManager_Masters_Activity.cs
-│   │   │   │   ├── U6_AudioManager_Masters_Activity.cs
-│   │   │   │   └── U6_Enums_Masters_Activity.cs
-│   │   │   ├── Screens/                       # Screen Controllers for all 5 gameplay stages
-│   │   │   │   ├── U6_LiveTableScreen_Masters_Activity.cs
-│   │   │   │   ├── U6_MenuScreen_Masters_Activity.cs
-│   │   │   │   ├── U6_WaiterInteractionScreen_Masters_Activity.cs
-│   │   │   │   ├── U6_SliderScreen_Masters_Activity.cs
-│   │   │   │   └── U6_EndingScreen_Masters_Activity.cs
-│   │   │   ├── UI/                            # Reusable UI widgets & animations
+│   │   │   ├── Core/                          # Core Managers & Enums (U6_GameManager, U6_AudioManager)
+│   │   │   ├── Screens/                       # 5 Screen Controllers (LiveTable, Menu, Waiter, Slider, Ending)
+│   │   │   ├── UI/                            # U6_SafeAreaConstraint, dish data containers
 │   │   │   └── Editor/                        # Scene generation and auto-wiring tools
 │   │   └── SFX/                               # Procedural audio generator & sound assets
 │   │
@@ -104,23 +100,24 @@ graph LR
 
 2. **Screen 2 — Menu Screen (`U6_MenuScreen_Masters_Activity.cs`)**:
    - **Concept:** Reading before ordering and choosing a meal.
-   - **Mechanic:** Laminated menu interaction, option selection.
-   - **Audio:** `SFX_MenuOpen`, `VO_U6_05`, `VO_U6_06`.
+   - **Curated Menu:** 6 local dishes (Dosa, Idli, Noodles, Rice, Roti, Ice Cream).
+   - **Mechanic:** Laminated menu interaction; stammer sequence (*"Ummm... ummm..."*) if called prematurely; dedicated polite vs blunt audio options per dish.
+   - **Audio:** `SFX_MenuOpen`, `SFX_PadWrite`, `VO_U6_05`, `VO_U6_06`, `VO_U6_ORD_*_POLITE` and `VO_U6_ORD_*_BLUNT`.
 
 3. **Screen 3 — Waiter Interaction (`U6_WaiterInteractionScreen_Masters_Activity.cs`)**:
-   - **Concept:** Ordering politely and handling when the wrong dish arrives.
-   - **Mechanic:** Branching dialogue choices (Polite vs Impatient / Rude).
-   - **Consequence:** Calm response triggers Waiter Ravi's warm apology (`VO_U6_WAIT_3`) and **Star 2** award.
-   - **Audio:** `VO_U6_08`, `VO_U6_09`, `VO_U6_ANU_1` through `VO_U6_ANU_7`, `VO_U6_WAIT_1` through `VO_U6_WAIT_4`, `AMB_RestaurantHush`.
+   - **Concept:** 5 interactive moments with Waiter Ravi (Water, Calling, Wrong Dish, Food Served, Dropped Fork).
+   - **Hand-Raising Etiquette:** Anu raises her hand with the family table (`U6_MAct_Family_HandRaise`) during asking moments.
+   - **Dynamic Wrong Dish:** Anu politely cites her exact chosen dish (e.g. *"Sorry, I think I ordered noodles!"*), triggering Ravi's warm apology (`VO_U6_WAIT_3`) and **Star 2** award.
+   - **Audio:** `VO_U6_08`, `VO_U6_09`, `VO_U6_ANU_WRONG_*`, `VO_U6_WAIT_1` through `VO_U6_WAIT_4`, `SFX_PlateDown`, `SFX_ForkDrop`.
 
 4. **Screen 4 — Voice Volume Slider (`U6_SliderScreen_Masters_Activity.cs`)**:
    - **Concept:** Understanding restaurant ambient noise vs appropriate indoor speaking volume.
-   - **Mechanic:** Interactive 3-zone slider (Too Quiet $\rightarrow$ Just Right $\rightarrow$ Too Loud).
-   - **Consequences:** Too quiet triggers Dad's confusion (`VO_U6_DAD_1`), too loud triggers Mum's gentle warning (`VO_U6_MUM_1`), just right awards **Star 3**.
+   - **Mechanic:** Interactive 3-zone slider (Whisper $\to$ Just Right $\to$ Big Voice) speaking *"Excuse me, Ravi!"*.
+   - **Consequences:** Whisper prompts Dad's confusion (`VO_U6_DAD_1`), Big Voice prompts Mum's guidance (`VO_U6_MUM_2`), Just Right awards **Star 3** and triggers the table turnover.
 
 5. **Screen 5 — Ending Celebration (`U6_EndingScreen_Masters_Activity.cs`)**:
-   - **Concept:** Victory fanfare, confetti, and teacher discussion prompt: *"What will you say to the waiter next time?"*.
-   - **Audio:** `MUS_Win`, `SFX_Confetti`, `SFX_Clap`, `VO_U6_12`, `VO_U6_13`.
+   - **Concept:** Victory fanfare, dynamic 2 or 3 star banner, confetti burst, and reflection prompt: *"What will you say to the waiter next time?"* (`VO_U6_13`).
+   - **Audio:** `MUS_Win`, `SFX_Confetti`, `SFX_Clap`, `SFX_Star`, `VO_U6_12`, `VO_U6_12_2STARS`, `VO_U6_13`.
 
 ---
 
@@ -184,12 +181,15 @@ graph TD
 All audio assets in the project use strict naming IDs matching the curriculum design specification.
 
 ### Unit 6 Audio Manifest
-- **Narrator:** `VO_U6_01` to `VO_U6_13`
-- **Anu (Child):** `VO_U6_ANU_1` to `VO_U6_ANU_10`
+- **Narrator:** `VO_U6_01` to `VO_U6_13`, `VO_U6_12_2STARS`
+- **Anu (Child):** `VO_U6_ANU_1` to `VO_U6_ANU_10`, `VO_U6_ANU_CALL_*`, `VO_U6_ANU_EAT_FAST`
+- **Dish Order Lines (6 Dishes x 2):** `VO_U6_ORD_*_POLITE` and `VO_U6_ORD_*_BLUNT` (Dosa, Idli, Noodles, Rice, Roti, Ice Cream)
+- **Dynamic Wrong Dish Lines (6 Dishes):** `VO_U6_ANU_WRONG_*` (Dosa, Idli, Noodles, Rice, Roti, Ice Cream)
+- **Modulated Slider Lines:** `VO_U6_SLIDER_WHISPER`, `VO_U6_SLIDER_JUSTRIGHT`, `VO_U6_SLIDER_BIGVOICE`
 - **Waiter (Ravi):** `VO_U6_WAIT_1` to `VO_U6_WAIT_4`
-- **Parents:** `VO_U6_DAD_1`, `VO_U6_MUM_1`
+- **Parents:** `VO_U6_DAD_1`, `VO_U6_MUM_1`, `VO_U6_MUM_2`
 - **Ambience & Music:** `AMB_Restaurant`, `AMB_RestaurantHush`, `MUS_Restaurant` (alias `MUS_Loop`), `MUS_Win`
-- **Sound Effects:** `SFX_MenuOpen`, `SFX_PlateDown`, `SFX_ForkDrop`, `SFX_GlassTing`, `SFX_ChairWobble`, `SFX_BabyCry`, `SFX_DoorChime` (alias `SFX_DoorBell`), `SFX_Bubble` (alias `SFX_SliderZone`), `SFX_PadWrite`, `SFX_Sparkle`, `SFX_Star`, `SFX_Confetti`, `SFX_Clap`, `SFX_Chirp`
+- **Sound Effects:** `SFX_MenuOpen`, `SFX_PlateDown`, `SFX_ForkDrop`, `SFX_GlassTing`, `SFX_ChairWobble`, `SFX_BabyCry`, `SFX_DoorChime`, `SFX_Bubble`, `SFX_PadWrite`, `SFX_Sparkle`, `SFX_Star`, `SFX_Confetti`, `SFX_Clap`
 
 ### Unit 10 Audio Manifest
 - **Narrator (NeerjaNeural):** `VO_U10_01` to `VO_U10_12`, `VO_U10_13_01` to `VO_U10_13_12` (12 Weekly Quotes), `VO_U10_14` (Harvest)
