@@ -362,7 +362,9 @@ namespace Googolplex.Unit6
             Debug.Log($"[U6_AudioManager] >>> PLAYING VO CLIP: '{clip.name}' <<<");
         }
 
-        public void PlayVO(string voId)
+        public void PlayVO(string voId) => PlayVO(voId, 1f);
+
+        public void PlayVO(string voId, float volumeMultiplier)
         {
             if (string.IsNullOrEmpty(voId)) return;
 
@@ -389,10 +391,11 @@ namespace Googolplex.Unit6
             {
                 voSource.Stop();
                 voSource.clip = entry.clip;
-                voSource.volume = entry.volume > 0 ? entry.volume : 1f;
+                float baseVol = entry.volume > 0 ? entry.volume : 1f;
+                voSource.volume = Mathf.Clamp01(baseVol * volumeMultiplier);
                 voSource.loop = false;
                 voSource.Play();
-                Debug.Log($"[U6_AudioManager] >>> PLAYING VO: {cleanId} (Clip: '{entry.clip.name}') <<<");
+                Debug.Log($"[U6_AudioManager] >>> PLAYING VO: {cleanId} (Clip: '{entry.clip.name}', Vol: {voSource.volume:F2}) <<<");
             }
             else
             {

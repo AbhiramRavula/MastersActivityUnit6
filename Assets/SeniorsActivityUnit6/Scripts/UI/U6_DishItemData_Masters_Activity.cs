@@ -10,5 +10,7 @@ namespace Googolplex.Unit6
         public int price;
         public Sprite dishSprite;
         public string anuVoiceLineKey;
+        public AudioClip politeOrderClip;
+        public AudioClip impoliteOrderClip;
     }
 }

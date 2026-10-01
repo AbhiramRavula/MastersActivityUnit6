@@ -1248,6 +1248,42 @@ MonoBehaviour:
   - id: VO_U6_13
     clip: {fileID: 8300000, guid: b4bd19899fc58b44fb225b0350bc41bc, type: 3}
     volume: 1
+  - id: VO_U6_ORD_DOSA_POLITE
+    clip: {fileID: 8300000, guid: 665e3a2998c740f1bfec31e94532b9f0, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_DOSA_BLUNT
+    clip: {fileID: 8300000, guid: d502ffc9547d4538b93e04504be28be4, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_IDLI_POLITE
+    clip: {fileID: 8300000, guid: f3672a2a340a49d4b17dbf9b3d7e16f3, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_IDLI_BLUNT
+    clip: {fileID: 8300000, guid: 08e9ac8d08a844548a3fb06843c8de55, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_NOODLES_POLITE
+    clip: {fileID: 8300000, guid: 7ee4bf2da7d64f338d5cd04af8027527, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_NOODLES_BLUNT
+    clip: {fileID: 8300000, guid: 5b234a99acd54352ac611748b313c6ea, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_RICE_POLITE
+    clip: {fileID: 8300000, guid: a3cfbce38b6d441d9bedc5adda383770, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_RICE_BLUNT
+    clip: {fileID: 8300000, guid: 1d911b2adcb449ba95d351037b6dbf06, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_ROTI_POLITE
+    clip: {fileID: 8300000, guid: 98fe3c1f279440e6bdb1324923d7a496, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_ROTI_BLUNT
+    clip: {fileID: 8300000, guid: 5ec9f3cad6f946c6b8702de47aa5ecda, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_ICECREAM_POLITE
+    clip: {fileID: 8300000, guid: a54ef5cee3964964b8390c101883a46c, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_ICECREAM_BLUNT
+    clip: {fileID: 8300000, guid: 0e7702b4355749ccaea9b1aa5962c722, type: 3}
+    volume: 1
 --- !u!114 &83239447
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1452,8 +1488,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.48, y: 0.28}
   m_AnchorMax: {x: 0.48, y: 0.28}
-  m_AnchoredPosition: {x: 173.99997, y: 198.39}
-  m_SizeDelta: {x: 49.96, y: 78.03}
+  m_AnchoredPosition: {x: 164.96973, y: 180.7}
+  m_SizeDelta: {x: 46.94, y: 73.31}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &91320698
 MonoBehaviour:
@@ -2255,7 +2291,7 @@ GameObject:
   - component: {fileID: 193084239}
   - component: {fileID: 193084238}
   m_Layer: 0
-  m_Name: AnuCharacterVisual
+  m_Name: AnuFamilyLeaving
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2508,8 +2544,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.32, y: 0.16}
   m_AnchorMax: {x: 0.32, y: 0.16}
-  m_AnchoredPosition: {x: 371.99997, y: 19}
-  m_SizeDelta: {x: 1198.9, y: 662.55}
+  m_AnchoredPosition: {x: 371, y: 19}
+  m_SizeDelta: {x: 1126.34, y: 622.45}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &208940842
 MonoBehaviour:
@@ -3036,7 +3072,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.76, y: 0.28}
   m_AnchorMax: {x: 0.76, y: 0.28}
-  m_AnchoredPosition: {x: 201.77, y: 0}
+  m_AnchoredPosition: {x: 201.77002, y: 0}
   m_SizeDelta: {x: 249.54, y: 549.69}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &277921569
@@ -3765,8 +3801,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.48, y: 0.28}
   m_AnchorMax: {x: 0.48, y: 0.28}
-  m_AnchoredPosition: {x: -21, y: 198.39}
-  m_SizeDelta: {x: 49.96, y: 78.03}
+  m_AnchoredPosition: {x: -18.23027, y: 180.7}
+  m_SizeDelta: {x: 46.94, y: 73.31}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &359288569
 MonoBehaviour:
@@ -4207,8 +4243,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 45.019, y: 0, z: 0}
   m_AnchorMin: {x: 0.48, y: 0.28}
   m_AnchorMax: {x: 0.48, y: 0.28}
-  m_AnchoredPosition: {x: 62, y: 198.39}
-  m_SizeDelta: {x: 200, y: 100}
+  m_AnchoredPosition: {x: 59.749725, y: 180.7}
+  m_SizeDelta: {x: 187.9, y: 93.95}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &452777387
 MonoBehaviour:
@@ -6558,6 +6594,42 @@ MonoBehaviour:
   - id: VO_U6_WAIT_4
     clip: {fileID: 8300000, guid: 169971f53cf78df48b4584346156ba00, type: 3}
     volume: 1
+  - id: VO_U6_ORD_DOSA_POLITE
+    clip: {fileID: 8300000, guid: 665e3a2998c740f1bfec31e94532b9f0, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_DOSA_BLUNT
+    clip: {fileID: 8300000, guid: d502ffc9547d4538b93e04504be28be4, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_IDLI_POLITE
+    clip: {fileID: 8300000, guid: f3672a2a340a49d4b17dbf9b3d7e16f3, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_IDLI_BLUNT
+    clip: {fileID: 8300000, guid: 08e9ac8d08a844548a3fb06843c8de55, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_NOODLES_POLITE
+    clip: {fileID: 8300000, guid: 7ee4bf2da7d64f338d5cd04af8027527, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_NOODLES_BLUNT
+    clip: {fileID: 8300000, guid: 5b234a99acd54352ac611748b313c6ea, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_RICE_POLITE
+    clip: {fileID: 8300000, guid: a3cfbce38b6d441d9bedc5adda383770, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_RICE_BLUNT
+    clip: {fileID: 8300000, guid: 1d911b2adcb449ba95d351037b6dbf06, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_ROTI_POLITE
+    clip: {fileID: 8300000, guid: 98fe3c1f279440e6bdb1324923d7a496, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_ROTI_BLUNT
+    clip: {fileID: 8300000, guid: 5ec9f3cad6f946c6b8702de47aa5ecda, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_ICECREAM_POLITE
+    clip: {fileID: 8300000, guid: a54ef5cee3964964b8390c101883a46c, type: 3}
+    volume: 1
+  - id: VO_U6_ORD_ICECREAM_BLUNT
+    clip: {fileID: 8300000, guid: 0e7702b4355749ccaea9b1aa5962c722, type: 3}
+    volume: 1
 --- !u!114 &768215225
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6631,7 +6703,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
   m_AnchoredPosition: {x: 0, y: 149}
-  m_SizeDelta: {x: 700, y: 90}
+  m_SizeDelta: {x: 750, y: 90}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &774379690
 MonoBehaviour:
@@ -7191,7 +7263,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Feedback text
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -9432,7 +9504,11 @@ MonoBehaviour:
   sfxConfetti: SFX_Confetti (Party popper burst)
   sfxClap: SFX_Clap (Children clapping & cheering)
   voCelebration: VO_U6_12 (Three stars! Thank you, come again!)
+  voCelebrationClip: {fileID: 0}
+  voCelebration2Stars: VO_U6_12_2STARS (Two stars! Thank you, come again!)
+  voCelebration2StarsClip: {fileID: 0}
   voTeacherReflection: VO_U6_13 (What will you say to the waiter next time?)
+  voTeacherReflectionClip: {fileID: 0}
   restartButton: {fileID: 1427697384}
 --- !u!114 &1184467243
 MonoBehaviour:
@@ -10897,36 +10973,48 @@ MonoBehaviour:
   cardsContainer: {fileID: 776311876}
   dishCardPrefab: {fileID: 760407792}
   defaultDishes:
-  - dishId: 
+  - dishId: dosa
     dishName: Dosa
     price: 60
     dishSprite: {fileID: 479484706, guid: 0d7b8434e68db0b40af7e965e1c7b687, type: 3}
-    anuVoiceLineKey: 
-  - dishId: 
+    anuVoiceLineKey: VO_U6_ORD_DOSA_POLITE
+    politeOrderClip: {fileID: 8300000, guid: 665e3a2998c740f1bfec31e94532b9f0, type: 3}
+    impoliteOrderClip: {fileID: 8300000, guid: d502ffc9547d4538b93e04504be28be4, type: 3}
+  - dishId: idli
     dishName: Idli
     price: 40
     dishSprite: {fileID: 1774692170, guid: 0d7b8434e68db0b40af7e965e1c7b687, type: 3}
-    anuVoiceLineKey: 
-  - dishId: 
+    anuVoiceLineKey: VO_U6_ORD_IDLI_POLITE
+    politeOrderClip: {fileID: 8300000, guid: f3672a2a340a49d4b17dbf9b3d7e16f3, type: 3}
+    impoliteOrderClip: {fileID: 8300000, guid: 08e9ac8d08a844548a3fb06843c8de55, type: 3}
+  - dishId: noodles
     dishName: Noodles
     price: 80
     dishSprite: {fileID: 1830692495, guid: 0d7b8434e68db0b40af7e965e1c7b687, type: 3}
-    anuVoiceLineKey: 
-  - dishId: 
+    anuVoiceLineKey: VO_U6_ORD_NOODLES_POLITE
+    politeOrderClip: {fileID: 8300000, guid: 7ee4bf2da7d64f338d5cd04af8027527, type: 3}
+    impoliteOrderClip: {fileID: 8300000, guid: 5b234a99acd54352ac611748b313c6ea, type: 3}
+  - dishId: rice
     dishName: Rice
     price: 70
     dishSprite: {fileID: 1628490977, guid: 0d7b8434e68db0b40af7e965e1c7b687, type: 3}
-    anuVoiceLineKey: 
-  - dishId: 
+    anuVoiceLineKey: VO_U6_ORD_RICE_POLITE
+    politeOrderClip: {fileID: 8300000, guid: a3cfbce38b6d441d9bedc5adda383770, type: 3}
+    impoliteOrderClip: {fileID: 8300000, guid: 1d911b2adcb449ba95d351037b6dbf06, type: 3}
+  - dishId: roti
     dishName: Roti
     price: 50
     dishSprite: {fileID: -754033882, guid: 0d7b8434e68db0b40af7e965e1c7b687, type: 3}
-    anuVoiceLineKey: 
-  - dishId: 
+    anuVoiceLineKey: VO_U6_ORD_ROTI_POLITE
+    politeOrderClip: {fileID: 8300000, guid: 98fe3c1f279440e6bdb1324923d7a496, type: 3}
+    impoliteOrderClip: {fileID: 8300000, guid: 5ec9f3cad6f946c6b8702de47aa5ecda, type: 3}
+  - dishId: icecream
     dishName: Ice Cream
     price: 45
     dishSprite: {fileID: -139709832, guid: 0d7b8434e68db0b40af7e965e1c7b687, type: 3}
-    anuVoiceLineKey: 
+    anuVoiceLineKey: VO_U6_ORD_ICECREAM_POLITE
+    politeOrderClip: {fileID: 8300000, guid: a54ef5cee3964964b8390c101883a46c, type: 3}
+    impoliteOrderClip: {fileID: 8300000, guid: 0e7702b4355749ccaea9b1aa5962c722, type: 3}
   callWaiterButton: {fileID: 774379690}
   readFirstPrompt: {fileID: 1830989512}
   readFirstText: {fileID: 1865381548}
@@ -10949,6 +11037,18 @@ MonoBehaviour:
   voWaiterResponse: VO_U6_WAIT_1 (Certainly!)
   sfxPadWrite: SFX_PadWrite (Waiter taking note)
   sfxSparkle: SFX_Sparkle (Order success)
+  dosaPoliteClip: {fileID: 8300000, guid: 665e3a2998c740f1bfec31e94532b9f0, type: 3}
+  dosaBluntClip: {fileID: 8300000, guid: d502ffc9547d4538b93e04504be28be4, type: 3}
+  idliPoliteClip: {fileID: 8300000, guid: f3672a2a340a49d4b17dbf9b3d7e16f3, type: 3}
+  idliBluntClip: {fileID: 8300000, guid: 08e9ac8d08a844548a3fb06843c8de55, type: 3}
+  noodlesPoliteClip: {fileID: 8300000, guid: 7ee4bf2da7d64f338d5cd04af8027527, type: 3}
+  noodlesBluntClip: {fileID: 8300000, guid: 5b234a99acd54352ac611748b313c6ea, type: 3}
+  ricePoliteClip: {fileID: 8300000, guid: a3cfbce38b6d441d9bedc5adda383770, type: 3}
+  riceBluntClip: {fileID: 8300000, guid: 1d911b2adcb449ba95d351037b6dbf06, type: 3}
+  rotiPoliteClip: {fileID: 8300000, guid: 98fe3c1f279440e6bdb1324923d7a496, type: 3}
+  rotiBluntClip: {fileID: 8300000, guid: 5ec9f3cad6f946c6b8702de47aa5ecda, type: 3}
+  iceCreamPoliteClip: {fileID: 8300000, guid: a54ef5cee3964964b8390c101883a46c, type: 3}
+  iceCreamBluntClip: {fileID: 8300000, guid: 0e7702b4355749ccaea9b1aa5962c722, type: 3}
   waiterStandingVisual: {fileID: 975614435}
   waiterFeedbackPopup: {fileID: 655819495}
   waiterDialogText: {fileID: 292631698}
@@ -12096,12 +12196,12 @@ MonoBehaviour:
   bigVoiceHighlight: {fileID: 160093014}
   leavingPhaseContainer: {fileID: 1855923261}
   waitingFamilyVisual: {fileID: 975263791}
-  anuFamilyLeaving: {fileID: 0}
+  anuFamilyLeaving: {fileID: 193084236}
   leavePolitelyButton: {fileID: 1552225005}
   stayAndPlayButton: {fileID: 1503450482}
-  whisperPreviewAudio: {fileID: 0}
-  justRightPreviewAudio: {fileID: 0}
-  bigVoicePreviewAudio: {fileID: 0}
+  whisperPreviewAudio: {fileID: 8300000, guid: 3d6d653712b2444baad6a333ec6c36b7, type: 3}
+  justRightPreviewAudio: {fileID: 8300000, guid: 6efd6149ab5c4e5da3036c8c106b073a, type: 3}
+  bigVoicePreviewAudio: {fileID: 8300000, guid: d98bbaa223954fe4b8eec99ea0581c01, type: 3}
   voVolumeIntro: VO_U6_10 (How loud should Anu talk here?)
   sfxSliderZone: SFX_SliderZone (Zone tick bubble sound)
   voDadCantHear: VO_U6_DAD_1 (Sorry, I cannot hear you at all)
@@ -13877,7 +13977,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1647554421
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13923,16 +14023,17 @@ MonoBehaviour:
   filledWaterGlassSprite: {fileID: -1724693843, guid: f80b6fc41f8240c459f595b2498ee40d, type: 3}
   tableDishObject: {fileID: 452777385}
   tableDishImage: {fileID: 452777387}
-  spriteDishDosa: {fileID: 0}
-  spriteDishIdli: {fileID: 0}
-  spriteDishNoodles: {fileID: 0}
-  spriteDishRice: {fileID: 0}
-  spriteDishRoti: {fileID: 0}
-  spriteDishIceCream: {fileID: 0}
+  spriteDishDosa: {fileID: 479484706, guid: 0d7b8434e68db0b40af7e965e1c7b687, type: 3}
+  spriteDishIdli: {fileID: 1774692170, guid: 0d7b8434e68db0b40af7e965e1c7b687, type: 3}
+  spriteDishNoodles: {fileID: 1830692495, guid: 0d7b8434e68db0b40af7e965e1c7b687, type: 3}
+  spriteDishRice: {fileID: 1628490977, guid: 0d7b8434e68db0b40af7e965e1c7b687, type: 3}
+  spriteDishRoti: {fileID: -754033882, guid: 0d7b8434e68db0b40af7e965e1c7b687, type: 3}
+  spriteDishIceCream: {fileID: -139709832, guid: 0d7b8434e68db0b40af7e965e1c7b687, type: 3}
   politeAvatarSprite: {fileID: -903311522, guid: ac77abff6ceca544fac6af7927297037, type: 3}
   impoliteAvatarSprite: {fileID: -1957915284, guid: ac77abff6ceca544fac6af7927297037, type: 3}
-  familyTableCalmSprite: {fileID: 0}
-  familyTableReactSprite: {fileID: 0}
+  familyTableCalmSprite: {fileID: 1087377, guid: fa14a354aed74a647aa5eff92675e5ec, type: 3}
+  familyTableHandRaiseSprite: {fileID: -624026220, guid: ac77abff6ceca544fac6af7927297037, type: 3}
+  familyTableReactSprite: {fileID: -1488961543, guid: fa14a354aed74a647aa5eff92675e5ec, type: 3}
   raviGreeting: {fileID: 1632895361, guid: 600da5f794885c34bbc14a02dafeb5ba, type: 3}
   raviTakingOrder: {fileID: -2091325867, guid: 600da5f794885c34bbc14a02dafeb5ba, type: 3}
   raviPouring: {fileID: -1051639420, guid: c7ac4c2cfd2177f4a89d421688bd6011, type: 3}
@@ -13963,38 +14064,43 @@ MonoBehaviour:
   outcomePanel: {fileID: 76819976}
   outcomeText: {fileID: 315228775}
   voRaviIntro: VO_U6_08 (This is Ravi...)
-  voRaviIntroClip: {fileID: 0}
+  voRaviIntroClip: {fileID: 8300000, guid: 9106d06b60d11ec45a35583480f22825, type: 3}
   voWrongDish: VO_U6_09 (Oh! That is the wrong dish!)
-  voWrongDishClip: {fileID: 0}
+  voWrongDishClip: {fileID: 8300000, guid: ddf175f9c05a3c44fbc9384ecfa4d65a, type: 3}
   voAnuThankYou: VO_U6_ANU_4 (Thank you!)
-  voAnuThankYouClip: {fileID: 0}
-  voAnuWrongDishPolite: VO_U6_ANU_5 (Sorry, I think I ordered dosa)
-  voAnuWrongDishPoliteClip: {fileID: 0}
+  voAnuThankYouClip: {fileID: 8300000, guid: 1e2a48556c35ce74caa8ab1c9facc282, type: 3}
+  voAnuWrongDishPoliteClip: {fileID: 8300000, guid: 048b98a41c53ae14fb91a88768f81959, type: 3}
+  voWrongDishDosaClip: {fileID: 8300000, guid: 66e8f0e7cfc64dc5b068d5017440e8bd, type: 3}
+  voWrongDishIdliClip: {fileID: 8300000, guid: 33f845b8aaf94430b95675321373c434, type: 3}
+  voWrongDishNoodlesClip: {fileID: 8300000, guid: 891bc0418ee8498aa2fdd04ffb98686e, type: 3}
+  voWrongDishRiceClip: {fileID: 8300000, guid: cc012ed448d2462e940874218b63d985, type: 3}
+  voWrongDishRotiClip: {fileID: 8300000, guid: b9467184a726447e92582dd1a979d52d, type: 3}
+  voWrongDishIceCreamClip: {fileID: 8300000, guid: 1692d934a88d48faaf47b9637f35387b, type: 3}
   voAnuWrongDishLoud: VO_U6_ANU_6 (This is WRONG!)
-  voAnuWrongDishLoudClip: {fileID: 0}
+  voAnuWrongDishLoudClip: {fileID: 8300000, guid: 538adaf560b41f441abe8a1d49e79cfe, type: 3}
   voAnuDroppedFork: VO_U6_ANU_8 (Excuse me, could I have another fork?)
-  voAnuDroppedForkClip: {fileID: 0}
+  voAnuDroppedForkClip: {fileID: 8300000, guid: 651fbec96114c194fbe912facfe1ffd0, type: 3}
   voAnuDroppedForkShout: VO_U6_ANU_9 (I dropped my fork!)
-  voAnuDroppedForkShoutClip: {fileID: 0}
+  voAnuDroppedForkShoutClip: {fileID: 8300000, guid: e393d8f8c178cad4795b461a64d77815, type: 3}
   voWaiterApologize: VO_U6_WAIT_3 (I am so sorry, I will fix that!)
-  voWaiterApologizeClip: {fileID: 0}
+  voWaiterApologizeClip: {fileID: 8300000, guid: 2c05d9db730a50547aa03c2150294f2f, type: 3}
   sfxPlateDown: SFX_PlateDown (Plate set down)
-  sfxPlateDownClip: {fileID: 0}
+  sfxPlateDownClip: {fileID: 8300000, guid: edc919b13d729ef46879a5825ac6420b, type: 3}
   sfxForkDrop: SFX_ForkDrop (Fork dropped on floor)
-  sfxForkDropClip: {fileID: 0}
+  sfxForkDropClip: {fileID: 8300000, guid: ee683e9b764157a4bb2fa6f1d229c4d1, type: 3}
   sfxSparkle: SFX_Sparkle (Polite outcome)
-  sfxSparkleClip: {fileID: 0}
+  sfxSparkleClip: {fileID: 8300000, guid: 6e2fb72c9e83a474d99356fdb5671efd, type: 3}
   moments:
   - situationTitle: Water Served
     situationPrompt: Ravi brings a fresh jug of water to the table.
-    fullBodyPoseSprite: {fileID: -457237438, guid: 05a16462d5b66564380db45baa58f306, type: 3}
+    fullBodyPoseSprite: {fileID: -1051639420, guid: c7ac4c2cfd2177f4a89d421688bd6011, type: 3}
     propSprite: {fileID: -1330277922, guid: 9ce9ed0c3af73b84daa0659690484f40, type: 3}
     anuReactionSprite: {fileID: -1129723287, guid: ac77abff6ceca544fac6af7927297037, type: 3}
     optionA_Badge: 
     optionA_Text: '"Thank you!"'
     optionA_Outcome: Ravi smiles warmly and nods.
     optionA_VO: VO_U6_ANU_4
-    optionA_Clip: {fileID: 0}
+    optionA_Clip: {fileID: 8300000, guid: 1e2a48556c35ce74caa8ab1c9facc282, type: 3}
     optionA_Face: 0
     optionA_Avatar: {fileID: 0}
     optionA_RaviPose: {fileID: 0}
@@ -14014,16 +14120,16 @@ MonoBehaviour:
     optionA_Badge: 
     optionA_Text: Raise a hand gently and make eye contact
     optionA_Outcome: Ravi notices and comes over calmly.
-    optionA_VO: 
-    optionA_Clip: {fileID: 0}
+    optionA_VO: VO_U6_ANU_CALL_POLITE
+    optionA_Clip: {fileID: 8300000, guid: 7b89e419cab5430db83c664b1d78248e, type: 3}
     optionA_Face: 0
     optionA_Avatar: {fileID: 0}
     optionA_RaviPose: {fileID: 0}
     optionB_Badge: 
     optionB_Text: Wave both arms and shout across the room
     optionB_Outcome: Ravi hurries over while other tables look over.
-    optionB_VO: 
-    optionB_Clip: {fileID: 0}
+    optionB_VO: VO_U6_ANU_CALL_SHOUT
+    optionB_Clip: {fileID: 8300000, guid: faf8ef52810c4fc2b4d3c4199b3c3e28, type: 3}
     optionB_Face: 1
     optionB_Avatar: {fileID: 0}
     optionB_RaviPose: {fileID: 0}
@@ -14035,16 +14141,16 @@ MonoBehaviour:
     optionA_Badge: 
     optionA_Text: '"Sorry, I think this is the wrong dish."'
     optionA_Outcome: 'Ravi apologises warmly: "I will fix that right away!"'
-    optionA_VO: VO_U6_WAIT_3
-    optionA_Clip: {fileID: 0}
+    optionA_VO: VO_U6_ANU_5
+    optionA_Clip: {fileID: 8300000, guid: 048b98a41c53ae14fb91a88768f81959, type: 3}
     optionA_Face: 0
-    optionA_Avatar: {fileID: 0}
+    optionA_Avatar: {fileID: -903311522, guid: ac77abff6ceca544fac6af7927297037, type: 3}
     optionA_RaviPose: {fileID: 0}
     optionB_Badge: 
     optionB_Text: '"This is WRONG!" (loudly)'
     optionB_Outcome: Ravi apologises stiffly and fixes it quietly.
     optionB_VO: VO_U6_ANU_6
-    optionB_Clip: {fileID: 0}
+    optionB_Clip: {fileID: 8300000, guid: 538adaf560b41f441abe8a1d49e79cfe, type: 3}
     optionB_Face: 2
     optionB_Avatar: {fileID: 0}
     optionB_RaviPose: {fileID: 0}
@@ -14057,15 +14163,15 @@ MonoBehaviour:
     optionA_Text: '"Thank you, Ravi!"'
     optionA_Outcome: 'Ravi nods happily: "Enjoy your meal!"'
     optionA_VO: VO_U6_ANU_4
-    optionA_Clip: {fileID: 0}
+    optionA_Clip: {fileID: 8300000, guid: 1e2a48556c35ce74caa8ab1c9facc282, type: 3}
     optionA_Face: 0
     optionA_Avatar: {fileID: 0}
     optionA_RaviPose: {fileID: 0}
     optionB_Badge: 
     optionB_Text: (Grab fork and eat immediately without looking)
     optionB_Outcome: Ravi steps away quietly.
-    optionB_VO: 
-    optionB_Clip: {fileID: 0}
+    optionB_VO: VO_U6_ANU_EAT_FAST
+    optionB_Clip: {fileID: 8300000, guid: 0138bcd89c464954b5ef38900fadc3af, type: 3}
     optionB_Face: 1
     optionB_Avatar: {fileID: 0}
     optionB_RaviPose: {fileID: 0}
@@ -14078,7 +14184,7 @@ MonoBehaviour:
     optionA_Text: '"Excuse me, could I have another fork please?"'
     optionA_Outcome: Ravi brings a clean fork right away with a smile.
     optionA_VO: VO_U6_ANU_8
-    optionA_Clip: {fileID: 0}
+    optionA_Clip: {fileID: 8300000, guid: 651fbec96114c194fbe912facfe1ffd0, type: 3}
     optionA_Face: 0
     optionA_Avatar: {fileID: 0}
     optionA_RaviPose: {fileID: 0}
@@ -14086,7 +14192,7 @@ MonoBehaviour:
     optionB_Text: '"I dropped my fork!" (shouted)'
     optionB_Outcome: Ravi brings one while the nearby diners look up.
     optionB_VO: VO_U6_ANU_9
-    optionB_Clip: {fileID: 0}
+    optionB_Clip: {fileID: 8300000, guid: e393d8f8c178cad4795b461a64d77815, type: 3}
     optionB_Face: 2
     optionB_Avatar: {fileID: 0}
     optionB_RaviPose: {fileID: 0}
@@ -15525,8 +15631,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.48, y: 0.28}
   m_AnchorMax: {x: 0.48, y: 0.28}
-  m_AnchoredPosition: {x: -128.00003, y: 198.39}
-  m_SizeDelta: {x: 49.96, y: 78.03}
+  m_AnchoredPosition: {x: -118.750275, y: 180.7}
+  m_SizeDelta: {x: 46.94, y: 73.31}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &2075248817
 MonoBehaviour:

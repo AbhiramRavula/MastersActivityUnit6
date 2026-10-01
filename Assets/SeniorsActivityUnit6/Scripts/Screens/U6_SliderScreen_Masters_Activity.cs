@@ -55,9 +55,13 @@ namespace Googolplex.Unit6
         [SerializeField] private TextMeshProUGUI feedbackText;
 
         private U6_VolumeZone currentZone = U6_VolumeZone.JustRight;
+        private bool isResolvingVolume = false;
 
         private void Awake()
         {
+#if UNITY_EDITOR
+            EnsurePreviewClips();
+#endif
             if (volumeSlider != null)
                 volumeSlider.onValueChanged.AddListener(OnSliderMoved);
 
@@ -76,11 +80,27 @@ namespace Googolplex.Unit6
 
         private void OnEnable()
         {
+            isResolvingVolume = false;
             isScreenReady = false;
+#if UNITY_EDITOR
+            EnsurePreviewClips();
+#endif
             ResetScreen();
             if (readyCoroutine != null) StopCoroutine(readyCoroutine);
             readyCoroutine = StartCoroutine(MarkScreenReadyRoutine());
         }
+
+#if UNITY_EDITOR
+        private void EnsurePreviewClips()
+        {
+            if (whisperPreviewAudio == null)
+                whisperPreviewAudio = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_SLIDER_WHISPER.mp3");
+            if (justRightPreviewAudio == null)
+                justRightPreviewAudio = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_SLIDER_JUSTRIGHT.mp3");
+            if (bigVoicePreviewAudio == null)
+                bigVoicePreviewAudio = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_SLIDER_BIGVOICE.mp3");
+        }
+#endif
 
         private IEnumerator MarkScreenReadyRoutine()
         {
@@ -93,6 +113,7 @@ namespace Googolplex.Unit6
             if (volumePhaseContainer) volumePhaseContainer.SetActive(true);
             if (leavingPhaseContainer) leavingPhaseContainer.SetActive(false);
             if (feedbackPanel) feedbackPanel.SetActive(false);
+            if (feedbackText != null) feedbackText.text = "";
 
             if (titleBanner == null)
             {
@@ -247,29 +268,31 @@ namespace Googolplex.Unit6
             {
                 case U6_VolumeZone.Whisper:
                     if (whisperPreviewAudio != null)
-                        U6_AudioManager_Masters_Activity.Instance.PlayVO(whisperPreviewAudio);
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO(whisperPreviewAudio, 0.12f);
                     else
-                        U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_SLIDER_WHISPER");
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_SLIDER_WHISPER", 0.12f);
                     break;
 
                 case U6_VolumeZone.JustRight:
                     if (justRightPreviewAudio != null)
-                        U6_AudioManager_Masters_Activity.Instance.PlayVO(justRightPreviewAudio);
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO(justRightPreviewAudio, 0.70f);
                     else
-                        U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_SLIDER_JUSTRIGHT");
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_SLIDER_JUSTRIGHT", 0.70f);
                     break;
 
                 case U6_VolumeZone.BigVoice:
                     if (bigVoicePreviewAudio != null)
-                        U6_AudioManager_Masters_Activity.Instance.PlayVO(bigVoicePreviewAudio);
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO(bigVoicePreviewAudio, 1.0f);
                     else
-                        U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_SLIDER_BIGVOICE");
+                        U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_SLIDER_BIGVOICE", 1.0f);
                     break;
             }
         }
 
         private void OnSayItClicked()
         {
+            if (isResolvingVolume) return;
+
             if (hideTitleBannerCoroutine != null)
             {
                 StopCoroutine(hideTitleBannerCoroutine);
@@ -285,22 +308,42 @@ namespace Googolplex.Unit6
 
         private IEnumerator ResolveVolumeSequence()
         {
+            isResolvingVolume = true;
+
+            // Set the feedback text immediately so the placeholder "Feedback text" is never seen!
+            switch (currentZone)
+            {
+                case U6_VolumeZone.Whisper:
+                    if (feedbackText) feedbackText.text = "Too quiet! The waiter cannot hear you. Father leans in: \"Sorry? I cannot hear you at all.\"";
+                    break;
+
+                case U6_VolumeZone.BigVoice:
+                    if (feedbackText) feedbackText.text = "Too loud! Heads turn across the restaurant. Mum whispers: \"Anu, indoor voice, please.\"";
+                    break;
+
+                case U6_VolumeZone.JustRight:
+                    if (feedbackText) feedbackText.text = "Just right! The waiter hears clearly and the restaurant remains peaceful.";
+                    break;
+            }
+
             if (feedbackPanel) feedbackPanel.SetActive(true);
+
+            PlayZoneVoicePreview(currentZone);
+            yield return new WaitForSeconds(1.6f);
 
             switch (currentZone)
             {
                 case U6_VolumeZone.Whisper:
-                    if (feedbackText) feedbackText.text = "Father leans in: \"Sorry? I cannot hear you at all.\"";
                     if (U6_AudioManager_Masters_Activity.Instance != null)
                     {
                         U6_AudioManager_Masters_Activity.Instance.PlayVO("VO_U6_DAD_1");
                     }
                     yield return new WaitForSeconds(3.0f);
                     if (feedbackPanel) feedbackPanel.SetActive(false);
+                    isResolvingVolume = false;
                     break;
 
                 case U6_VolumeZone.BigVoice:
-                    if (feedbackText) feedbackText.text = "Too loud! Heads turn. Mum whispers: \"Anu, indoor voice, please.\"";
                     if (U6_AudioManager_Masters_Activity.Instance != null)
                     {
                         U6_AudioManager_Masters_Activity.Instance.PlaySFX("AMB_RestaurantHush");
@@ -308,16 +351,17 @@ namespace Googolplex.Unit6
                     }
                     yield return new WaitForSeconds(3.0f);
                     if (feedbackPanel) feedbackPanel.SetActive(false);
+                    isResolvingVolume = false;
                     break;
 
                 case U6_VolumeZone.JustRight:
-                    if (feedbackText) feedbackText.text = "Perfect! Father hears clearly and the room is undisturbed.";
                     if (U6_AudioManager_Masters_Activity.Instance != null)
                     {
                         U6_AudioManager_Masters_Activity.Instance.PlaySFX("SFX_Sparkle");
                     }
                     yield return new WaitForSeconds(2.5f);
 
+                    isResolvingVolume = false;
                     ShowLeavingPhase();
                     break;
             }

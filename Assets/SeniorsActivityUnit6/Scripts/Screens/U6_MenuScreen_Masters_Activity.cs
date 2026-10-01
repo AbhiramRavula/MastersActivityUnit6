@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 #endif
 
 namespace Googolplex.Unit6
@@ -48,6 +49,20 @@ namespace Googolplex.Unit6
         [SerializeField] private string sfxPadWrite = "SFX_PadWrite (Waiter taking note)";
         [SerializeField] private string sfxSparkle = "SFX_Sparkle (Order success)";
 #pragma warning restore 0414
+
+        [Header("Dish Order Audio Clips (Inspector Assignable)")]
+        [SerializeField] private AudioClip dosaPoliteClip;
+        [SerializeField] private AudioClip dosaBluntClip;
+        [SerializeField] private AudioClip idliPoliteClip;
+        [SerializeField] private AudioClip idliBluntClip;
+        [SerializeField] private AudioClip noodlesPoliteClip;
+        [SerializeField] private AudioClip noodlesBluntClip;
+        [SerializeField] private AudioClip ricePoliteClip;
+        [SerializeField] private AudioClip riceBluntClip;
+        [SerializeField] private AudioClip rotiPoliteClip;
+        [SerializeField] private AudioClip rotiBluntClip;
+        [SerializeField] private AudioClip iceCreamPoliteClip;
+        [SerializeField] private AudioClip iceCreamBluntClip;
 
         [Header("Full Body Waiter")]
         [SerializeField] private Image waiterStandingVisual;
@@ -199,16 +214,105 @@ namespace Googolplex.Unit6
             politeAvatarSprite = GetSprite("SPR_Anu_HandRaise") ?? GetSprite("SPR_Anu_SittingStraight") ?? GetSprite("U6_MAct_Family_HandRaise");
             impoliteAvatarSprite = GetSprite("SPR_Anu_ShoutingHungry") ?? GetSprite("U6_MAct_Family_ShoutingHungry");
 
-            defaultDishes.Clear();
-            defaultDishes.Add(new U6_DishItemData_Masters_Activity { dishId = "dosa", dishName = "Dosa", price = 60, dishSprite = GetSprite("SPR_Dish_Dosa") });
-            defaultDishes.Add(new U6_DishItemData_Masters_Activity { dishId = "idli", dishName = "Idli", price = 40, dishSprite = GetSprite("SPR_Dish_Idli") });
-            defaultDishes.Add(new U6_DishItemData_Masters_Activity { dishId = "noodles", dishName = "Noodles", price = 90, dishSprite = GetSprite("SPR_Dish_Noodles") });
-            defaultDishes.Add(new U6_DishItemData_Masters_Activity { dishId = "rice", dishName = "Rice", price = 80, dishSprite = GetSprite("SPR_Dish_Rice") });
-            defaultDishes.Add(new U6_DishItemData_Masters_Activity { dishId = "roti", dishName = "Roti", price = 30, dishSprite = GetSprite("SPR_Dish_Roti") });
-            defaultDishes.Add(new U6_DishItemData_Masters_Activity { dishId = "icecream", dishName = "Ice Cream", price = 50, dishSprite = GetSprite("SPR_Dish_IceCream") });
+            if (defaultDishes == null || defaultDishes.Count == 0)
+            {
+                defaultDishes = new List<U6_DishItemData_Masters_Activity>
+                {
+                    new U6_DishItemData_Masters_Activity { dishId = "dosa", dishName = "Dosa", price = 60, dishSprite = GetSprite("SPR_Dish_Dosa") },
+                    new U6_DishItemData_Masters_Activity { dishId = "idli", dishName = "Idli", price = 40, dishSprite = GetSprite("SPR_Dish_Idli") },
+                    new U6_DishItemData_Masters_Activity { dishId = "noodles", dishName = "Noodles", price = 90, dishSprite = GetSprite("SPR_Dish_Noodles") },
+                    new U6_DishItemData_Masters_Activity { dishId = "rice", dishName = "Rice", price = 80, dishSprite = GetSprite("SPR_Dish_Rice") },
+                    new U6_DishItemData_Masters_Activity { dishId = "roti", dishName = "Roti", price = 30, dishSprite = GetSprite("SPR_Dish_Roti") },
+                    new U6_DishItemData_Masters_Activity { dishId = "icecream", dishName = "Ice Cream", price = 50, dishSprite = GetSprite("SPR_Dish_IceCream") }
+                };
+            }
+            else
+            {
+                // Preserve user configured dishes! Only attach sprite if missing.
+                foreach (var d in defaultDishes)
+                {
+                    if (d == null) continue;
+                    if (d.dishSprite == null)
+                    {
+                        string n = (d.dishName ?? "").ToLower();
+                        if (n.Contains("dosa")) d.dishSprite = GetSprite("SPR_Dish_Dosa");
+                        else if (n.Contains("idli")) d.dishSprite = GetSprite("SPR_Dish_Idli");
+                        else if (n.Contains("noodle")) d.dishSprite = GetSprite("SPR_Dish_Noodles");
+                        else if (n.Contains("rice")) d.dishSprite = GetSprite("SPR_Dish_Rice");
+                        else if (n.Contains("roti")) d.dishSprite = GetSprite("SPR_Dish_Roti");
+                        else if (n.Contains("ice") || n.Contains("cream")) d.dishSprite = GetSprite("SPR_Dish_IceCream");
+                    }
+                }
+            }
 
+            EnsureMenuDishClips();
             InitializeDefaultDishes();
             
+            if (!Application.isPlaying)
+            {
+                UnityEditor.EditorUtility.SetDirty(this);
+                if (gameObject.scene.IsValid())
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+                }
+            }
+        }
+
+        [ContextMenu("Auto-Assign Dish Order Clips")]
+        public void EnsureMenuDishClips()
+        {
+            if (dosaPoliteClip == null) dosaPoliteClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ORD_DOSA_POLITE.mp3") ?? AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ANU_1.mp3");
+            if (dosaBluntClip == null) dosaBluntClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ORD_DOSA_BLUNT.mp3") ?? AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ANU_2.mp3");
+            if (idliPoliteClip == null) idliPoliteClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ORD_IDLI_POLITE.mp3");
+            if (idliBluntClip == null) idliBluntClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ORD_IDLI_BLUNT.mp3");
+            if (noodlesPoliteClip == null) noodlesPoliteClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ORD_NOODLES_POLITE.mp3");
+            if (noodlesBluntClip == null) noodlesBluntClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ORD_NOODLES_BLUNT.mp3");
+            if (ricePoliteClip == null) ricePoliteClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ORD_RICE_POLITE.mp3");
+            if (riceBluntClip == null) riceBluntClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ORD_RICE_BLUNT.mp3");
+            if (rotiPoliteClip == null) rotiPoliteClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ORD_ROTI_POLITE.mp3");
+            if (rotiBluntClip == null) rotiBluntClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ORD_ROTI_BLUNT.mp3");
+            if (iceCreamPoliteClip == null) iceCreamPoliteClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ORD_ICECREAM_POLITE.mp3");
+            if (iceCreamBluntClip == null) iceCreamBluntClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ORD_ICECREAM_BLUNT.mp3");
+
+            if (defaultDishes != null)
+            {
+                foreach (var d in defaultDishes)
+                {
+                    if (d == null) continue;
+                    string n = (d.dishName ?? "").ToLower();
+                    if (n.Contains("dosa"))
+                    {
+                        if (d.politeOrderClip == null) d.politeOrderClip = dosaPoliteClip;
+                        if (d.impoliteOrderClip == null) d.impoliteOrderClip = dosaBluntClip;
+                    }
+                    else if (n.Contains("idli"))
+                    {
+                        if (d.politeOrderClip == null) d.politeOrderClip = idliPoliteClip;
+                        if (d.impoliteOrderClip == null) d.impoliteOrderClip = idliBluntClip;
+                    }
+                    else if (n.Contains("noodle"))
+                    {
+                        if (d.politeOrderClip == null) d.politeOrderClip = noodlesPoliteClip;
+                        if (d.impoliteOrderClip == null) d.impoliteOrderClip = noodlesBluntClip;
+                    }
+                    else if (n.Contains("rice"))
+                    {
+                        if (d.politeOrderClip == null) d.politeOrderClip = ricePoliteClip;
+                        if (d.impoliteOrderClip == null) d.impoliteOrderClip = riceBluntClip;
+                    }
+                    else if (n.Contains("roti"))
+                    {
+                        if (d.politeOrderClip == null) d.politeOrderClip = rotiPoliteClip;
+                        if (d.impoliteOrderClip == null) d.impoliteOrderClip = rotiBluntClip;
+                    }
+                    else if (n.Contains("ice") || n.Contains("cream"))
+                    {
+                        if (d.politeOrderClip == null) d.politeOrderClip = iceCreamPoliteClip;
+                        if (d.impoliteOrderClip == null) d.impoliteOrderClip = iceCreamBluntClip;
+                    }
+                }
+            }
+
             if (!Application.isPlaying)
             {
                 UnityEditor.EditorUtility.SetDirty(this);
@@ -388,11 +492,32 @@ namespace Googolplex.Unit6
             target.localScale = originalScale;
         }
 
+        public AudioClip GetDishAudioClip(U6_DishItemData_Masters_Activity dish, bool isPolite)
+        {
+            if (dish != null)
+            {
+                if (isPolite && dish.politeOrderClip != null) return dish.politeOrderClip;
+                if (!isPolite && dish.impoliteOrderClip != null) return dish.impoliteOrderClip;
+
+                string name = (dish.dishName ?? "").ToLower().Trim();
+                string id = (dish.dishId ?? "").ToLower().Trim();
+
+                if (name.Contains("dosa") || id.Contains("dosa")) return isPolite ? dosaPoliteClip : dosaBluntClip;
+                if (name.Contains("idli") || id.Contains("idli")) return isPolite ? idliPoliteClip : idliBluntClip;
+                if (name.Contains("noodle") || id.Contains("noodle")) return isPolite ? noodlesPoliteClip : noodlesBluntClip;
+                if (name.Contains("rice") || id.Contains("rice")) return isPolite ? ricePoliteClip : riceBluntClip;
+                if (name.Contains("roti") || id.Contains("roti")) return isPolite ? rotiPoliteClip : rotiBluntClip;
+                if (name.Contains("ice") || name.Contains("cream") || id.Contains("icecream")) return isPolite ? iceCreamPoliteClip : iceCreamBluntClip;
+            }
+
+            return isPolite ? dosaPoliteClip : dosaBluntClip;
+        }
+
         private string GetDishAudioId(U6_DishItemData_Masters_Activity dish, bool isPolite)
         {
             if (dish == null)
             {
-                return isPolite ? "VO_U6_ANU_1" : "VO_U6_ANU_2";
+                return isPolite ? "VO_U6_ORD_DOSA_POLITE" : "VO_U6_ORD_DOSA_BLUNT";
             }
 
             string name = dish.dishName != null ? dish.dishName.ToLower().Trim() : "";
@@ -400,7 +525,7 @@ namespace Googolplex.Unit6
 
             if (name.Contains("dosa") || id.Contains("dosa"))
             {
-                return isPolite ? "VO_U6_ANU_1" : "VO_U6_ANU_2";
+                return isPolite ? "VO_U6_ORD_DOSA_POLITE" : "VO_U6_ORD_DOSA_BLUNT";
             }
             if (name.Contains("idli") || id.Contains("idli"))
             {
@@ -422,20 +547,19 @@ namespace Googolplex.Unit6
             {
                 return isPolite ? "VO_U6_ORD_ICECREAM_POLITE" : "VO_U6_ORD_ICECREAM_BLUNT";
             }
-            if (name.Contains("sandwich") || id.Contains("sandwich"))
-            {
-                return isPolite ? "VO_U6_ORD_SANDWICH_POLITE" : "VO_U6_ORD_SANDWICH_BLUNT";
-            }
-            if (name.Contains("juice") || id.Contains("juice"))
-            {
-                return isPolite ? "VO_U6_ORD_JUICE_POLITE" : "VO_U6_ORD_JUICE_BLUNT";
-            }
 
-            return isPolite ? "VO_U6_ANU_1" : "VO_U6_ANU_2";
+            return isPolite ? "VO_U6_ORD_DOSA_POLITE" : "VO_U6_ORD_DOSA_BLUNT";
         }
 
         public void PlayPoliteAudioPreview()
         {
+            AudioClip clip = GetDishAudioClip(selectedDish, isPolite: true);
+            if (clip != null && U6_AudioManager_Masters_Activity.Instance != null)
+            {
+                U6_AudioManager_Masters_Activity.Instance.PlayVO(clip);
+                return;
+            }
+
             if (U6_AudioManager_Masters_Activity.Instance != null)
             {
                 string soundId = GetDishAudioId(selectedDish, isPolite: true);
@@ -445,6 +569,13 @@ namespace Googolplex.Unit6
 
         public void PlayImpoliteAudioPreview()
         {
+            AudioClip clip = GetDishAudioClip(selectedDish, isPolite: false);
+            if (clip != null && U6_AudioManager_Masters_Activity.Instance != null)
+            {
+                U6_AudioManager_Masters_Activity.Instance.PlayVO(clip);
+                return;
+            }
+
             if (U6_AudioManager_Masters_Activity.Instance != null)
             {
                 string soundId = GetDishAudioId(selectedDish, isPolite: false);
@@ -644,11 +775,20 @@ namespace Googolplex.Unit6
         private IEnumerator OrderResolutionSequence(bool isPolite)
         {
             // Anu speaks her chosen order line out loud!
-            string orderAudio = GetDishAudioId(selectedDish, isPolite);
-            if (U6_AudioManager_Masters_Activity.Instance != null && !string.IsNullOrEmpty(orderAudio))
+            AudioClip clip = GetDishAudioClip(selectedDish, isPolite);
+            if (clip != null && U6_AudioManager_Masters_Activity.Instance != null)
             {
-                U6_AudioManager_Masters_Activity.Instance.PlayVO(orderAudio);
-                yield return new WaitForSeconds(1.8f);
+                U6_AudioManager_Masters_Activity.Instance.PlayVO(clip);
+                yield return new WaitForSeconds(Mathf.Max(1.6f, clip.length));
+            }
+            else
+            {
+                string orderAudio = GetDishAudioId(selectedDish, isPolite);
+                if (U6_AudioManager_Masters_Activity.Instance != null && !string.IsNullOrEmpty(orderAudio))
+                {
+                    U6_AudioManager_Masters_Activity.Instance.PlayVO(orderAudio);
+                    yield return new WaitForSeconds(1.8f);
+                }
             }
 
             if (waiterFeedbackPopup) waiterFeedbackPopup.SetActive(true);

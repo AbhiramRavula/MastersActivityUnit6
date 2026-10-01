@@ -787,8 +787,8 @@ namespace Googolplex.Unit6
                 AddDishItem(dishesProp, "Dosa", 60, GetSprite(sprites, "SPR_Dish_Dosa"));
                 AddDishItem(dishesProp, "Idli", 40, GetSprite(sprites, "SPR_Dish_Idli"));
                 AddDishItem(dishesProp, "Noodles", 80, GetSprite(sprites, "SPR_Dish_Noodles"));
-                AddDishItem(dishesProp, "Sandwich", 70, GetSprite(sprites, "SPR_Dish_Sandwich"));
-                AddDishItem(dishesProp, "Juice", 50, GetSprite(sprites, "SPR_Dish_Juice"));
+                AddDishItem(dishesProp, "Rice", 70, GetSprite(sprites, "SPR_Dish_Rice"));
+                AddDishItem(dishesProp, "Roti", 50, GetSprite(sprites, "SPR_Dish_Roti"));
                 AddDishItem(dishesProp, "Ice Cream", 45, GetSprite(sprites, "SPR_Dish_IceCream"));
             }
 

@@ -81,8 +81,16 @@ namespace Googolplex.Unit6
             }
         }
 
+        public void ResetStars()
+        {
+            starCount = 0;
+            OnStarEarned?.Invoke(starCount);
+            Debug.Log("[U6_GameManager] Stars reset to 0.");
+        }
+
         private void Start()
         {
+            ResetStars();
             ChangeState(U6_GamePart.Intro);
         }
 
@@ -128,7 +136,11 @@ namespace Googolplex.Unit6
             if (endingScreen && endingScreen.activeSelf != isEnding) endingScreen.SetActive(isEnding);
         }
 
-        public void StartPart1() => ChangeState(U6_GamePart.Part1_Waiting);
+        public void StartPart1()
+        {
+            ResetStars();
+            ChangeState(U6_GamePart.Part1_Waiting);
+        }
         public void StartPart2() => ChangeState(U6_GamePart.Part2_Menu);
         public void StartPart3() => ChangeState(U6_GamePart.Part3_Waiter);
         public void StartPart4() => ChangeState(U6_GamePart.Part4_VoicesAndLeaving);

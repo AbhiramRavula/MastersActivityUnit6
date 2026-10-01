@@ -80,6 +80,7 @@ namespace Googolplex.Unit6
 
         [Header("Family Dining Table Sprites (Parents + Anu)")]
         [SerializeField] private Sprite familyTableCalmSprite;
+        [SerializeField] private Sprite familyTableHandRaiseSprite;
         [SerializeField] private Sprite familyTableReactSprite;
 
         [Header("Full Body Waiter Poses (u6 MA more waiter ravi sprites)")]
@@ -129,8 +130,15 @@ namespace Googolplex.Unit6
         [SerializeField] private AudioClip voWrongDishClip;
         [SerializeField] private string voAnuThankYou = "VO_U6_ANU_4 (Thank you!)";
         [SerializeField] private AudioClip voAnuThankYouClip;
-        [SerializeField] private string voAnuWrongDishPolite = "VO_U6_ANU_5 (Sorry, I think I ordered dosa)";
         [SerializeField] private AudioClip voAnuWrongDishPoliteClip;
+
+        [Header("Dynamic Wrong Dish Audio Clips (All 6 Dishes for Moment 2)")]
+        [SerializeField] private AudioClip voWrongDishDosaClip;
+        [SerializeField] private AudioClip voWrongDishIdliClip;
+        [SerializeField] private AudioClip voWrongDishNoodlesClip;
+        [SerializeField] private AudioClip voWrongDishRiceClip;
+        [SerializeField] private AudioClip voWrongDishRotiClip;
+        [SerializeField] private AudioClip voWrongDishIceCreamClip;
         [SerializeField] private string voAnuWrongDishLoud = "VO_U6_ANU_6 (This is WRONG!)";
         [SerializeField] private AudioClip voAnuWrongDishLoudClip;
         [SerializeField] private string voAnuDroppedFork = "VO_U6_ANU_8 (Excuse me, could I have another fork?)";
@@ -195,6 +203,9 @@ namespace Googolplex.Unit6
             EnsureFilledWaterGlassSprite();
             EnsurePreReaderAssets();
             EnsureDishSprites();
+#if UNITY_EDITOR
+            EnsureWrongDishClips();
+#endif
         }
 
         private void OnEnable()
@@ -205,6 +216,7 @@ namespace Googolplex.Unit6
             EnsurePreReaderAssets();
             EnsureDishSprites();
 #if UNITY_EDITOR
+            EnsureWrongDishClips();
             AutoLoadSpritesAndMoments();
 #else
             InitializeDefaultMoments();
@@ -491,6 +503,10 @@ namespace Googolplex.Unit6
                     {
                         familyTableCalmSprite = sp;
                     }
+                    if (familyTableHandRaiseSprite == null && (sp.name == "U6_MAct_Family_HandRaise" || sp.name == "SPR_FamilyTable_HandRaise"))
+                    {
+                        familyTableHandRaiseSprite = sp;
+                    }
                     if (familyTableReactSprite == null && (sp.name == "U6_MAct_Family_ShoutingHungry" || sp.name == "SPR_FamilyTable_ShoutingHungry"))
                     {
                         familyTableReactSprite = sp;
@@ -563,6 +579,73 @@ namespace Googolplex.Unit6
 
             return spriteDishDosa;
         }
+
+        public string GetOrderedDishWrongAudioKey(string dishName)
+        {
+            string name = !string.IsNullOrEmpty(dishName) ? dishName.ToLowerInvariant() : "";
+            if (string.IsNullOrEmpty(name) && U6_GameManager_Masters_Activity.Instance != null)
+            {
+                name = (U6_GameManager_Masters_Activity.Instance.OrderedDishName ?? "").ToLowerInvariant();
+            }
+
+            if (name.Contains("idli")) return "VO_U6_ANU_WRONG_IDLI";
+            if (name.Contains("noodle")) return "VO_U6_ANU_WRONG_NOODLES";
+            if (name.Contains("rice")) return "VO_U6_ANU_WRONG_RICE";
+            if (name.Contains("roti")) return "VO_U6_ANU_WRONG_ROTI";
+            if (name.Contains("ice") || name.Contains("cream")) return "VO_U6_ANU_WRONG_ICECREAM";
+
+            return "VO_U6_ANU_WRONG_DOSA";
+        }
+
+        public AudioClip GetOrderedDishWrongClip(string dishName)
+        {
+            string name = !string.IsNullOrEmpty(dishName) ? dishName.ToLowerInvariant() : "";
+            if (string.IsNullOrEmpty(name) && U6_GameManager_Masters_Activity.Instance != null)
+            {
+                name = (U6_GameManager_Masters_Activity.Instance.OrderedDishName ?? "").ToLowerInvariant();
+            }
+
+            AudioClip clip = null;
+            if (name.Contains("idli")) clip = voWrongDishIdliClip;
+            else if (name.Contains("noodle")) clip = voWrongDishNoodlesClip;
+            else if (name.Contains("rice")) clip = voWrongDishRiceClip;
+            else if (name.Contains("roti")) clip = voWrongDishRotiClip;
+            else if (name.Contains("ice") || name.Contains("cream")) clip = voWrongDishIceCreamClip;
+            else clip = voWrongDishDosaClip;
+
+            if (clip != null) return clip;
+
+#if UNITY_EDITOR
+            string key = GetOrderedDishWrongAudioKey(name);
+            string path = $"Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/{key}.mp3";
+            clip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+            if (clip != null) return clip;
+#endif
+
+            return voAnuWrongDishPoliteClip;
+        }
+
+#if UNITY_EDITOR
+        [ContextMenu("Auto-Assign Wrong Dish Audio Clips")]
+        public void EnsureWrongDishClips()
+        {
+            if (voWrongDishDosaClip == null) voWrongDishDosaClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ANU_WRONG_DOSA.mp3") ?? voAnuWrongDishPoliteClip;
+            if (voWrongDishIdliClip == null) voWrongDishIdliClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ANU_WRONG_IDLI.mp3");
+            if (voWrongDishNoodlesClip == null) voWrongDishNoodlesClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ANU_WRONG_NOODLES.mp3");
+            if (voWrongDishRiceClip == null) voWrongDishRiceClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ANU_WRONG_RICE.mp3");
+            if (voWrongDishRotiClip == null) voWrongDishRotiClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ANU_WRONG_ROTI.mp3");
+            if (voWrongDishIceCreamClip == null) voWrongDishIceCreamClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/SeniorsActivityUnit6/Audio/U6_MastersActivity_audios/VO_U6_ANU_WRONG_ICECREAM.mp3");
+
+            if (!Application.isPlaying)
+            {
+                UnityEditor.EditorUtility.SetDirty(this);
+                if (gameObject.scene.IsValid())
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+                }
+            }
+        }
+#endif
 
         public void UpdateTableDishVisibility(bool isDelivered, bool animate = false)
         {
@@ -745,7 +828,13 @@ namespace Googolplex.Unit6
 
             hBtn = hT.GetComponent<Button>();
 
-            if (hBtn != null)
+            bool hasVoiceAudio = (currentClip != null) || (!string.IsNullOrEmpty(currentVO) && !currentVO.Equals("VO_U6_ANU_3", System.StringComparison.OrdinalIgnoreCase) && !currentVO.ToLower().Contains("nothing"));
+            if (hT != null)
+            {
+                hT.gameObject.SetActive(hasVoiceAudio);
+            }
+
+            if (hBtn != null && hasVoiceAudio)
             {
                 hBtn.onClick.RemoveAllListeners();
                 string voToPlay = currentVO;
@@ -780,6 +869,7 @@ namespace Googolplex.Unit6
         public void AutoLoadSpritesAndMoments()
         {
             ApplyBigChoiceCardSizing();
+            EnsureWrongDishClips();
 
             Dictionary<string, Sprite> spriteDict = new Dictionary<string, Sprite>(System.StringComparer.OrdinalIgnoreCase);
             string[] guids = AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets/SeniorsActivityUnit6/Art" });
@@ -808,6 +898,7 @@ namespace Googolplex.Unit6
             }
 
             // CRITICAL: Inspector Priority!
+            EnsureWrongDishClips();
             // Only assign component-level sprite fields if they are currently null!
             if (filledWaterGlassSprite == null) filledWaterGlassSprite = GetSprite("Sprite water glasses_2") ?? GetSprite("water glasses_2");
             if (waiterSmileSprite == null) waiterSmileSprite = GetSprite("SPR_Ravi_WarmSmile");
@@ -871,6 +962,7 @@ namespace Googolplex.Unit6
             Sprite poseClearing = raviClearing ?? poseOrder;
 
             if (familyTableCalmSprite == null) familyTableCalmSprite = familyStraight;
+            if (familyTableHandRaiseSprite == null) familyTableHandRaiseSprite = familyHandRaise;
             if (familyTableReactSprite == null) familyTableReactSprite = familyShouting;
 
             // CRITICAL: Inspector Priority!
@@ -882,9 +974,11 @@ namespace Googolplex.Unit6
                     var m = moments[i];
                     if (m == null) continue;
 
-                    // Force clear Inspector audio clips to use our auto-generated VO strings flawlessly
-                    m.optionA_Clip = null;
-                    m.optionB_Clip = null;
+                    // Preserve inspector audio clips
+                    if (m.optionA_Clip == null && !string.IsNullOrEmpty(m.optionA_VO))
+                    {
+                        // optional fallback
+                    }
 
                     // Only provide fallback if inspector field is empty
                     if (m.fullBodyPoseSprite == null)
@@ -902,7 +996,7 @@ namespace Googolplex.Unit6
 
                     if (m.optionA_Avatar == null)
                     {
-                        m.optionA_Avatar = (i == 1 || i == 4) ? anuHandRaise : anuStraight;
+                        m.optionA_Avatar = (i == 1 || i == 2 || i == 4) ? anuHandRaise : anuStraight;
                     }
 
                     if (m.optionB_Avatar == null)
@@ -942,11 +1036,16 @@ namespace Googolplex.Unit6
                     
                     if (string.IsNullOrEmpty(m.optionB_VO))
                     {
-                        if (i == 0) m.optionB_VO = "VO_U6_ANU_3";
+                        if (i == 0) m.optionB_VO = "";
                         else if (i == 1) m.optionB_VO = "VO_U6_ANU_CALL_SHOUT";
                         else if (i == 2) m.optionB_VO = "VO_U6_ANU_6";
                         else if (i == 3) m.optionB_VO = "VO_U6_ANU_EAT_FAST";
                         else if (i == 4) m.optionB_VO = "VO_U6_ANU_9";
+                    }
+                    if (i == 0)
+                    {
+                        m.optionB_VO = "";
+                        m.optionB_Clip = null;
                     }
                 }
                 Debug.Log($"[U6_WaiterInteractionScreen] Preserved all {moments.Count} Inspector-configured moments with priority!");
@@ -974,7 +1073,7 @@ namespace Googolplex.Unit6
                 optionB_Badge = "[SAY NOTHING]",
                 optionB_Text = "\"...\" (Say nothing)",
                 optionB_Outcome = "Ravi pours the water quietly.",
-                optionB_VO = "VO_U6_ANU_3",
+                optionB_VO = "",
                 optionB_Face = U6_WaiterFaceState.BlankNeutral,
                 optionB_Avatar = anuStraight,
                 optionB_RaviPose = poseOrder
@@ -1099,7 +1198,7 @@ namespace Googolplex.Unit6
                     optionB_Badge = "[SAY NOTHING]",
                     optionB_Text = "\"...\" (Say nothing)",
                     optionB_Outcome = "Ravi pours the water quietly.",
-                    optionB_VO = "VO_U6_ANU_3",
+                    optionB_VO = "",
                     optionB_Face = U6_WaiterFaceState.BlankNeutral
                 });
 
@@ -1223,7 +1322,7 @@ namespace Googolplex.Unit6
 
             if (currentMomentIndex == 2) // Wrong Dish
             {
-                if (string.IsNullOrEmpty(m.optionA_Text) && !string.IsNullOrEmpty(orderedName))
+                if (!string.IsNullOrEmpty(orderedName))
                 {
                     m.optionA_Text = $"\"Sorry, I think I ordered {orderedName.ToLower()}.\"";
                 }
@@ -1231,11 +1330,11 @@ namespace Googolplex.Unit6
             }
             else if (currentMomentIndex == 3) // Food Served
             {
-                if (m.propSprite == null && orderedSprite != null)
+                if (orderedSprite != null)
                 {
                     m.propSprite = orderedSprite; // Fallback only if no prop was assigned in inspector
                 }
-                if (string.IsNullOrEmpty(m.situationPrompt) && !string.IsNullOrEmpty(orderedName))
+                if (!string.IsNullOrEmpty(orderedName))
                 {
                     m.situationPrompt = $"Ravi sets the hot {orderedName.ToLower()} down in front of Anu.";
                 }
@@ -1271,8 +1370,24 @@ namespace Googolplex.Unit6
                 optionB_Label.color = Color.white;
             }
 
-            SetupChoiceCard(optionA_Button, isPolite: true, currentVO: m.optionA_VO, currentClip: m.optionA_Clip, specificAvatar: m.optionA_Avatar);
-            SetupChoiceCard(optionB_Button, isPolite: false, currentVO: m.optionB_VO, currentClip: m.optionB_Clip, specificAvatar: m.optionB_Avatar);
+            string voKeyA = m.optionA_VO;
+            AudioClip clipA = m.optionA_Clip;
+            if (currentMomentIndex == 2)
+            {
+                voKeyA = GetOrderedDishWrongAudioKey(orderedName);
+                clipA = GetOrderedDishWrongClip(orderedName);
+            }
+
+            string voKeyB = m.optionB_VO;
+            AudioClip clipB = m.optionB_Clip;
+            if (currentMomentIndex == 0 || (!string.IsNullOrEmpty(m.optionB_Text) && m.optionB_Text.ToLower().Contains("nothing")))
+            {
+                voKeyB = "";
+                clipB = null;
+            }
+
+            SetupChoiceCard(optionA_Button, isPolite: true, currentVO: voKeyA, currentClip: clipA, specificAvatar: m.optionA_Avatar);
+            SetupChoiceCard(optionB_Button, isPolite: false, currentVO: voKeyB, currentClip: clipB, specificAvatar: m.optionB_Avatar);
 
             // 1. Update Full Body Ravi: Inspector fullBodyPoseSprite has top priority!
             if (waiterFullBodyAvatar != null)
@@ -1414,7 +1529,11 @@ namespace Googolplex.Unit6
                 Sprite poseA = m.optionA_RaviPose != null ? m.optionA_RaviPose : (raviGreeting != null ? raviGreeting : m.fullBodyPoseSprite);
                 SetWaiterPose(poseA, m.optionA_Face);
 
-                Sprite tableA = familyTableCalmSprite != null ? familyTableCalmSprite : m.anuReactionSprite;
+                bool isAskingMoment = (currentMomentIndex == 1 || currentMomentIndex == 2 || currentMomentIndex == 4);
+                Sprite handRaiseTable = familyTableHandRaiseSprite != null ? familyTableHandRaiseSprite : m.anuReactionSprite;
+                Sprite calmTable = familyTableCalmSprite != null ? familyTableCalmSprite : m.anuReactionSprite;
+
+                Sprite tableA = isAskingMoment ? (handRaiseTable != null ? handRaiseTable : calmTable) : calmTable;
                 if (anuCharacterAvatar != null && tableA != null)
                 {
                     anuCharacterAvatar.sprite = tableA;
@@ -1422,17 +1541,48 @@ namespace Googolplex.Unit6
                 }
 
                 PlayScreenSFX(sfxSparkleClip, sfxSparkle);
-                PlayScreenAudio(m.optionA_Clip, m.optionA_VO);
+                if (currentMomentIndex == 2)
+                {
+                    string orderedDish = (U6_GameManager_Masters_Activity.Instance != null) ? U6_GameManager_Masters_Activity.Instance.OrderedDishName : "dosa";
+                    AudioClip wrongClip = GetOrderedDishWrongClip(orderedDish);
+                    string wrongKey = GetOrderedDishWrongAudioKey(orderedDish);
+                    PlayScreenAudio(wrongClip, wrongKey);
+                }
+                else
+                {
+                    PlayScreenAudio(m.optionA_Clip, m.optionA_VO);
+                }
 
                 if (currentMomentIndex == 1) 
                 {
-                    yield return new WaitForSeconds(1.8f);
+                    float waitDuration = (m.optionA_Clip != null && m.optionA_Clip.length > 0) ? (m.optionA_Clip.length + 0.35f) : 2.2f;
+                    yield return new WaitForSeconds(waitDuration);
+                    if (anuCharacterAvatar != null && calmTable != null)
+                    {
+                        anuCharacterAvatar.sprite = calmTable;
+                    }
                     PlayScreenAudio(null, "VO_U6_WAIT_2");
                 }
                 else if (currentMomentIndex == 2) 
                 {
-                    yield return new WaitForSeconds(2.0f);
+                    string orderedDish = (U6_GameManager_Masters_Activity.Instance != null) ? U6_GameManager_Masters_Activity.Instance.OrderedDishName : "dosa";
+                    AudioClip wrongClip = GetOrderedDishWrongClip(orderedDish);
+                    float waitDuration = (wrongClip != null && wrongClip.length > 0) ? (wrongClip.length + 0.45f) : 3.0f;
+                    yield return new WaitForSeconds(waitDuration);
+                    if (anuCharacterAvatar != null && calmTable != null)
+                    {
+                        anuCharacterAvatar.sprite = calmTable;
+                    }
                     PlayScreenAudio(voWaiterApologizeClip, voWaiterApologize);
+                }
+                else if (currentMomentIndex == 4)
+                {
+                    float waitDuration = (m.optionA_Clip != null && m.optionA_Clip.length > 0) ? (m.optionA_Clip.length + 0.35f) : 2.5f;
+                    yield return new WaitForSeconds(waitDuration);
+                    if (anuCharacterAvatar != null && calmTable != null)
+                    {
+                        anuCharacterAvatar.sprite = calmTable;
+                    }
                 }
             }
             else
@@ -1449,7 +1599,14 @@ namespace Googolplex.Unit6
                     StartCoroutine(PopAvatarAnimation(anuCharacterAvatar.transform));
                 }
 
-                PlayScreenAudio(m.optionB_Clip, m.optionB_VO);
+                bool isSayNothing = (currentMomentIndex == 0)
+                                 || (!string.IsNullOrEmpty(m.optionB_VO) && m.optionB_VO.Equals("VO_U6_ANU_3", System.StringComparison.OrdinalIgnoreCase))
+                                 || (!string.IsNullOrEmpty(m.optionB_Text) && m.optionB_Text.ToLower().Contains("nothing"));
+
+                if (!isSayNothing)
+                {
+                    PlayScreenAudio(m.optionB_Clip, m.optionB_VO);
+                }
             }
 
             yield return new WaitForSeconds(4.0f);

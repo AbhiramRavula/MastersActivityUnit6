@@ -5,19 +5,13 @@ import uuid
 
 VOICE_ANU = "en-IN-NeerjaNeural"
 
-dish_audios = [
-    {"file": "VO_U6_ORD_DOSA_POLITE.mp3", "text": "Could I have the dosa, please?", "voice": VOICE_ANU},
-    {"file": "VO_U6_ORD_DOSA_BLUNT.mp3", "text": "I want dosa.", "voice": VOICE_ANU},
-    {"file": "VO_U6_ORD_IDLI_POLITE.mp3", "text": "Could I have the idli, please?", "voice": VOICE_ANU},
-    {"file": "VO_U6_ORD_IDLI_BLUNT.mp3", "text": "I want idli.", "voice": VOICE_ANU},
-    {"file": "VO_U6_ORD_NOODLES_POLITE.mp3", "text": "Could I have the noodles, please?", "voice": VOICE_ANU},
-    {"file": "VO_U6_ORD_NOODLES_BLUNT.mp3", "text": "I want noodles.", "voice": VOICE_ANU},
-    {"file": "VO_U6_ORD_RICE_POLITE.mp3", "text": "Could I have the rice, please?", "voice": VOICE_ANU},
-    {"file": "VO_U6_ORD_RICE_BLUNT.mp3", "text": "I want rice.", "voice": VOICE_ANU},
-    {"file": "VO_U6_ORD_ROTI_POLITE.mp3", "text": "Could I have the roti, please?", "voice": VOICE_ANU},
-    {"file": "VO_U6_ORD_ROTI_BLUNT.mp3", "text": "I want roti.", "voice": VOICE_ANU},
-    {"file": "VO_U6_ORD_ICECREAM_POLITE.mp3", "text": "Could I have the ice cream, please?", "voice": VOICE_ANU},
-    {"file": "VO_U6_ORD_ICECREAM_BLUNT.mp3", "text": "I want ice cream.", "voice": VOICE_ANU},
+wrong_dish_audios = [
+    {"file": "VO_U6_ANU_WRONG_DOSA.mp3", "text": "Sorry, I think I ordered dosa.", "voice": VOICE_ANU},
+    {"file": "VO_U6_ANU_WRONG_IDLI.mp3", "text": "Sorry, I think I ordered idli.", "voice": VOICE_ANU},
+    {"file": "VO_U6_ANU_WRONG_NOODLES.mp3", "text": "Sorry, I think I ordered noodles.", "voice": VOICE_ANU},
+    {"file": "VO_U6_ANU_WRONG_RICE.mp3", "text": "Sorry, I think I ordered rice.", "voice": VOICE_ANU},
+    {"file": "VO_U6_ANU_WRONG_ROTI.mp3", "text": "Sorry, I think I ordered roti.", "voice": VOICE_ANU},
+    {"file": "VO_U6_ANU_WRONG_ICECREAM.mp3", "text": "Sorry, I think I ordered ice cream.", "voice": VOICE_ANU},
 ]
 
 META_TEMPLATE = """fileFormatVersion: 2
@@ -47,9 +41,9 @@ AudioImporter:
 
 async def generate():
     target_dir = os.path.dirname(os.path.abspath(__file__))
-    print(f"Generating dish voiceovers in: {target_dir}")
+    print(f"Generating wrong dish voiceovers in: {target_dir}")
     
-    for item in dish_audios:
+    for item in wrong_dish_audios:
         filepath = os.path.join(target_dir, item["file"])
         meta_filepath = filepath + ".meta"
         
